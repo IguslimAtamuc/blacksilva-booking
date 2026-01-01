@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Black Silva - Book Your Appointment</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <span class="logo-text">Black Silva</span>
+            </div>
+            <div class="nav-links">
+                <a href="#home">Home</a>
+                <a href="#services">Services</a>
+                <a href="#about">About</a>
+                <a href="#contact">Contact</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="hero-content">
+            <h1 class="hero-title">Welcome to Black Silva</h1>
+            <p class="hero-subtitle">Where Style Meets Excellence</p>
+            <p class="hero-description">Experience premium hairdressing in the heart of Copenhagen. Book your appointment today.</p>
+            <button class="cta-button" onclick="scrollToBooking()">Book Now</button>
+        </div>
+        <div class="hero-image">
+            <div class="image-placeholder"></div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section id="services" class="services">
+        <h2 class="section-title">Our Services</h2>
+        <div class="services-grid">
+            <div class="service-card">
+                <div class="service-icon">✂️</div>
+                <h3>Professional Haircuts</h3>
+                <p>Expert cuts tailored to your style</p>
+                <p class="price">From 500 DKK</p>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">💇</div>
+                <h3>Hair Styling</h3>
+                <p>Modern and classic styles</p>
+                <p class="price">From 400 DKK</p>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">🎨</div>
+                <h3>Hair Coloring</h3>
+                <p>Premium coloring techniques</p>
+                <p class="price">From 800 DKK</p>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">💆</div>
+                <h3>Hair Treatment</h3>
+                <p>Luxurious hair care treatments</p>
+                <p class="price">From 600 DKK</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Booking Section -->
+    <section id="booking" class="booking">
+        <div class="booking-container">
+            <h2 class="section-title">Book Your Appointment</h2>
+            <p class="booking-subtitle">Fill in the form below and we'll confirm your appointment within 24 hours</p>
+            
+            <form class="booking-form" id="bookingForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="name">Full Name *</label>
+                        <input type="text" id="name" name="name" required placeholder="John Doe">
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email *</label>
+                        <input type="email" id="email" name="email" required placeholder="john@example.com">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="phone">Phone Number *</label>
+                        <input type="tel" id="phone" name="phone" required placeholder="+45 12 34 56 78">
+                    </div>
+                    <div class="form-group">
+                        <label for="service">Service *</label>
+                        <select id="service" name="service" required>
+                            <option value="">Select a service</option>
+                            <option value="haircut">Professional Haircut</option>
+                            <option value="styling">Hair Styling</option>
+                            <option value="coloring">Hair Coloring</option>
+                            <option value="treatment">Hair Treatment</option>
+                            <option value="consultation">Consultation</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="date">Preferred Date *</label>
+                        <input type="date" id="date" name="date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="time">Preferred Time *</label>
+                        <select id="time" name="time" required>
+                            <option value="">Select time</option>
+                            <option value="09:00">09:00 AM</option>
+                            <option value="10:00">10:00 AM</option>
+                            <option value="11:00">11:00 AM</option>
+                            <option value="12:00">12:00 PM</option>
+                            <option value="13:00">01:00 PM</option>
+                            <option value="14:00">02:00 PM</option>
+                            <option value="15:00">03:00 PM</option>
+                            <option value="16:00">04:00 PM</option>
+                            <option value="17:00">05:00 PM</option>
+                            <option value="18:00">06:00 PM</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group full-width">
+                    <label for="message">Additional Notes</label>
+                    <textarea id="message" name="message" rows="4" placeholder="Any special requests or notes..."></textarea>
+                </div>
+
+                <button type="submit" class="submit-button">Confirm Booking</button>
+            </form>
+
+            <div id="successMessage" class="success-message" style="display: none;">
+                <h3>Booking Confirmed! ✓</h3>
+                <p>Thank you for your booking. We'll send you a confirmation email shortly.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="about">
+        <div class="about-content">
+            <h2 class="section-title">About Black Silva</h2>
+            <p>Welcome to Black Silva Hairdresser, where we combine expertise with style to deliver exceptional haircuts and personalized service in a modern, comfortable environment.</p>
+            <p>Our skilled team is dedicated to providing you with the best hair care experience in Copenhagen.</p>
+            <div class="features">
+                <div class="feature">
+                    <h4>🕐 Easy Online Booking</h4>
+                    <p>Book your appointment 24/7 through our convenient online system</p>
+                </div>
+                <div class="feature">
+                    <h4>📍 Prime Location</h4>
+                    <p>Conveniently located in the heart of Copenhagen</p>
+                </div>
+                <div class="feature">
+                    <h4>💡 Expert Consultation</h4>
+                    <p>Get professional hair care advice and styling suggestions</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact">
+        <h2 class="section-title">Contact Us</h2>
+        <div class="contact-info">
+            <div class="contact-item">
+                <h4>📍 Address</h4>
+                <p>Copenhagen, Denmark</p>
+            </div>
+            <div class="contact-item">
+                <h4>📞 Phone</h4>
+                <p>+45 12 34 56 78</p>
+            </div>
+            <div class="contact-item">
+                <h4>📧 Email</h4>
+                <p>contact@blacksilva.dk</p>
+            </div>
+            <div class="contact-item">
+                <h4>🕐 Hours</h4>
+                <p>Mon-Fri: 9:00 - 19:00<br>Sat: 10:00 - 17:00<br>Sun: Closed</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2026 Black Silva Hairdresser. All rights reserved.</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

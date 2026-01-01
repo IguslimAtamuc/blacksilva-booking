@@ -661,3 +661,93 @@ html {
         max-width: 300px;
     }
 }
+
+
+/* ====== ENHANCED BOOKING FORM - LARGER & MORE VISIBLE ====== */
+
+/* Override pentru formular mai mare */
+.booking-container {
+    max-width: 1000px !important;
+    padding: 4rem 3.5rem !important;
+}
+
+.booking-title {
+    font-size: clamp(2.5rem, 5vw, 3.5rem) !important;
+    margin-bottom: 1rem !important;
+}
+
+.booking-subtitle {
+    font-size: 1.1rem !important;
+    margin-bottom: 3.5rem !important;
+}
+
+.booking-form {
+    display: grid;
+    grid-template-columns: 1fr !important;
+    gap: 2.5rem !important;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 2rem !important;
+    grid-column: 1 / -1 !important;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem !important;
+}
+
+.form-group label {
+    font-size: 0.85rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.14em !important;
+    color: var(--accent-silver) !important;
+    font-weight: 600 !important;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    padding: 1.2rem 1.5rem !important;
+    border-radius: 12px !important;
+    border: 1.5px solid rgba(255, 255, 255, 0.16) !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+    color: var(--text-primary) !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 1rem !important;
+    transition: all 250ms ease !important;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none !important;
+    border-color: var(--accent-silver) !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 0 0 3px rgba(208, 213, 221, 0.1) !important;
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 140px !important;
+}
+
+.cta-button {
+    grid-column: 1 / -1;
+    margin-top: 1.5rem !important;
+    padding: 18px 56px !important;
+    font-size: 0.8rem !important;
+}
+
+@media (max-width: 768px) {
+    .form-row {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .booking-container {
+        padding: 2.5rem 2rem !important;
+    }
+}

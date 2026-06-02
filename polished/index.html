@@ -374,15 +374,15 @@ function start(){
     g.rotation.x=-1.4; g.position.set(0,-0.42,0.1); g.visible=false; return g; }
   function makeCoffeeTray(){ var g=new THREE.Group(), metal=fix('#8f949d',{metalness:.82,roughness:.2}), cup=fix('#fff8ee',{roughness:.38}), coffee=fix('#4b2f1e',{roughness:.65});
     var tray=new THREE.Mesh(new THREE.CylinderGeometry(.36,.36,.045,40),metal); tray.scale.z=.72; tray.castShadow=true; tray.receiveShadow=true; g.add(tray);
-    var mug=new THREE.Mesh(new THREE.CylinderGeometry(.082,.092,.2,28),cup); mug.position.set(.08,.122,.02); mug.castShadow=true; g.add(mug);
-    var top=new THREE.Mesh(new THREE.CylinderGeometry(.07,.07,.012,28),coffee); top.position.set(.08,.23,.02); g.add(top);
-    var handle=new THREE.Mesh(new THREE.TorusGeometry(.047,.01,8,16),cup); handle.position.set(.16,.13,.02); handle.rotation.y=Math.PI/2; g.add(handle);
-    var steam=fix('#ffffff',{transparent:true,opacity:.65,roughness:.3}); [-.045,0,.045].forEach(function(x,i){ var s=new THREE.Mesh(new THREE.CylinderGeometry(.008,.008,.2+i*.03,8),steam); s.position.set(.08+x,.34+i*.03,.02); s.rotation.z=(i-1)*.24; g.add(s); });
+    var mug=new THREE.Mesh(new THREE.CylinderGeometry(.082,.092,.2,28),cup); mug.position.set(0,.122,0); mug.castShadow=true; g.add(mug);
+    var top=new THREE.Mesh(new THREE.CylinderGeometry(.07,.07,.012,28),coffee); top.position.set(0,.23,0); g.add(top);
+    var handle=new THREE.Mesh(new THREE.TorusGeometry(.047,.01,8,16),cup); handle.position.set(.08,.13,0); handle.rotation.y=Math.PI/2; g.add(handle);
+    var steam=fix('#ffffff',{transparent:true,opacity:.65,roughness:.3}); [-.045,0,.045].forEach(function(x,i){ var s=new THREE.Mesh(new THREE.CylinderGeometry(.008,.008,.2+i*.03,8),steam); s.position.set(x,.34+i*.03,0); s.rotation.z=(i-1)*.24; g.add(s); });
     g.visible=false; return shadowAll(g); }
   eduard.scissors=makeScissors(); eduard.armR.fore.add(eduard.scissors);
   elena.scissors=makeScissors(); elena.armR.fore.add(elena.scissors);
-  eduard.tray=makeCoffeeTray(); eduard.tray.position.set(.34,1.52,.3); eduard.bodyG.add(eduard.tray);
-  elena.tray=makeCoffeeTray(); elena.tray.position.set(.34,1.52,.3); elena.bodyG.add(elena.tray);
+  eduard.tray=makeCoffeeTray(); eduard.tray.position.set(0,1.66,.78); eduard.bodyG.add(eduard.tray);
+  elena.tray=makeCoffeeTray(); elena.tray.position.set(0,1.66,.78); elena.bodyG.add(elena.tray);
 
   var pGeo=new THREE.BufferGeometry(); var N=isMobile?150:240; var arr=new Float32Array(N*3);
   for(var k=0;k<N;k++){ arr[k*3]=(Math.random()-.5)*30; arr[k*3+1]=Math.random()*9; arr[k*3+2]=(Math.random()-.5)*30-3; }
@@ -413,8 +413,9 @@ function start(){
     ch.legL.hip.rotation.set(0,0,0); ch.legR.hip.rotation.set(0,0,0); ch.legL.knee.rotation.x=0; ch.legR.knee.rotation.x=0;
     ch.armL.g.rotation.set(-1.78,Math.sin(t*7)*0.18,0.58+Math.sin(t*7)*0.38); ch.armL.fore.rotation.x=-0.5;
     ch.armR.g.rotation.set(0.08,0,-0.08); ch.armR.fore.rotation.x=0.16; }
-  function poseServe(ch,ph,t){ var sw=Math.sin(ph)*0.22; ch.bodyG.position.y=Math.abs(Math.sin(ph))*0.025; ch.bodyG.rotation.set(0,0,Math.sin(t*2.5)*0.018);
-    ch.legL.hip.rotation.set(sw,0,0); ch.legR.hip.rotation.set(-sw,0,0); ch.legL.knee.rotation.x=Math.max(0,-sw)*0.35; ch.legR.knee.rotation.x=Math.max(0,sw)*0.35;
+  /* serve: barber holds the tray perfectly still — no sway, no steps */
+  function poseServe(ch){ ch.bodyG.position.y=0; ch.bodyG.rotation.set(0,0,0);
+    ch.legL.hip.rotation.set(0,0,0); ch.legR.hip.rotation.set(0,0,0); ch.legL.knee.rotation.x=0; ch.legR.knee.rotation.x=0;
     ch.armL.g.rotation.set(-0.92,0,0.24); ch.armL.fore.rotation.x=-1.28;
     ch.armR.g.rotation.set(-0.92,0,-0.24); ch.armR.fore.rotation.x=-1.28; }
   /* retained for compatibility; stylists now stand still while the customer celebrates */
@@ -423,7 +424,7 @@ function start(){
     ch.armL.g.rotation.set(-1.75+Math.sin(t*10)*0.65,0,0.55+Math.abs(Math.sin(t*9))*0.22); ch.armL.fore.rotation.x=-0.55+Math.sin(t*12)*0.42;
     ch.armR.g.rotation.set(0.08,0,-0.08); ch.armR.fore.rotation.x=0.18; }
   function setPose(ch,st,ph,t){ if(ch.scissors) ch.scissors.visible=(st==='cut'); if(ch.tray) ch.tray.visible=(st==='serve');
-    if(st==='walk')poseWalk(ch,ph); else if(st==='sit')poseSit(ch); else if(st==='cut')poseCut(ch,t); else if(st==='cheer')poseCheer(ch,t); else if(st==='wave')poseWave(ch,t); else if(st==='serve')poseServe(ch,ph,t); else if(st==='dance')poseStand(ch); else poseStand(ch); }
+    if(st==='walk')poseWalk(ch,ph); else if(st==='sit')poseSit(ch); else if(st==='cut')poseCut(ch,t); else if(st==='cheer')poseCheer(ch,t); else if(st==='wave')poseWave(ch,t); else if(st==='serve')poseServe(ch); else if(st==='dance')poseStand(ch); else poseStand(ch); }
 
   var mode='scroll', gated=false;
   var choice={haircut:null,service:null,fromPrice:0,price:0,priceTier:1,dayIdx:null,dayLabel:null,time:null,stylist:null};
@@ -566,18 +567,16 @@ function start(){
     var tx=1.15, tz=-4.2;
     gsap.to(sty,{x:tx,z:tz,duration:1.8,ease:'power1.inOut',onComplete:function(){
       sty.facing=faceToward(tx,tz,0,-4.0); sty.state='serve';
-      gsap.delayedCall(1.05,function(){
-        sty.state='cut';
-        gsap.delayedCall(3.2,function(){ sty.state='stand'; cust.state='cheer'; done(); });
-      }); }});
+      /* coffee delivered — barber now holds the tray still and keeps it until the booking is done */
+      gsap.delayedCall(1.05,function(){ done(); });
+    }});
   }
   function suspenseReveal(done){
-    gsap.to(sty,{x:0.8,z:-2.9,facing:faceToward(0.8,-2.9,0,-4.0),duration:0.9,ease:'power2.inOut'});
+    /* barber does NOT move — he stays put holding the coffee tray */
     gsap.to(bookCam,{tx:0.05,ty:1.62,tz:-3.95,zoom:2.7,frontMix:1,rightShift:0.08,duration:0.9,ease:'power2.inOut'});
     gsap.delayedCall(2.6,function(){
       setHair('S_fade');  /* after confirming: a short haircut */
-      gsap.to(sty,{x:-1.45,z:-3.5,facing:0.55,duration:0.8,ease:'power2.inOut',onComplete:function(){ sty.state='stand'; }});
-      cust.state='cheer';  /* customer stays seated, only waves arms */
+      cust.state='cheer';  /* customer stays seated, only waves arms; barber keeps holding the tray */
       gsap.to(bookCam,{tx:0.1,ty:1.5,tz:-4.0,zoom:2.1,frontMix:1,rightShift:0.3,duration:1.0,ease:'power2.inOut',onComplete:done});
     });
   }

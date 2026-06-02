@@ -290,6 +290,13 @@ function start(){
     var torso=new THREE.Mesh(new THREE.CylinderGeometry(.32,.39,.88,28),m.cloth); torso.position.y=1.32; torso.scale.z=.68; torso.castShadow=true; torso.receiveShadow=true; bodyG.add(torso);
     bodyG.add((function(){ var n=new THREE.Mesh(new THREE.CylinderGeometry(.085,.095,.16,20),m.skin); n.position.y=1.83; n.castShadow=true; return n; })());
     var head=ovalSphere(.265,m.skin,.94,1.05,.9); head.position.y=2.05; bodyG.add(head);
+    var faceMat=fix('#151519',{roughness:.55}), cheekMat=fix('#f2d4b3',{roughness:.7});
+    [-1,1].forEach(function(s){
+      var eye=new THREE.Mesh(new THREE.SphereGeometry(.026,14,8),faceMat); eye.position.set(s*.085,2.095,.224); eye.scale.z=.45; bodyG.add(eye);
+      var cheek=new THREE.Mesh(new THREE.SphereGeometry(.025,12,8),cheekMat); cheek.position.set(s*.12,2.035,.221); cheek.scale.set(1,.55,.35); bodyG.add(cheek);
+    });
+    var nose=new THREE.Mesh(new THREE.ConeGeometry(.024,.065,14),m.skin); nose.position.set(0,2.055,.245); nose.rotation.x=Math.PI/2; nose.castShadow=true; bodyG.add(nose);
+    var smile=new THREE.Mesh(new THREE.TorusGeometry(.045,.006,8,24,Math.PI*.9),faceMat); smile.position.set(0,2.0,.235); smile.rotation.set(0,0,Math.PI*.05); smile.scale.y=.45; bodyG.add(smile);
     var hairBase=new THREE.Mesh(new THREE.SphereGeometry(.265,24,14,0,Math.PI*2,0,Math.PI*0.62),m.hair); hairBase.position.y=2.12; hairBase.castShadow=true; bodyG.add(hairBase);
     function arm(side){ var g=new THREE.Group(); g.position.set(side*0.39,1.67,0);
       var up=capsule(.085,.54,m.cloth,'y'); up.position.y=-0.27; g.add(up);
@@ -332,19 +339,25 @@ function start(){
     });
     return g; }
   function shortHair(o){ var g=new THREE.Group(); var m=fix(o.color,{roughness:.95});
-    g.add((function(){ var cap=new THREE.Mesh(new THREE.SphereGeometry(.252,18,12,0,Math.PI*2,0,Math.PI*0.58),m); cap.position.y=2.105; cap.scale.set(1.02,.82,.9); cap.castShadow=true; return cap; })());
+    g.add((function(){ var cap=new THREE.Mesh(new THREE.SphereGeometry(.265,24,14,0,Math.PI*2,0,Math.PI*0.62),m); cap.position.y=2.105; cap.scale.set(1.08,.9,.98); cap.castShadow=true; return cap; })());
+    g.add((function(){ var hairline=ovalSphere(.095,m,2.55,.34,.5); hairline.position.set(0,2.13,.22); hairline.rotation.x=-.1; return hairline; })());
     if(o.fade){
-      [-1,1].forEach(function(s){ g.add((function(){ var side=ovalSphere(.11,m,.62,.72,.34); side.position.set(s*.205,2.08,.02); side.rotation.z=s*.08; return side; })()); });
+      [-1,1].forEach(function(s){ g.add((function(){ var side=ovalSphere(.12,m,.7,.86,.42); side.position.set(s*.215,2.065,.06); side.rotation.z=s*.08; return side; })()); });
       g.add((function(){ var back=new THREE.Mesh(new THREE.BoxGeometry(.36,.13,.1),m); back.position.set(0,2.02,-.18); back.castShadow=true; return back; })());
     }
     if(o.tuft){
-      g.add((function(){ var t=ovalSphere(.14,m,1.28,.36,.92); t.position.set(.03,2.285,.08); t.rotation.set(-0.16,0,.12); return t; })());
-      g.add((function(){ var f=ovalSphere(.105,m,1.0,.24,.78); f.position.set(.16,2.245,.12); f.rotation.set(-0.22,0,.35); return f; })());
+      g.add((function(){ var t=ovalSphere(.15,m,1.48,.36,.9); t.position.set(.02,2.255,.13); t.rotation.set(-0.2,0,.1); return t; })());
+      g.add((function(){ var f=ovalSphere(.115,m,1.18,.26,.78); f.position.set(.16,2.215,.2); f.rotation.set(-0.28,0,.34); return f; })());
+    }
+    if(o.polished){
+      [[-.15,2.19,.23,.085,.95,.28,.55,-.32],[-.04,2.215,.245,.092,1.16,.28,.62,-.14],[.08,2.21,.24,.088,1.08,.26,.6,.1],[.2,2.185,.22,.076,.88,.24,.52,.34]].forEach(function(p){
+        var lock=ovalSphere(p[3],m,p[4],p[5],p[6]); lock.position.set(p[0],p[1],p[2]); lock.rotation.set(-.22,0,p[7]); g.add(lock);
+      });
     }
     return g; }
   var AFRO_DEF={k:'L_afro',color:'#12100d'};
   var LONG_DEFS=[ {k:'L_brown',color:'#3a2a1c',len:1.25}, {k:'L_black',color:'#15110e',len:1.45,tail:true}, {k:'L_auburn',color:'#a85f2c',len:1.1,vol:true}, {k:'L_blonde',color:'#dcc188',len:1.35}, {k:'L_chestnut',color:'#5a3320',len:1.05,vol:true} ];
-  var SHORT_DEFS=[ {k:'S_polished',color:'#15110e',tuft:true,fade:true}, {k:'S_black',color:'#15110e',tuft:true}, {k:'S_brown',color:'#3a2a1c'}, {k:'S_fade',color:'#1c1814',tuft:true,fade:true}, {k:'S_ash',color:'#4f4b45'}, {k:'S_sand',color:'#8a7152'} ];
+  var SHORT_DEFS=[ {k:'S_polished',color:'#15110e',tuft:true,fade:true,polished:true}, {k:'S_black',color:'#15110e',tuft:true}, {k:'S_brown',color:'#3a2a1c'}, {k:'S_fade',color:'#1c1814',tuft:true,fade:true}, {k:'S_ash',color:'#4f4b45'}, {k:'S_sand',color:'#8a7152'} ];
   var allStyles={}, longKeys=[], shortKeys=[];
   var afro=afroHair(AFRO_DEF); afro.visible=false; customer.bodyG.add(afro); allStyles[AFRO_DEF.k]=afro;
   LONG_DEFS.forEach(function(d){ var g=longHair(d); g.visible=false; customer.bodyG.add(g); allStyles[d.k]=g; longKeys.push(d.k); });
@@ -359,8 +372,17 @@ function start(){
     g.add((function(){ var r=new THREE.Mesh(new THREE.TorusGeometry(.04,.013,6,12),m); r.position.set(-0.02,-0.02,0); return r; })());
     g.add((function(){ var r=new THREE.Mesh(new THREE.TorusGeometry(.04,.013,6,12),m); r.position.set(0.02,-0.02,0); return r; })());
     g.rotation.x=-1.4; g.position.set(0,-0.42,0.1); g.visible=false; return g; }
+  function makeCoffeeTray(){ var g=new THREE.Group(), metal=fix('#8f949d',{metalness:.82,roughness:.2}), cup=fix('#fff8ee',{roughness:.38}), coffee=fix('#4b2f1e',{roughness:.65});
+    var tray=new THREE.Mesh(new THREE.CylinderGeometry(.36,.36,.045,40),metal); tray.scale.z=.72; tray.castShadow=true; tray.receiveShadow=true; g.add(tray);
+    var mug=new THREE.Mesh(new THREE.CylinderGeometry(.082,.092,.2,28),cup); mug.position.set(.08,.122,.02); mug.castShadow=true; g.add(mug);
+    var top=new THREE.Mesh(new THREE.CylinderGeometry(.07,.07,.012,28),coffee); top.position.set(.08,.23,.02); g.add(top);
+    var handle=new THREE.Mesh(new THREE.TorusGeometry(.047,.01,8,16),cup); handle.position.set(.16,.13,.02); handle.rotation.y=Math.PI/2; g.add(handle);
+    var steam=fix('#ffffff',{transparent:true,opacity:.65,roughness:.3}); [-.045,0,.045].forEach(function(x,i){ var s=new THREE.Mesh(new THREE.CylinderGeometry(.008,.008,.2+i*.03,8),steam); s.position.set(.08+x,.34+i*.03,.02); s.rotation.z=(i-1)*.24; g.add(s); });
+    g.visible=false; return shadowAll(g); }
   eduard.scissors=makeScissors(); eduard.armR.fore.add(eduard.scissors);
   elena.scissors=makeScissors(); elena.armR.fore.add(elena.scissors);
+  eduard.tray=makeCoffeeTray(); eduard.tray.position.set(.34,1.52,.3); eduard.bodyG.add(eduard.tray);
+  elena.tray=makeCoffeeTray(); elena.tray.position.set(.34,1.52,.3); elena.bodyG.add(elena.tray);
 
   var pGeo=new THREE.BufferGeometry(); var N=isMobile?150:240; var arr=new Float32Array(N*3);
   for(var k=0;k<N;k++){ arr[k*3]=(Math.random()-.5)*30; arr[k*3+1]=Math.random()*9; arr[k*3+2]=(Math.random()-.5)*30-3; }
@@ -389,28 +411,33 @@ function start(){
     ch.armL.fore.rotation.x=-0.5+Math.sin(t*10)*0.4; ch.armR.fore.rotation.x=-0.5+Math.cos(t*10)*0.4; legsSit(ch); }
   function poseWave(ch,t){ ch.bodyG.position.y=Math.abs(Math.sin(t*4))*0.025; ch.bodyG.rotation.set(0,0,Math.sin(t*3)*0.035);
     ch.legL.hip.rotation.set(0,0,0); ch.legR.hip.rotation.set(0,0,0); ch.legL.knee.rotation.x=0; ch.legR.knee.rotation.x=0;
-    ch.armL.g.rotation.set(-1.55+Math.sin(t*7)*0.34,0,0.5); ch.armL.fore.rotation.x=-0.55+Math.sin(t*8)*0.22;
+    ch.armL.g.rotation.set(-1.78,Math.sin(t*7)*0.18,0.58+Math.sin(t*7)*0.38); ch.armL.fore.rotation.x=-0.5;
     ch.armR.g.rotation.set(0.08,0,-0.08); ch.armR.fore.rotation.x=0.16; }
-  /* stylist: dances with the customer, waving only the left hand */
+  function poseServe(ch,ph,t){ var sw=Math.sin(ph)*0.22; ch.bodyG.position.y=Math.abs(Math.sin(ph))*0.025; ch.bodyG.rotation.set(0,0,Math.sin(t*2.5)*0.018);
+    ch.legL.hip.rotation.set(sw,0,0); ch.legR.hip.rotation.set(-sw,0,0); ch.legL.knee.rotation.x=Math.max(0,-sw)*0.35; ch.legR.knee.rotation.x=Math.max(0,sw)*0.35;
+    ch.armL.g.rotation.set(-0.92,0,0.24); ch.armL.fore.rotation.x=-1.28;
+    ch.armR.g.rotation.set(-0.92,0,-0.24); ch.armR.fore.rotation.x=-1.28; }
+  /* retained for compatibility; stylists now stand still while the customer celebrates */
   function poseStylistDance(ch,t){ ch.bodyG.position.y=Math.abs(Math.sin(t*7))*0.035; ch.bodyG.rotation.set(0,0,Math.sin(t*5)*0.05);
     ch.legL.hip.rotation.set(0,0,0); ch.legR.hip.rotation.set(0,0,0); ch.legL.knee.rotation.x=0; ch.legR.knee.rotation.x=0;
     ch.armL.g.rotation.set(-1.75+Math.sin(t*10)*0.65,0,0.55+Math.abs(Math.sin(t*9))*0.22); ch.armL.fore.rotation.x=-0.55+Math.sin(t*12)*0.42;
     ch.armR.g.rotation.set(0.08,0,-0.08); ch.armR.fore.rotation.x=0.18; }
-  function setPose(ch,st,ph,t){ if(ch.scissors) ch.scissors.visible=(st==='cut');
-    if(st==='walk')poseWalk(ch,ph); else if(st==='sit')poseSit(ch); else if(st==='cut')poseCut(ch,t); else if(st==='cheer')poseCheer(ch,t); else if(st==='wave')poseWave(ch,t); else if(st==='dance')poseStylistDance(ch,t); else poseStand(ch); }
+  function setPose(ch,st,ph,t){ if(ch.scissors) ch.scissors.visible=(st==='cut'); if(ch.tray) ch.tray.visible=(st==='serve');
+    if(st==='walk')poseWalk(ch,ph); else if(st==='sit')poseSit(ch); else if(st==='cut')poseCut(ch,t); else if(st==='cheer')poseCheer(ch,t); else if(st==='wave')poseWave(ch,t); else if(st==='serve')poseServe(ch,ph,t); else if(st==='dance')poseStand(ch); else poseStand(ch); }
 
   var mode='scroll', gated=false;
   var choice={haircut:null,service:null,fromPrice:0,price:0,priceTier:1,dayIdx:null,dayLabel:null,time:null,stylist:null};
   var cust={x:0,y:0,z:5.8,facing:Math.PI,state:'stand'};
   var sty={x:-2.0,y:0,z:4.5,facing:Math.PI,state:'stand'};
   var activeStylist=null;
-  var DESK_GUEST={x:2.35,z:0.95,facing:0.78}, DESK_STAFF={x:3.2,z:-0.48,facing:Math.PI};
+  var DESK_GUEST={x:2.35,z:0.95,facing:0.78}, DESK_STAFF={x:3.2,z:-0.48,facing:0};
   var deskMoving=false, deskReady=false, deskCallbacks=[];
   var bookCam={tx:0,ty:1.4,tz:0.4,zoom:1.15,frontMix:0.5,rightShift:0.0};
 
   function setActiveStylist(ch){ activeStylist=ch; [eduard,elena].forEach(function(s){ s.group.visible=(s===ch); }); }
   function flushDeskCallbacks(){ var cbs=deskCallbacks.splice(0); cbs.forEach(function(cb){ cb(); }); }
-  function showDeskEduard(){ setActiveStylist(eduard); sty.x=DESK_STAFF.x; sty.y=0; sty.z=DESK_STAFF.z; sty.facing=DESK_STAFF.facing; sty.state='wave'; }
+  function faceToward(x,z,tx,tz){ return Math.atan2(tx-x,tz-z); }
+  function showDeskEduard(){ setActiveStylist(eduard); sty.x=DESK_STAFF.x; sty.y=0; sty.z=DESK_STAFF.z; sty.facing=faceToward(DESK_STAFF.x,DESK_STAFF.z,DESK_GUEST.x,DESK_GUEST.z); sty.state='wave'; }
   function arriveAtDesk(done){
     if(done) deskCallbacks.push(done);
     showDeskEduard();
@@ -532,21 +559,24 @@ function start(){
 
   function stylistArriveAndCut(done){
     var selected=(choice.stylist==='Eduard')?eduard:elena; setActiveStylist(selected);
-    if(choice.stylist==='Eduard'){ sty.x=DESK_STAFF.x; sty.z=DESK_STAFF.z; sty.facing=DESK_STAFF.facing; }
+    if(choice.stylist==='Eduard'){ sty.x=DESK_STAFF.x; sty.z=DESK_STAFF.z; sty.facing=faceToward(DESK_STAFF.x,DESK_STAFF.z,0,-4.0); }
     else { sty.x=2.2; sty.z=4.6; sty.facing=Math.PI; }
-    sty.y=0; sty.state='walk';
+    sty.y=0; sty.state='serve';
     gsap.to(bookCam,{zoom:2.35,rightShift:0.22,tz:-3.7,ty:1.62,frontMix:1,duration:0.9,ease:'power2.inOut'});
     var tx=1.15, tz=-4.2;
     gsap.to(sty,{x:tx,z:tz,duration:1.8,ease:'power1.inOut',onComplete:function(){
-      sty.facing=Math.atan2(0-tx,-4.0-tz); sty.state='cut';
-      gsap.delayedCall(3.6,function(){ sty.state='dance'; cust.state='cheer'; done(); }); }});
+      sty.facing=faceToward(tx,tz,0,-4.0); sty.state='serve';
+      gsap.delayedCall(1.05,function(){
+        sty.state='cut';
+        gsap.delayedCall(3.2,function(){ sty.state='stand'; cust.state='cheer'; done(); });
+      }); }});
   }
   function suspenseReveal(done){
-    gsap.to(sty,{x:0.8,z:-2.9,facing:Math.atan2(0-0.8,-4.0+2.9),duration:0.9,ease:'power2.inOut'});
+    gsap.to(sty,{x:0.8,z:-2.9,facing:faceToward(0.8,-2.9,0,-4.0),duration:0.9,ease:'power2.inOut'});
     gsap.to(bookCam,{tx:0.05,ty:1.62,tz:-3.95,zoom:2.7,frontMix:1,rightShift:0.08,duration:0.9,ease:'power2.inOut'});
     gsap.delayedCall(2.6,function(){
       setHair('S_fade');  /* after confirming: a short haircut */
-      gsap.to(sty,{x:-1.45,z:-3.5,facing:0.55,duration:0.8,ease:'power2.inOut',onComplete:function(){ sty.state='dance'; }});
+      gsap.to(sty,{x:-1.45,z:-3.5,facing:0.55,duration:0.8,ease:'power2.inOut',onComplete:function(){ sty.state='stand'; }});
       cust.state='cheer';  /* customer stays seated, only waves arms */
       gsap.to(bookCam,{tx:0.1,ty:1.5,tz:-4.0,zoom:2.1,frontMix:1,rightShift:0.3,duration:1.0,ease:'power2.inOut',onComplete:done});
     });

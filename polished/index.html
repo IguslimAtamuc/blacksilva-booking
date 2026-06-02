@@ -129,9 +129,54 @@
   .svc-name{ display:block; font-family:var(--display); font-weight:600; font-size:23px; line-height:1.04; color:var(--ink); }
   .svc-price{ display:block; margin-top:7px; font-size:12px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:#55555d; }
   .addons{ margin-top:14px; display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-  .addon{ position:relative; padding:13px 12px; border-radius:13px; border:1px solid rgba(0,0,0,.12); background:rgba(255,255,255,.55); color:var(--ink); font-weight:600; font-size:13.5px; cursor:pointer; transition:.16s; text-align:center; }
+  .addon{ position:relative; padding:13px 12px; border-radius:13px; border:1px solid rgba(0,0,0,.12); background:rgba(255,255,255,.55); color:var(--ink); font-weight:600; font-size:13.5px; cursor:pointer; transition:.16s; text-align:center; display:flex; flex-direction:column; align-items:center; gap:4px; }
   .addon:hover,.addon:active{ border-color:var(--ink); transform:translateY(-2px); }
   .addon.on{ background:var(--ink); color:#fff; border-color:var(--ink); }
+  .addon .an{ display:block; }
+  .addon .ap{ display:block; font-size:11px; font-weight:800; letter-spacing:.06em; color:#6b6b73; }
+  .addon.on .ap{ color:#cfcfd6; }
+  .cal-nav{ margin-top:14px; display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .cal-arrow{ width:36px; height:36px; border-radius:50%; border:1px solid rgba(0,0,0,.14); background:rgba(255,255,255,.6); color:var(--ink); font-size:20px; line-height:1; cursor:pointer; padding:0 2px 2px 0; }
+  .cal-arrow:hover,.cal-arrow:active{ border-color:var(--ink); }
+  .cal-arrow.off{ opacity:.25; pointer-events:none; }
+  .cal-title{ font-family:var(--display); font-size:21px; font-weight:600; letter-spacing:.02em; color:var(--ink); }
+  .cal-dow{ display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin-top:8px; padding:0 2px; }
+  .cal-dow i{ font-style:normal; text-align:center; font-size:10px; letter-spacing:.14em; color:#8a8a93; text-transform:uppercase; }
+  .cal-days{ display:grid; grid-template-columns:repeat(7,1fr); gap:6px; padding:6px 0 4px; }
+  .chip.blank{ background:transparent; border-color:transparent; cursor:default; pointer-events:none; }
+  .qm-h{ margin-top:18px; font-size:11px; letter-spacing:.24em; text-transform:uppercase; color:#7d7d84; }
+  .qmenu{ margin-top:10px; padding:12px 12px 8px; border-radius:16px; border:1px solid rgba(0,0,0,.1); background:rgba(255,255,255,.5); }
+  .qrow{ margin-bottom:10px; }
+  .qrow label{ display:block; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:#80808a; margin-bottom:4px; }
+  .qrow input,.qrow select{ width:100%; padding:11px 12px; border-radius:11px; border:1px solid rgba(0,0,0,.14); background:rgba(255,255,255,.85); font-size:14px; color:var(--ink); outline:none; font-family:inherit; -webkit-appearance:none; appearance:none; }
+  .qrow select{ background-image:linear-gradient(45deg,transparent 50%,var(--ink) 50%),linear-gradient(135deg,var(--ink) 50%,transparent 50%); background-position:calc(100% - 17px) 17px,calc(100% - 12px) 17px; background-size:5px 5px,5px 5px; background-repeat:no-repeat; padding-right:34px; }
+  .qrow input:focus,.qrow select:focus{ border-color:var(--ink); }
+  .qpick{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .qopt{ padding:11px; border-radius:11px; border:1px solid rgba(0,0,0,.14); background:rgba(255,255,255,.85); font-weight:700; font-size:13.5px; cursor:pointer; color:var(--ink); transition:.16s; }
+  .qopt:hover,.qopt:active{ border-color:var(--ink); }
+  .qopt.on{ background:var(--ink); color:#fff; border-color:var(--ink); }
+  .confirm-btn{ display:flex; align-items:center; justify-content:center; gap:12px; width:100%; margin-top:18px; padding:15px 18px; border-radius:16px; border:none; background:var(--ink); color:#fff; font-weight:700; font-size:14px; letter-spacing:.04em; cursor:pointer; font-family:inherit; transition:.16s; }
+  .confirm-btn:hover,.confirm-btn:active{ transform:translateY(-2px); box-shadow:0 14px 28px rgba(0,0,0,.22); }
+  .cbcircle{ width:30px; height:30px; border-radius:50%; border:1.6px solid #fff; display:inline-flex; align-items:center; justify-content:center; flex:0 0 auto; }
+  .cbcircle svg{ width:16px; height:16px; }
+  .paylist{ margin-top:14px; display:flex; flex-direction:column; gap:10px; }
+  .payopt{ display:flex; align-items:center; gap:14px; padding:14px 16px; border-radius:15px; border:1px solid rgba(0,0,0,.12); background:rgba(255,255,255,.6); cursor:pointer; color:var(--ink); transition:.16s; text-align:left; font-family:inherit; }
+  .payopt:hover,.payopt:active{ border-color:var(--ink); transform:translateY(-2px); box-shadow:0 12px 26px rgba(0,0,0,.14); }
+  .payicon{ width:42px; height:42px; border-radius:11px; flex:0 0 auto; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:12px; letter-spacing:.04em; color:#fff; }
+  .payicon.card{ background:linear-gradient(135deg,#1f2329,#3b3f47); }
+  .payicon.card::before{ content:"CARD"; }
+  .payicon.mobile{ background:#5a78ff; }
+  .payicon.mobile::before{ content:"MP"; }
+  .payicon.apple{ background:#111; }
+  .payicon.apple::before{ content:""; font-size:18px; }
+  .payicon.google{ background:#fff; color:#5f6368; border:1px solid rgba(0,0,0,.08); }
+  .payicon.google::before{ content:"G"; font-family:'Cormorant Garamond',serif; font-size:22px; font-weight:700; background:linear-gradient(135deg,#4285f4 0,#34a853 40%,#fbbc04 70%,#ea4335 100%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+  .payicon.cash{ background:linear-gradient(135deg,#2fa869,#1f7a4a); }
+  .payicon.cash::before{ content:"DKK"; font-size:10.5px; }
+  .paytxt{ flex:1; display:flex; flex-direction:column; gap:2px; }
+  .paytxt b{ font-family:var(--display); font-weight:600; font-size:18px; line-height:1.05; }
+  .paytxt small{ font-size:11.5px; color:#6f6f77; }
+  .paychev{ font-size:22px; color:#8a8a93; flex:0 0 auto; }
   .grab{ display:none; }
   @media(max-width:760px){
     .grab{ display:block; width:44px; height:5px; border-radius:3px; background:rgba(0,0,0,.2); margin:0 auto 12px; touch-action:none; }
@@ -140,8 +185,10 @@
     .cutgrid{ grid-template-columns:1fr 1fr; gap:10px; }
     .cutcard{ min-height:208px; padding:10px; }
     .cutcopy b{ font-size:20px; }
-    .cal-days{ grid-template-columns:repeat(4,minmax(0,1fr)); gap:7px; }
-    .chip small{ font-size:8px; letter-spacing:0; }
+    .cal-days{ grid-template-columns:repeat(7,minmax(0,1fr)); gap:5px; }
+    .chip{ min-height:48px; padding:4px 2px; } .chip b{ font-size:18px; }
+    .chip small{ font-size:8px; letter-spacing:0; display:none; }
+    .cal-title{ font-size:18px; }
     .times{ grid-template-columns:repeat(2,1fr); }
     .modal,#m-login{ align-items:flex-end; justify-content:center; padding:0; } .mcard{ width:100%; border-radius:24px 24px 0 0; padding:26px 20px calc(26px + env(safe-area-inset-bottom)); }
   }
@@ -179,6 +226,7 @@
   <div class="sheet" id="m-calendar"></div>
   <div class="sheet" id="m-stylist"></div>
   <div class="sheet" id="m-confirm"></div>
+  <div class="sheet" id="m-pay"></div>
   <div class="sheet" id="m-done"></div>
 </div>
 <button id="restart-top" onclick="location.reload()">&#8634; Restart</button>
@@ -447,7 +495,7 @@ function start(){
     if(st==='walk')poseWalk(ch,ph); else if(st==='sit')poseSit(ch); else if(st==='cut')poseCut(ch,t); else if(st==='cheer')poseCheer(ch,t); else if(st==='wave')poseWave(ch,t); else if(st==='serve')poseServe(ch); else if(st==='dance')poseStand(ch); else poseStand(ch); }
 
   var mode='scroll', gated=false;
-  var choice={haircut:null,service:null,fromPrice:0,price:0,priceTier:1,dayIdx:null,dayLabel:null,time:null,stylist:null,addons:[]};
+  var choice={haircut:null,service:null,fromPrice:0,price:0,priceTier:1,dayIdx:null,dayLabel:null,time:null,stylist:null,addons:[],email:'',name:'',payment:null};
   var cust={x:0,y:0,z:5.8,facing:Math.PI,state:'stand'};
   var sty={x:-2.0,y:0,z:4.5,facing:Math.PI,state:'stand'};
   var activeStylist=null;
@@ -507,7 +555,7 @@ function start(){
     if(p>0.72 && !gated) gateLogin();
   }
 
-  function showStep(name){ ['m-login','m-length','m-calendar','m-stylist','m-confirm','m-done'].forEach(function(id){ var el=document.getElementById(id); if(!el) return; if(id===('m-'+name)){ el.classList.add('on'); el.classList.remove('min'); el.style.transform=''; } else el.classList.remove('on'); }); }
+  function showStep(name){ ['m-login','m-length','m-calendar','m-stylist','m-confirm','m-pay','m-done'].forEach(function(id){ var el=document.getElementById(id); if(!el) return; if(id===('m-'+name)){ el.classList.add('on'); el.classList.remove('min'); el.style.transform=''; } else el.classList.remove('on'); }); }
   function dots(n){ var s='<div class="step-dots">'; for(var i=1;i<=4;i++) s+='<i class="'+(i<=n?'a':'')+'"></i>'; return s+'</div>'; }
   function grab(){ return '<div class="grab"></div>'; }
   function backBtn(target){ return '<button class="back" onclick="BS.back(\''+target+'\')" aria-label="Back">‹</button>'; }
@@ -535,6 +583,9 @@ function start(){
 
   var CUTS={ lady:{label:"Lady's Haircut",from:500}, gentleman:{label:"Gentleman's Haircut",from:375} };
   var SERVICE_ADDONS={ gentleman:['Beard Trim','Hair Wash','Eyebrows'], lady:['Styling','Hair Treatment','Eyebrows'] };
+  var ADDON_PRICE=125;
+  function addonsTotal(){ return choice.addons.length*ADDON_PRICE; }
+  function grandTotal(){ return choice.price+addonsTotal(); }
   var PRICE_STEPS=[500,450,400,375];
   var DAY_NAMES=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   var MONTH_NAMES=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -558,7 +609,7 @@ function start(){
     var h=grab()+backBtn('chooser')+dots(1)+'<p class="bk">Step 1 · '+c.label+'</p><h3 class="serif">Add to your visit</h3>';
     h+='<div class="svc"><img src="'+CUT_IMAGES[type]+'" alt="'+c.label+'"><div><b class="svc-name serif">'+c.label+'</b><span class="svc-price">from '+c.from+'DKK</span></div></div>';
     h+='<p class="bsub">Optional extras — tap any you would like to add.</p><div class="addons">';
-    SERVICE_ADDONS[type].forEach(function(name){ var on=choice.addons.indexOf(name)>=0; h+='<button class="addon'+(on?' on':'')+'" onclick="BS.toggleAddon(this,\''+name+'\')">'+name+'</button>'; });
+    SERVICE_ADDONS[type].forEach(function(name){ var on=choice.addons.indexOf(name)>=0; h+='<button class="addon'+(on?' on':'')+'" onclick="BS.toggleAddon(this,\''+name+'\')"><span class="an">'+name+'</span><span class="ap">+'+ADDON_PRICE+' DKK</span></button>'; });
     h+='</div><button class="cont go" onclick="BS.afterLength()">Continue</button>';
     document.getElementById('m-length').innerHTML=h; }
   function refreshCalendarPrice(){
@@ -567,27 +618,85 @@ function start(){
     var tier=document.getElementById('slot-tier'); if(tier) tier.textContent=tierLabel(choice.priceTier);
     document.querySelectorAll('.slot-price').forEach(function(el){ el.textContent=money(choice.price); });
   }
-  function buildCalendar(){ var today=startDay(new Date()), end=bookingEndDate(today);
+  var FULL_MONTH_NAMES=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var calMonthOffset=0;
+  function renderCalendarDays(){
+    var today=startDay(new Date()), end=bookingEndDate(today);
+    var view=new Date(today.getFullYear(),today.getMonth()+calMonthOffset,1);
+    var monthLast=new Date(view.getFullYear(),view.getMonth()+1,0);
+    var title=document.getElementById('cal-title'); if(title) title.textContent=FULL_MONTH_NAMES[view.getMonth()]+' '+view.getFullYear();
+    var prev=document.getElementById('cal-prev'), next=document.getElementById('cal-next');
+    if(prev) prev.classList.toggle('off', calMonthOffset<=0);
+    if(next) next.classList.toggle('off', view.getMonth()===end.getMonth() && view.getFullYear()===end.getFullYear());
+    var grid=document.getElementById('cal-grid'); if(!grid) return;
+    var html='', firstDow=view.getDay();
+    for(var p=0;p<firstDow;p++) html+='<div class="chip blank"></div>';
+    for(var day=1; day<=monthLast.getDate(); day++){
+      var d=new Date(view.getFullYear(),view.getMonth(),day);
+      var idx=Math.round((d-today)/86400000);
+      var dis=(d<today || d>end), on=(idx===choice.dayIdx);
+      var lbl=fullDayLabel(d,idx);
+      html+='<div class="chip'+(dis?' blank':'')+(on?' on':'')+'" id="day-'+idx+'"'+(dis?'':' onclick="BS.pickDay('+idx+',\''+lbl+'\')"')+'><small>'+DAY_NAMES[d.getDay()].slice(0,3)+'</small><b>'+day+'</b></div>';
+    }
+    grid.innerHTML=html;
+  }
+  function buildCalendar(){ var today=startDay(new Date());
     choice.dayIdx=0; choice.dayLabel=fullDayLabel(today,0); choice.time=null; choice.price=priceForDay(0); choice.priceTier=1;
+    calMonthOffset=0;
     var h=grab()+backBtn('addons')+dots(2)+'<p class="bk">Step 2 · Date &amp; time</p><h3 class="serif">Pick a slot</h3>';
     h+='<div class="pricebar"><span id="slot-tier">Week 1 price</span><b id="slot-price">'+money(choice.price)+'</b></div>';
-    h+='<p class="bsub">Booking is open for two months ahead — book a month early and the price stays at its best 375 DKK.</p><div class="cal-days">';
-    for(var i=0,d=today; d<=end; i++,d=addDays(today,i)){ var chip=fullDayLabel(d,i), small=DAY_NAMES[d.getDay()]; h+='<div class="chip '+(i===0?'on':'')+'" id="day-'+i+'" onclick="BS.pickDay('+i+',\''+chip+'\')"><small>'+small+'</small><b>'+d.getDate()+'</b></div>'; }
-    h+='</div><div class="times">';
+    h+='<p class="bsub">Booking is open for two months ahead — book a month early and the price stays at its best 375 DKK.</p>';
+    h+='<div class="cal-nav"><button class="cal-arrow" id="cal-prev" onclick="BS.calMonth(-1)" aria-label="Previous month">‹</button><b class="cal-title" id="cal-title"></b><button class="cal-arrow" id="cal-next" onclick="BS.calMonth(1)" aria-label="Next month">›</button></div>';
+    h+='<div class="cal-dow"><i>Sun</i><i>Mon</i><i>Tue</i><i>Wed</i><i>Thu</i><i>Fri</i><i>Sat</i></div>';
+    h+='<div class="cal-days" id="cal-grid"></div><div class="times">';
     ['10:00','11:30','13:00','14:30','16:00','17:30','19:00','20:00'].forEach(function(tm){ h+='<div class="tslot" id="t-'+tm.replace(':','')+'" onclick="BS.pickTime(\''+tm+'\')"><span>'+tm+'</span><small class="slot-price">'+money(choice.price)+'</small></div>'; });
     h+='</div><button class="cont" id="cal-cont" onclick="BS.afterCalendar()">Continue</button>';
-    document.getElementById('m-calendar').innerHTML=h; }
+    document.getElementById('m-calendar').innerHTML=h; renderCalendarDays(); }
   function buildStylist(){ var h=grab()+backBtn('calendar')+dots(3)+'<p class="bk">Step 3 · Your stylist</p><h3 class="serif">Who cuts your hair?</h3><div class="scards">';
     h+='<div class="scard eduard" onclick="BS.stylist(\'Eduard\')"><div class="av"></div><b class="serif">Eduard</b><span>Men&#39;s grooming</span></div>';
     h+='<div class="scard elena" onclick="BS.stylist(\'Elena\')"><div class="av"></div><b class="serif">Elena</b><span>Women&#39;s styling</span></div></div>';
     document.getElementById('m-stylist').innerHTML=h; }
-  function buildConfirm(){ var h=grab()+dots(4)+'<p class="bk">Step 4 · Review</p><h3 class="serif">Confirm booking</h3>';
-    h+='<div class="summary">Stylist&nbsp;&nbsp;<b>'+choice.stylist+'</b><br>Haircut&nbsp;&nbsp;'+choice.service+'<br>Extras&nbsp;&nbsp;'+addonText()+'<br>When&nbsp;&nbsp;'+choice.dayLabel+' · '+choice.time+'<br><span class="tot">Total&nbsp;&nbsp;'+money(choice.price)+'</span></div>';
-    h+='<button class="opt primary" style="justify-content:center" onclick="BS.confirm()"><b>Confirm booking</b></button>';
-    document.getElementById('m-confirm').innerHTML=h; }
+  var TIME_SLOTS=['10:00','11:30','13:00','14:30','16:00','17:30','19:00','20:00'];
+  function loggedInEmail(){ var em=document.getElementById('i-email'); return (em&&em.value)?em.value.trim():''; }
+  function loggedInName(){ var nm=document.getElementById('i-name'); return (nm&&nm.value)?nm.value.trim():''; }
+  function totalLine(){ var addons=addonsTotal(); return addons>0 ? money(choice.price)+' + '+money(addons)+' = '+money(grandTotal()) : money(grandTotal()); }
+  function buildConfirm(){
+    if(!choice.email) choice.email=loggedInEmail();
+    if(!choice.name)  choice.name=loggedInName();
+    var h=grab()+dots(4)+'<p class="bk">Step 4 · Review</p><h3 class="serif">Confirm booking</h3>';
+    h+='<div class="summary">Haircut&nbsp;&nbsp;<b>'+choice.service+'</b><br>Extras&nbsp;&nbsp;'+addonText()+'<br>When&nbsp;&nbsp;'+choice.dayLabel+' · '+choice.time+'<br>Stylist&nbsp;&nbsp;'+choice.stylist+'<br><span class="tot">Total&nbsp;&nbsp;'+totalLine()+'</span></div>';
+    h+='<p class="qm-h">Quick changes</p><div class="qmenu">';
+    h+=' <div class="qrow"><label>Email</label><input id="qm-email" type="email" value="'+(choice.email||'')+'" placeholder="you@email.com"></div>';
+    h+=' <div class="qrow"><label>Name (for this visit)</label><input id="qm-name" type="text" value="'+(choice.name||'')+'" placeholder="Your name"></div>';
+    h+=' <div class="qrow"><label>Time</label><select id="qm-time">';
+    TIME_SLOTS.forEach(function(t){ h+='<option value="'+t+'"'+(t===choice.time?' selected':'')+'>'+t+'</option>'; });
+    h+=' </select></div>';
+    h+=' <div class="qrow"><label>Stylist</label><div class="qpick"><button class="qopt'+(choice.stylist==='Eduard'?' on':'')+'" onclick="BS.pickStylist(\'Eduard\')">Eduard</button><button class="qopt'+(choice.stylist==='Elena'?' on':'')+'" onclick="BS.pickStylist(\'Elena\')">Elena</button></div></div>';
+    h+='</div>';
+    h+='<button class="confirm-btn" onclick="BS.confirm()"><span class="cbcircle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span><span>Confirm booking</span></button>';
+    document.getElementById('m-confirm').innerHTML=h;
+    var qe=document.getElementById('qm-email'); if(qe) qe.addEventListener('input',function(){ choice.email=qe.value.trim(); });
+    var qn=document.getElementById('qm-name'); if(qn) qn.addEventListener('input',function(){ choice.name=qn.value.trim(); });
+    var qt=document.getElementById('qm-time'); if(qt) qt.addEventListener('change',function(){ choice.time=qt.value; });
+  }
+  var PAY_METHODS=[
+    {k:'card',  label:'Card', sub:'Visa · Mastercard · Amex'},
+    {k:'mobile',label:'MobilePay', sub:'Quick payment'},
+    {k:'apple', label:'Apple Pay', sub:'Face ID or Touch ID'},
+    {k:'google',label:'Google Pay', sub:'Saved cards'},
+    {k:'cash',  label:'Pay in the salon', sub:'Cash or card on arrival'}
+  ];
+  function buildPay(){
+    var h=grab()+backBtn('confirm')+'<p class="bk">Payment</p><h3 class="serif">How would you like to pay?</h3>';
+    h+='<p class="bsub">Total <b>'+money(grandTotal())+'</b> · '+choice.service+(choice.addons.length?' + '+choice.addons.length+' extra'+(choice.addons.length>1?'s':''):'')+'</p>';
+    h+='<div class="paylist">';
+    PAY_METHODS.forEach(function(p){ h+='<button class="payopt" onclick="BS.pay(\''+p.k+'\')"><span class="payicon '+p.k+'"></span><span class="paytxt"><b>'+p.label+'</b><small>'+p.sub+'</small></span><span class="paychev">›</span></button>'; });
+    h+='</div>';
+    document.getElementById('m-pay').innerHTML=h;
+  }
   function buildDone(){ var h='<div class="check"><svg viewBox="0 0 24 24" fill="none" stroke="#2fd27e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>';
     h+='<h3 class="serif">Booking confirmed</h3><p class="bsub">A fresh new look! Please check your email for your confirmation and calendar invite.</p>';
-    h+='<div class="summary">'+choice.stylist+' · '+choice.service+(choice.addons.length?' + '+addonText():'')+'<br>'+choice.dayLabel+' · '+choice.time+'<br><span class="tot">'+money(choice.price)+'</span></div>';
+    h+='<div class="summary">'+choice.stylist+' · '+choice.service+(choice.addons.length?' + '+addonText():'')+'<br>'+choice.dayLabel+' · '+choice.time+'<br><span class="tot">'+money(grandTotal())+'</span></div>';
     h+='<button class="restart" onclick="location.reload()">Book again</button>';
     document.getElementById('m-done').innerHTML=h; }
 
@@ -627,11 +736,14 @@ function start(){
     length:function(g,l){ BS.haircut(g==='women'?'lady':'gentleman'); },
     pickDay:function(i,label){ choice.dayIdx=i; choice.dayLabel=label; document.querySelectorAll('.chip').forEach(function(el){ el.classList.toggle('on',el.id===('day-'+i)); }); refreshCalendarPrice(); BS._cc(); },
     pickTime:function(tm){ choice.time=tm; document.querySelectorAll('.tslot').forEach(function(e){ e.classList.remove('on'); }); var el=document.getElementById('t-'+tm.replace(':','')); if(el) el.classList.add('on'); BS._cc(); },
+    calMonth:function(dir){ calMonthOffset=Math.max(0,Math.min(2,calMonthOffset+dir)); renderCalendarDays(); },
     _cc:function(){ var c=document.getElementById('cal-cont'); if(c) c.classList.toggle('go', !!(choice.dayIdx!==null&&choice.time)); },
     afterCalendar:function(){ if(!(choice.dayIdx!==null&&choice.time)) return; buildStylist(); showStep('stylist'); },
     stylist:function(who){ choice.stylist=who; setActiveStylist(who==='Eduard'?eduard:null); showStep('');
       seatCustomer(function(){ stylistArriveAndCut(function(){ buildConfirm(); showStep('confirm'); }); }); },
-    confirm:function(){ showStep(''); suspenseReveal(function(){ buildDone(); showStep('done'); }); }
+    pickStylist:function(who){ choice.stylist=who; setActiveStylist(who==='Eduard'?eduard:elena); document.querySelectorAll('.qopt').forEach(function(el){ el.classList.toggle('on', el.textContent===who); }); },
+    confirm:function(){ buildPay(); showStep('pay'); },
+    pay:function(method){ choice.payment=method; showStep(''); suspenseReveal(function(){ buildDone(); showStep('done'); }); }
   };
 
   /* mobile: drag the grabber to pull a sheet down (minimise) or back up; a tap toggles it */

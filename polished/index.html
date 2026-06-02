@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 <title>Black Silva Hairdresser</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='26' fill='%2316161a'/%3E%3Ccircle cx='24' cy='22' r='6' fill='%23d7d9de'/%3E%3C/svg%3E" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -59,13 +60,28 @@
   .step-dots{ display:flex; gap:6px; margin-bottom:14px; }
   .step-dots i{ width:18px; height:3px; border-radius:3px; background:rgba(0,0,0,.14); }
   .step-dots i.a{ background:var(--ink); }
-  .lenwrap{ margin-top:16px; display:grid; grid-template-columns:1fr 1fr; gap:16px; }
-  .lencol .ch{ display:flex; align-items:center; gap:8px; font-size:11px; letter-spacing:.2em; text-transform:uppercase; margin-bottom:9px; color:#5b5b62; }
-  .ch .sw{ width:10px; height:10px; border-radius:50%; } .women .sw{ background:var(--pink); } .men .sw{ background:#6b6f76; }
-  .hcard{ width:100%; text-align:left; background:#0c0c10; border:1px solid rgba(0,0,0,.12); border-radius:14px; overflow:hidden; cursor:pointer; margin-bottom:11px; transition:.16s; color:#fff; display:block; }
-  .hcard:hover,.hcard:active{ transform:translateY(-2px); box-shadow:0 12px 30px rgba(0,0,0,.25); }
-  .hcard img{ width:100%; height:108px; object-fit:cover; display:block; background:#000; }
-  .hcard .lab{ padding:8px 11px 10px; } .hcard .lab b{ font-family:var(--display); font-weight:600; font-size:18px; } .hcard .lab span{ display:block; font-size:10.5px; color:#9a9aa2; margin-top:1px; }
+  .cutgrid{ margin-top:16px; display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .cutcard{ min-height:184px; text-align:left; display:flex; flex-direction:column; justify-content:space-between; gap:15px;
+    background:rgba(255,255,255,.58); border:1px solid rgba(0,0,0,.1); border-radius:18px; padding:16px; cursor:pointer; color:var(--ink); transition:.16s; }
+  .cutcard:hover,.cutcard:active{ transform:translateY(-3px); border-color:rgba(0,0,0,.32); box-shadow:0 16px 36px rgba(0,0,0,.16); }
+  .cuticon{ width:64px; height:64px; border-radius:18px; display:flex; align-items:center; justify-content:center; background:#0f0f14; color:#fff; }
+  .cuticon svg{ width:42px; height:42px; display:block; }
+  .cutcard.lady .cuticon{ background:linear-gradient(145deg,#15151a,#33212b); color:#ff7ab8; }
+  .cutcard.gentleman .cuticon{ background:linear-gradient(145deg,#15151a,#343941); color:#c8ccd3; }
+  .cutcopy b{ display:block; font-family:var(--display); font-weight:600; font-size:23px; line-height:1.02; color:var(--ink); }
+  .cutcopy .price{ display:block; margin-top:8px; font-size:12px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:#55555d; }
+  .price-info{ margin-top:14px; position:relative; }
+  .price-info summary{ list-style:none; display:inline-flex; align-items:center; gap:8px; border:1px solid rgba(0,0,0,.12);
+    background:rgba(255,255,255,.5); border-radius:999px; padding:9px 12px; cursor:pointer; color:#55555d; font-size:12px; font-weight:700; }
+  .price-info summary::-webkit-details-marker{ display:none; }
+  .price-info summary svg{ width:15px; height:15px; flex:0 0 auto; }
+  .price-pop{ margin-top:9px; padding:14px 15px; border-radius:16px; background:rgba(18,18,22,.94); color:#f7f7f5;
+    box-shadow:0 18px 44px rgba(0,0,0,.22); font-size:12.5px; line-height:1.55; }
+  .price-pop b{ display:block; font-family:var(--display); font-size:20px; font-weight:600; margin-bottom:5px; }
+  .pricebar{ margin-top:13px; padding:13px 14px; border:1px solid rgba(0,0,0,.1); border-radius:16px;
+    background:rgba(255,255,255,.54); display:flex; justify-content:space-between; align-items:center; gap:12px; }
+  .pricebar span{ display:block; font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:#777780; }
+  .pricebar b{ font-size:22px; white-space:nowrap; color:var(--ink); }
   .opt{ width:100%; text-align:left; display:flex; justify-content:space-between; align-items:center; gap:12px;
     background:rgba(255,255,255,.55); border:1px solid rgba(0,0,0,.1); border-radius:15px; padding:15px 17px; margin-top:11px; cursor:pointer; color:var(--ink); transition:.16s; }
   .opt:hover,.opt:active{ border-color:var(--ink); transform:translateY(-2px); }
@@ -84,7 +100,10 @@
   .chip small{ display:block; font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:#80808a; } .chip b{ font-family:var(--display); font-size:22px; display:block; line-height:1.1; }
   .chip.on{ background:var(--ink); color:#fff; } .chip.on small{ color:#c7c7cf; }
   .times{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:14px; }
-  .tslot{ padding:10px 0; text-align:center; border-radius:12px; border:1px solid rgba(0,0,0,.1); background:rgba(255,255,255,.5); cursor:pointer; font-weight:600; font-size:14px; } .tslot.on{ background:var(--ink); color:#fff; }
+  .tslot{ min-height:58px; padding:9px 4px; text-align:center; border-radius:12px; border:1px solid rgba(0,0,0,.1);
+    background:rgba(255,255,255,.5); cursor:pointer; font-weight:700; font-size:14px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; }
+  .tslot small{ font-size:10px; font-weight:800; letter-spacing:.06em; color:#6f6f77; }
+  .tslot.on{ background:var(--ink); color:#fff; } .tslot.on small{ color:#cfcfd6; }
   .cont{ width:100%; margin-top:16px; padding:14px; border-radius:14px; border:none; background:var(--ink); color:#fff; font-weight:700; letter-spacing:.12em; text-transform:uppercase; font-size:12px; cursor:pointer; opacity:.4; pointer-events:none; } .cont.go{ opacity:1; pointer-events:auto; }
   .summary{ margin-top:14px; border-top:1px solid rgba(0,0,0,.12); padding-top:14px; font-size:14px; color:#42424a; line-height:1.95; } .summary .tot{ color:var(--ink); font-weight:700; }
   .modal{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; padding:24px; opacity:0; pointer-events:none; transition:opacity .45s ease; } .modal.on{ opacity:1; pointer-events:auto; }
@@ -107,7 +126,11 @@
   @keyframes slide{0%{transform:translateX(-120%)}100%{transform:translateX(320%)}}
   @media(max-width:760px){
     .sheet{ left:0; right:0; bottom:0; top:auto; width:auto; max-height:62svh; transform:translateY(112%); border-radius:24px 24px 0 0; padding:20px 18px calc(20px + env(safe-area-inset-bottom)); } .sheet.on{ transform:translateY(0); }
-    .hcard img{ height:96px; }
+    .cutgrid{ grid-template-columns:1fr 1fr; gap:10px; }
+    .cutcard{ min-height:166px; padding:14px; }
+    .cuticon{ width:56px; height:56px; border-radius:16px; }
+    .cutcopy b{ font-size:20px; }
+    .times{ grid-template-columns:repeat(2,1fr); }
     .modal{ align-items:flex-end; padding:0; } .mcard{ width:100%; border-radius:24px 24px 0 0; padding:26px 20px calc(26px + env(safe-area-inset-bottom)); }
   }
 </style>
@@ -141,7 +164,6 @@
     <button class="gobtn" id="login-go" onclick="BS.login()">Log in &amp; continue</button>
   </div></div>
   <div class="sheet" id="m-length"></div>
-  <div class="sheet" id="m-service"></div>
   <div class="sheet" id="m-calendar"></div>
   <div class="sheet" id="m-stylist"></div>
   <div class="sheet" id="m-confirm"></div>
@@ -358,7 +380,7 @@ function start(){
   function setPose(ch,st,ph,t){ if(st==='walk')poseWalk(ch,ph); else if(st==='sit')poseSit(ch); else if(st==='cut')poseCut(ch,t); else if(st==='cheer')poseCheer(ch,t); else if(st==='dance')poseStylistDance(ch,t); else poseStand(ch); }
 
   var mode='scroll', gated=false;
-  var choice={length:null,gender:null,service:null,price:0,dayIdx:null,dayLabel:null,time:null,stylist:null};
+  var choice={haircut:null,service:null,fromPrice:0,price:0,priceTier:1,dayIdx:null,dayLabel:null,time:null,stylist:null};
   var cust={x:0,y:0,z:5.8,facing:Math.PI,state:'stand'};
   var sty={x:-2.0,y:0,z:4.5,facing:Math.PI,state:'stand'};
   var activeStylist=null;
@@ -400,8 +422,8 @@ function start(){
     if(p>0.72 && !gated) gateLogin();
   }
 
-  function showStep(name){ ['m-login','m-length','m-service','m-calendar','m-stylist','m-confirm','m-done'].forEach(function(id){ var el=document.getElementById(id); if(!el) return; if(id===('m-'+name)) el.classList.add('on'); else el.classList.remove('on'); }); }
-  function dots(n){ var s='<div class="step-dots">'; for(var i=1;i<=5;i++) s+='<i class="'+(i<=n?'a':'')+'"></i>'; return s+'</div>'; }
+  function showStep(name){ ['m-login','m-length','m-calendar','m-stylist','m-confirm','m-done'].forEach(function(id){ var el=document.getElementById(id); if(!el) return; if(id===('m-'+name)) el.classList.add('on'); else el.classList.remove('on'); }); }
+  function dots(n){ var s='<div class="step-dots">'; for(var i=1;i<=4;i++) s+='<i class="'+(i<=n?'a':'')+'"></i>'; return s+'</div>'; }
 
   function gateLogin(){ if(gated) return; gated=true; mode='flow';
     document.body.style.overflow='hidden'; document.getElementById('restart-top').style.display='block';
@@ -422,35 +444,53 @@ function start(){
     tl.add(function(){ buildLength(); showStep('length'); });
   }
 
-  var LBL={ men:{short:['Short','About 2 cm from the scalp'],medium:['Medium','About 8-10 cm long'],long:['Long','About 15 cm+ long']},
-            women:{short:['Short','Above the jawline'],medium:['Medium','Between chin and shoulders'],long:['Long','Below the shoulders']} };
-  function hcard(g,l){ var b=LBL[g][l]; return '<button class="hcard" onclick="BS.length(\''+g+'\',\''+l+'\')"><img src="'+HAIR[g+'_'+l]+'" alt="'+b[0]+'"><div class="lab"><b>'+b[0]+'</b><span>'+b[1]+'</span></div></button>'; }
-  function buildLength(){ var h=dots(1)+'<p class="bk">Step 1 · Your hair now</p><h3 class="serif">How long is your hair?</h3><p class="bsub">Tap the closest match.</p>';
-    h+='<div class="lenwrap"><div class="lencol women"><div class="ch"><span class="sw"></span>Women</div>'+hcard('women','short')+hcard('women','medium')+hcard('women','long')+'</div>';
-    h+='<div class="lencol men"><div class="ch"><span class="sw"></span>Men</div>'+hcard('men','short')+hcard('men','medium')+hcard('men','long')+'</div></div>';
+  var CUTS={ lady:{label:"Lady's Haircut",from:500}, gentleman:{label:"Gentleman's Haircut",from:375} };
+  var PRICE_STEPS=[500,450,400,375];
+  var DAY_NAMES=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  var MONTH_NAMES=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  function money(v){ return v+' DKK'; }
+  function startDay(d){ return new Date(d.getFullYear(),d.getMonth(),d.getDate()); }
+  function addDays(d,n){ var x=new Date(d); x.setDate(x.getDate()+n); return x; }
+  function bookingEndDate(today){ var e=new Date(today); e.setMonth(e.getMonth()+1); return e; }
+  function priceTier(daysAhead){ if(daysAhead<7) return 0; if(daysAhead<14) return 1; if(daysAhead<21) return 2; return 3; }
+  function priceForDay(daysAhead){ return PRICE_STEPS[priceTier(daysAhead)]; }
+  function fullDayLabel(d,daysAhead){ var lead=daysAhead===0?'Today':(daysAhead===1?'Tomorrow':DAY_NAMES[d.getDay()]); return lead+' '+d.getDate()+' '+MONTH_NAMES[d.getMonth()]; }
+  function cutIcon(type){
+    if(type==='lady') return '<svg viewBox="0 0 64 64" fill="none" aria-hidden="true"><path d="M19 26c0-10 7-17 16-17 8 0 14 6 14 15 0 8-4 14-4 22 0 5 2 8 2 8H19s3-4 3-9c0-7-3-12-3-19Z" fill="currentColor" opacity=".24"/><path d="M24 28c0-8 5-14 12-14s12 6 12 14c0 6-3 11-8 13v6h-8v-6c-5-2-8-7-8-13Z" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M24 28c8 0 14-4 18-11" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M27 52h18" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>';
+    return '<svg viewBox="0 0 64 64" fill="none" aria-hidden="true"><path d="M20 26c0-9 7-16 16-16s16 7 16 16v8c0 10-7 18-16 18s-16-8-16-18v-8Z" fill="currentColor" opacity=".18"/><path d="M22 29c0-9 6-15 14-15s14 6 14 15v6c0 9-6 16-14 16s-14-7-14-16v-6Z" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M24 25c4-6 11-9 21-8" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M29 43c4 3 10 3 14 0" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M25 54h22" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>';
+  }
+  function dynamicInfo(){ return '<details class="price-info"><summary><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 10v6M12 7h.01" stroke-linecap="round"/></svg>Dynamic pricing</summary><div class="price-pop"><b>Hi!</b>Please note that our pricing system is dynamic. What does that mean?<br><br>We offer you the best available price based on factors such as the duration of the haircut, holiday periods, and booking flow.<br><br>Basically, the earlier you book your appointment, the better the price can be!</div></details>'; }
+  function cutCard(type){ var c=CUTS[type]; return '<button class="cutcard '+type+'" onclick="BS.haircut(\''+type+'\')"><span class="cuticon">'+cutIcon(type)+'</span><span class="cutcopy"><b>'+c.label+'</b><span class="price">from '+c.from+'DKK</span></span></button>'; }
+  function buildLength(){ var h=dots(1)+'<p class="bk">Step 1 · Haircut type</p><h3 class="serif">Choose your haircut</h3><p class="bsub">Select the appointment that fits you best.</p>';
+    h+='<div class="cutgrid">'+cutCard('lady')+cutCard('gentleman')+'</div>'+dynamicInfo();
     document.getElementById('m-length').innerHTML=h; }
-  var SERVICES=[['Fade','Tapered, faded sides',300],['Scissors cut','Classic scissor work',400],['Beard trim','Sharp, clean lines',250]];
-  function buildService(){ var h=dots(2)+'<p class="bk">Step 2 · Service</p><h3 class="serif">Choose your service</h3>';
-    SERVICES.forEach(function(s){ h+='<button class="opt" onclick="BS.service(\''+s[0]+'\','+s[2]+')"><span><b>'+s[0]+'</b><div class="d">'+s[1]+'</div></span><span class="pr">'+s[2]+' DKK</span></button>'; });
-    document.getElementById('m-service').innerHTML=h; }
-  function buildCalendar(){ var names=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'], today=new Date();
-    var h=dots(3)+'<p class="bk">Step 3 · Date &amp; time</p><h3 class="serif">Pick a slot</h3><div class="cal-days">';
-    for(var i=1;i<=14;i++){ var d=new Date(today.getTime()+i*86400000); h+='<div class="chip" id="day-'+i+'" onclick="BS.pickDay('+i+',\''+names[d.getDay()]+' '+d.getDate()+'\')"><small>'+names[d.getDay()]+'</small><b>'+d.getDate()+'</b></div>'; }
+  function refreshCalendarPrice(){
+    var idx=choice.dayIdx===null?0:choice.dayIdx; choice.price=priceForDay(idx); choice.priceTier=priceTier(idx)+1;
+    var price=document.getElementById('slot-price'); if(price) price.textContent=money(choice.price);
+    var tier=document.getElementById('slot-tier'); if(tier) tier.textContent='Week '+choice.priceTier+' price';
+    document.querySelectorAll('.slot-price').forEach(function(el){ el.textContent=money(choice.price); });
+  }
+  function buildCalendar(){ var today=startDay(new Date()), end=bookingEndDate(today);
+    choice.dayIdx=0; choice.dayLabel=fullDayLabel(today,0); choice.time=null; choice.price=priceForDay(0); choice.priceTier=1;
+    var h=dots(2)+'<p class="bk">Step 2 · Date &amp; time</p><h3 class="serif">Pick a slot</h3>';
+    h+='<div class="pricebar"><span id="slot-tier">Week 1 price</span><b id="slot-price">'+money(choice.price)+'</b></div>';
+    h+='<p class="bsub">Booking is available from today until the same date next month.</p><div class="cal-days">';
+    for(var i=0,d=today; d<=end; i++,d=addDays(today,i)){ var chip=fullDayLabel(d,i), small=(i===0?'Today':(i===1?'Tomorrow':DAY_NAMES[d.getDay()])); h+='<div class="chip '+(i===0?'on':'')+'" id="day-'+i+'" onclick="BS.pickDay('+i+',\''+chip+'\')"><small>'+small+'</small><b>'+d.getDate()+'</b></div>'; }
     h+='</div><div class="times">';
-    ['10:00','11:30','13:00','14:30','16:00','17:30','19:00','20:00'].forEach(function(tm){ h+='<div class="tslot" id="t-'+tm.replace(':','')+'" onclick="BS.pickTime(\''+tm+'\')">'+tm+'</div>'; });
+    ['10:00','11:30','13:00','14:30','16:00','17:30','19:00','20:00'].forEach(function(tm){ h+='<div class="tslot" id="t-'+tm.replace(':','')+'" onclick="BS.pickTime(\''+tm+'\')"><span>'+tm+'</span><small class="slot-price">'+money(choice.price)+'</small></div>'; });
     h+='</div><button class="cont" id="cal-cont" onclick="BS.afterCalendar()">Continue</button>';
     document.getElementById('m-calendar').innerHTML=h; }
-  function buildStylist(){ var h=dots(4)+'<p class="bk">Step 4 · Your stylist</p><h3 class="serif">Who cuts your hair?</h3><div class="scards">';
+  function buildStylist(){ var h=dots(3)+'<p class="bk">Step 3 · Your stylist</p><h3 class="serif">Who cuts your hair?</h3><div class="scards">';
     h+='<div class="scard eduard" onclick="BS.stylist(\'Eduard\')"><div class="av"></div><b class="serif">Eduard</b><span>Men&#39;s grooming</span></div>';
     h+='<div class="scard elena" onclick="BS.stylist(\'Elena\')"><div class="av"></div><b class="serif">Elena</b><span>Women&#39;s styling</span></div></div>';
     document.getElementById('m-stylist').innerHTML=h; }
-  function buildConfirm(){ var h=dots(5)+'<p class="bk">Step 5 · Review</p><h3 class="serif">Confirm booking</h3>';
-    h+='<div class="summary">Stylist&nbsp;&nbsp;<b>'+choice.stylist+'</b><br>Service&nbsp;&nbsp;'+choice.service+'<br>Hair now&nbsp;&nbsp;'+choice.length+'<br>When&nbsp;&nbsp;'+choice.dayLabel+' · '+choice.time+'<br><span class="tot">Total&nbsp;&nbsp;'+choice.price+' DKK</span></div>';
+  function buildConfirm(){ var h=dots(4)+'<p class="bk">Step 4 · Review</p><h3 class="serif">Confirm booking</h3>';
+    h+='<div class="summary">Stylist&nbsp;&nbsp;<b>'+choice.stylist+'</b><br>Haircut&nbsp;&nbsp;'+choice.service+'<br>When&nbsp;&nbsp;'+choice.dayLabel+' · '+choice.time+'<br><span class="tot">Total&nbsp;&nbsp;'+money(choice.price)+'</span></div>';
     h+='<button class="opt primary" style="justify-content:center" onclick="BS.confirm()"><b>Confirm booking</b></button>';
     document.getElementById('m-confirm').innerHTML=h; }
   function buildDone(){ var h='<div class="check"><svg viewBox="0 0 24 24" fill="none" stroke="#2fd27e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>';
     h+='<h3 class="serif">Booking confirmed</h3><p class="bsub">A fresh new look! Please check your email for your confirmation and calendar invite.</p>';
-    h+='<div class="summary">'+choice.stylist+' · '+choice.service+'<br>'+choice.dayLabel+' · '+choice.time+'<br><span class="tot">'+choice.price+' DKK</span></div>';
+    h+='<div class="summary">'+choice.stylist+' · '+choice.service+'<br>'+choice.dayLabel+' · '+choice.time+'<br><span class="tot">'+money(choice.price)+'</span></div>';
     h+='<button class="restart" onclick="location.reload()">Book again</button>';
     document.getElementById('m-done').innerHTML=h; }
 
@@ -479,12 +519,12 @@ function start(){
     login:function(){ var em=document.getElementById('i-email').value.trim(), pw=document.getElementById('i-pass').value.trim(); var er=document.getElementById('login-err');
       if(em.indexOf('@')<1 || em.length<5){ er.textContent='Please enter a valid email.'; return; } if(pw.length<4){ er.textContent='Password must be at least 4 characters.'; return; }
       er.textContent=''; showStep(''); seatCustomer(); },
-    length:function(g,l){ choice.length=l; choice.gender=g; buildService(); showStep('service'); },
-    service:function(s,p){ choice.service=s; choice.price=p; buildCalendar(); showStep('calendar'); },
-    pickDay:function(i,label){ choice.dayIdx=i; choice.dayLabel=label; for(var j=1;j<=14;j++){ var el=document.getElementById('day-'+j); if(el) el.classList.toggle('on',j===i); } BS._cc(); },
+    haircut:function(type){ var c=CUTS[type]; if(!c) return; choice.haircut=type; choice.service=c.label; choice.fromPrice=c.from; buildCalendar(); showStep('calendar'); },
+    length:function(g,l){ BS.haircut(g==='women'?'lady':'gentleman'); },
+    pickDay:function(i,label){ choice.dayIdx=i; choice.dayLabel=label; document.querySelectorAll('.chip').forEach(function(el){ el.classList.toggle('on',el.id===('day-'+i)); }); refreshCalendarPrice(); BS._cc(); },
     pickTime:function(tm){ choice.time=tm; document.querySelectorAll('.tslot').forEach(function(e){ e.classList.remove('on'); }); var el=document.getElementById('t-'+tm.replace(':','')); if(el) el.classList.add('on'); BS._cc(); },
-    _cc:function(){ var c=document.getElementById('cal-cont'); if(c) c.classList.toggle('go', !!(choice.dayIdx&&choice.time)); },
-    afterCalendar:function(){ if(!(choice.dayIdx&&choice.time)) return; buildStylist(); showStep('stylist'); },
+    _cc:function(){ var c=document.getElementById('cal-cont'); if(c) c.classList.toggle('go', !!(choice.dayIdx!==null&&choice.time)); },
+    afterCalendar:function(){ if(!(choice.dayIdx!==null&&choice.time)) return; buildStylist(); showStep('stylist'); },
     stylist:function(who){ choice.stylist=who; activeStylist=(who==='Eduard')?eduard:elena; showStep('');
       stylistArriveAndCut(function(){ buildConfirm(); showStep('confirm'); }); },
     confirm:function(){ showStep(''); suspenseReveal(function(){ buildDone(); showStep('done'); }); }

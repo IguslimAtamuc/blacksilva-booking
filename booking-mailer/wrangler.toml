@@ -1,0 +1,6 @@
+name = "blacksilva-mailer"
+main = "src/index.js"
+compatibility_date = "2024-11-01"
+
+# The Resend API key is stored as a secret, NOT here:
+#   wrangler secret put RESEND_API_KEY

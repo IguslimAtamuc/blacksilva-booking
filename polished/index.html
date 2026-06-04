@@ -190,6 +190,10 @@
   .ft-err{ margin-top:9px; font-size:12px; color:#ff9a8f; min-height:14px; line-height:1.4; }
   .ft-err b{ color:#ffd0c9; }
   body.flow #scroll{ visibility:hidden; }
+  .mail-status{ margin-top:13px; font-size:12.5px; line-height:1.4; min-height:16px; }
+  .ms-ok{ color:#1f9d57; font-weight:600; } .ms-err{ color:#d83b3b; } .ms-info{ color:#62626a; }
+  .addcal{ margin-top:12px; width:100%; background:#fff; color:#16161a; border:1px solid rgba(0,0,0,.18); padding:14px; border-radius:14px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; font-size:12px; cursor:pointer; transition:.16s; }
+  .addcal:hover,.addcal:active{ border-color:var(--ink); transform:translateY(-2px); }
   .grab{ display:none; }
   @media(max-width:760px){
     .fasttrack{ margin-top:26px; padding:17px 16px 15px; } .fasttrack h3{ font-size:26px; } .fasttrack p{ font-size:12.5px; }
@@ -742,11 +746,48 @@ function start(){
     h+='</div>';
     document.getElementById('m-pay').innerHTML=h;
   }
+  /* ===== Automatic booking email + calendar =====
+     Emails are sent server-side by a Cloudflare Worker that holds the Resend key.
+     Paste your deployed Worker URL below (see booking-mailer/README.md). */
+  var BOOKING_API="";
+  var SALON_LOCATION="Black Silva Hairdresser, Badstuestræde 16, Copenhagen";
+  function pad2(n){ return (n<10?'0':'')+n; }
+  function bookingStart(){ var today=startDay(new Date()); var d=addDays(today, choice.dayIdx||0); var hm=(choice.time||'10:00').split(':'); d.setHours(parseInt(hm[0],10)||10, parseInt(hm[1],10)||0, 0, 0); return d; }
+  function bookingDuration(){ return 45 + (choice.addons.length*25) + (choice.haircut==='lady'?20:0); }
+  function icsStamp(d){ return d.getUTCFullYear()+pad2(d.getUTCMonth()+1)+pad2(d.getUTCDate())+'T'+pad2(d.getUTCHours())+pad2(d.getUTCMinutes())+'00Z'; }
+  function buildICS(){
+    var start=bookingStart(), end=new Date(start.getTime()+bookingDuration()*60000);
+    var esc=function(s){ return String(s||'').replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n'); };
+    var desc='Stylist: '+choice.stylist+'\\nExtras: '+addonText()+'\\nTotal: '+money(grandTotal());
+    return ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Black Silva//Booking//EN','CALSCALE:GREGORIAN',
+      'BEGIN:VEVENT','UID:'+Date.now()+'@blacksilva','DTSTAMP:'+icsStamp(new Date()),
+      'DTSTART:'+icsStamp(start),'DTEND:'+icsStamp(end),
+      'SUMMARY:'+esc((choice.service||'Haircut')+' — Black Silva'),'DESCRIPTION:'+esc(desc),'LOCATION:'+esc(SALON_LOCATION),'STATUS:CONFIRMED',
+      'BEGIN:VALARM','TRIGGER:-PT2H','ACTION:DISPLAY','DESCRIPTION:Black Silva appointment','END:VALARM',
+      'END:VEVENT','END:VCALENDAR'].join('\r\n');
+  }
+  function downloadICS(){ var blob=new Blob([buildICS()],{type:'text/calendar;charset=utf-8'}); var url=URL.createObjectURL(blob);
+    var a=document.createElement('a'); a.href=url; a.download='black-silva-booking.ics'; document.body.appendChild(a); a.click();
+    setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(url); },300); }
+  function bookingPayload(){ return { name:choice.name||'Guest', email:choice.email||'', service:choice.service, addons:choice.addons,
+      stylist:choice.stylist, dateLabel:choice.dayLabel, time:choice.time, startISO:bookingStart().toISOString(),
+      durationMin:bookingDuration(), price:grandTotal(), currency:'DKK', payment:choice.payment, location:SALON_LOCATION }; }
+  function sendBookingEmails(){
+    var st=document.getElementById('mail-status');
+    if(!BOOKING_API){ if(st) st.innerHTML='<span class="ms-info">Tap below to add the appointment to your phone calendar.</span>'; return; }
+    if(st) st.innerHTML='<span class="ms-info">Sending confirmation…</span>';
+    fetch(BOOKING_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(bookingPayload())})
+      .then(function(r){ return r.ok; })
+      .then(function(ok){ if(st) st.innerHTML = ok ? '<span class="ms-ok">✓ Confirmation emailed to you and the salon.</span>' : '<span class="ms-err">Couldn\'t send the email automatically — add it manually below.</span>'; })
+      .catch(function(){ if(st) st.innerHTML='<span class="ms-err">Couldn\'t send the email automatically — add it manually below.</span>'; });
+  }
   function buildDone(){ var h='<div class="check"><svg viewBox="0 0 24 24" fill="none" stroke="#2fd27e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>';
-    h+='<h3 class="serif">Booking confirmed</h3><p class="bsub">A fresh new look! Please check your email for your confirmation and calendar invite.</p>';
+    h+='<h3 class="serif">Booking confirmed</h3><p class="bsub">A fresh new look! A confirmation with a calendar invite is on its way to your email.</p>';
     h+='<div class="summary">'+choice.stylist+' · '+choice.service+(choice.addons.length?' + '+addonText():'')+'<br>'+choice.dayLabel+' · '+choice.time+'<br><span class="tot">'+money(grandTotal())+'</span></div>';
+    h+='<div class="mail-status" id="mail-status"></div>';
+    h+='<button class="addcal" onclick="BS.addCalendar()">＋ Add to my calendar</button>';
     h+='<button class="restart" onclick="location.reload()">Book again</button>';
-    document.getElementById('m-done').innerHTML=h; }
+    document.getElementById('m-done').innerHTML=h; sendBookingEmails(); }
 
   function stylistArriveAndCut(done){
     var selected=(choice.stylist==='Eduard')?eduard:elena; setActiveStylist(selected);
@@ -799,7 +840,8 @@ function start(){
     confirm:function(){ var em=document.getElementById('i-email'); if(em && choice.email) em.value=choice.email;
       var nm=document.getElementById('i-name'); if(nm && choice.name) nm.value=choice.name;
       showStep('login'); setTimeout(function(){ var e=document.getElementById('i-pass'); if(e) e.focus(); },250); },
-    pay:function(method){ choice.payment=method; saveBooking(); showStep(''); suspenseReveal(function(){ buildDone(); showStep('done'); }); }
+    pay:function(method){ choice.payment=method; saveBooking(); showStep(''); suspenseReveal(function(){ buildDone(); showStep('done'); }); },
+    addCalendar:function(){ downloadICS(); }
   };
 
   /* mobile: drag the grabber to pull a sheet down (minimise) or back up; a tap toggles it */

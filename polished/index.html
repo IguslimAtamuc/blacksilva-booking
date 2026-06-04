@@ -177,8 +177,23 @@
   .paytxt b{ font-family:var(--display); font-weight:600; font-size:18px; line-height:1.05; }
   .paytxt small{ font-size:11.5px; color:#6f6f77; }
   .paychev{ font-size:22px; color:#8a8a93; flex:0 0 auto; }
+  .fasttrack{ margin-top:36px; max-width:440px; width:100%; padding:20px 20px 18px; border-radius:20px; border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.06); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); box-shadow:0 24px 60px rgba(0,0,0,.42); }
+  .fasttrack .ft-k{ font-size:10.5px; letter-spacing:.34em; text-transform:uppercase; color:var(--ui-dim); }
+  .fasttrack h3{ font-family:var(--display); font-weight:500; font-size:30px; line-height:1.02; margin-top:5px; color:var(--ui-ink); }
+  .fasttrack p{ margin-top:10px; font-size:13px; line-height:1.55; color:var(--ui-dim); max-width:none; }
+  .ft-row{ margin-top:15px; display:flex; gap:8px; }
+  .ft-row input{ flex:1; min-width:0; padding:13px 14px; border-radius:12px; border:1px solid rgba(255,255,255,.18); background:rgba(0,0,0,.28); color:var(--ui-ink); font-size:14px; outline:none; font-family:inherit; }
+  .ft-row input::placeholder{ color:rgba(247,247,245,.4); }
+  .ft-row input:focus{ border-color:rgba(255,255,255,.5); }
+  .ft-row button{ flex:0 0 auto; padding:0 18px; border-radius:12px; border:none; background:#fff; color:#16161a; font-weight:700; font-size:13px; cursor:pointer; font-family:inherit; letter-spacing:.02em; transition:.15s; }
+  .ft-row button:hover,.ft-row button:active{ background:#e7e7e3; transform:translateY(-1px); }
+  .ft-err{ margin-top:9px; font-size:12px; color:#ff9a8f; min-height:14px; line-height:1.4; }
+  .ft-err b{ color:#ffd0c9; }
+  body.flow #scroll{ visibility:hidden; }
   .grab{ display:none; }
   @media(max-width:760px){
+    .fasttrack{ margin-top:26px; padding:17px 16px 15px; } .fasttrack h3{ font-size:26px; } .fasttrack p{ font-size:12.5px; }
+    .ft-row{ flex-direction:column; } .ft-row button{ padding:13px; }
     .grab{ display:block; width:44px; height:5px; border-radius:3px; background:rgba(0,0,0,.2); margin:0 auto 12px; touch-action:none; }
     .sheet{ left:0; right:0; bottom:0; top:auto; width:auto; max-height:62svh; transform:translateY(112%); border-radius:24px 24px 0 0; padding:16px 18px calc(20px + env(safe-area-inset-bottom)); transition:opacity .4s ease, transform .4s cubic-bezier(.2,.8,.2,1); } .sheet.on{ transform:translateY(0); }
     .sheet.on.min{ transform:translateY(calc(100% - 50px)); } .sheet.dragging{ transition:none; }
@@ -208,19 +223,26 @@
     <h1 data-fade>Black Silva<br><span class="thin">Hairdresser</span></h1>
     <p class="tagline" data-fade>Step out of the dark and into the chair. Scroll to walk into the studio and begin your booking.</p>
     <div class="scrollcue" data-fade><span class="track"></span> Scroll to walk in</div>
+    <div class="fasttrack" data-fade>
+      <p class="ft-k">Returning guest</p>
+      <h3 class="serif">Fast Track here!</h3>
+      <p>Skip the walkthrough. Enter the email from your last booking and we'll reload the exact same services — taking you straight to Confirm &amp; checkout.</p>
+      <div class="ft-row"><input id="ft-email" type="email" placeholder="Email from your last visit" autocomplete="email"><button onclick="BS.fasttrack()">Fast track</button></div>
+      <div class="ft-err" id="ft-err"></div>
+    </div>
   </section>
   <section id="s1" class="panel right"><div class="cap"><p class="k">Step into the light</p><h2 class="serif">Come<br>inside.</h2><p>The glass door opens and the studio warms from night into bright daylight.</p></div></section>
   <section id="s2" class="panel"><div class="cap"><p class="k">Almost there</p><h2 class="serif">Sign in<br>to begin.</h2><p>Create an account or log in to start your personalised booking.</p></div></section>
 </main>
 <div id="ui">
   <div class="modal" id="m-login"><div class="mcard">
-    <h3 class="serif">Welcome</h3><p class="ms">Create an account or log in to continue your booking.</p>
+    <h3 class="serif">Almost done</h3><p class="ms">Log in or create your account to secure this booking, then choose how to pay.</p>
     <div class="tabs"><button id="tab-login" class="on" onclick="BS.tab('login')">Log in</button><button id="tab-signup" onclick="BS.tab('signup')">Sign up</button></div>
     <div class="field" id="f-name" style="display:none"><label>Full name</label><input id="i-name" type="text" placeholder="Your name" autocomplete="name"></div>
     <div class="field"><label>Email</label><input id="i-email" type="email" placeholder="you@email.com" autocomplete="email"></div>
     <div class="field"><label>Password</label><input id="i-pass" type="password" placeholder="********" autocomplete="current-password"></div>
     <div class="err" id="login-err"></div>
-    <button class="gobtn" id="login-go" onclick="BS.login()">Log in &amp; continue</button>
+    <button class="gobtn" id="login-go" onclick="BS.login()">Log in &amp; pay</button>
   </div></div>
   <div class="sheet" id="m-length"></div>
   <div class="sheet" id="m-calendar"></div>
@@ -552,7 +574,7 @@ function start(){
     if(moving>0.5) poseWalk(customer,walk*Math.PI*10); else poseStand(customer);
     person.position.set(0, moving>0.5?Math.abs(Math.sin(walk*Math.PI*10))*0.05:0, lerp(5.8,0.7,walk)); person.rotation.y=Math.PI;
     camAtEntry(p);
-    if(p>0.72 && !gated) gateLogin();
+    if(p>0.72 && !gated) gateBooking();
   }
 
   function showStep(name){ ['m-login','m-length','m-calendar','m-stylist','m-confirm','m-pay','m-done'].forEach(function(id){ var el=document.getElementById(id); if(!el) return; if(id===('m-'+name)){ el.classList.add('on'); el.classList.remove('min'); el.style.transform=''; } else el.classList.remove('on'); }); }
@@ -560,12 +582,38 @@ function start(){
   function grab(){ return '<div class="grab"></div>'; }
   function backBtn(target){ return '<button class="back" onclick="BS.back(\''+target+'\')" aria-label="Back">‹</button>'; }
 
-  function gateLogin(){ if(gated) return; gated=true; mode='flow';
-    document.body.style.overflow='hidden'; document.getElementById('restart-top').style.display='block';
+  function enterFlow(){ gated=true; mode='flow'; document.body.classList.add('flow');
+    document.body.style.overflow='hidden'; var rt=document.getElementById('restart-top'); if(rt) rt.style.display='block'; }
+  function gateBooking(){ if(gated) return; enterFlow();
     cust={x:0,y:0,z:0.7,facing:Math.PI,state:'stand'};
     bookCam={tx:0,ty:1.5,tz:0.3,zoom:1.15,frontMix:0.45,rightShift:0.0};
-    showStep('login'); gsap.delayedCall(0.25,function(){ arriveAtDesk(); });
-    setTimeout(function(){ var em=document.getElementById('i-email'); if(em) em.focus(); },300); }
+    arriveAtDesk(function(){ buildLength(); showStep('length'); }); }
+
+  /* snap the studio to full daylight without the scroll animation (used by Fast Track) */
+  function setDaylight(){
+    scene.background.copy(COLOR_DARK).lerp(COLOR_DAY,1); scene.fog.color.copy(scene.background); scene.fog.near=26; scene.fog.far=90;
+    swatches.forEach(function(s){ s.mat.color.copy(s.day); });
+    hemi.intensity=0.95; ambient.intensity=0.55; key.intensity=1.15;
+    signLight.intensity=0.15; fillLight.intensity=1.2; pMat.opacity=0; fxEl.style.opacity=0.3;
+    hinge.rotation.y=-Math.PI*0.62;
+    fadeMats.forEach(function(m){ m.opacity=0; m.visible=false; });
+  }
+  function bookingKey(email){ return 'bs_booking_'+String(email||'').trim().toLowerCase(); }
+  function saveBooking(){ try{ var data={haircut:choice.haircut,service:choice.service,fromPrice:choice.fromPrice,addons:choice.addons,stylist:choice.stylist,time:choice.time,name:choice.name,email:choice.email}; localStorage.setItem(bookingKey(choice.email),JSON.stringify(data)); }catch(e){} }
+  function loadBooking(email){ try{ var s=localStorage.getItem(bookingKey(email)); return s?JSON.parse(s):null; }catch(e){ return null; } }
+  function fastTrackConfirm(saved){
+    choice.haircut=saved.haircut; choice.service=saved.service; choice.fromPrice=saved.fromPrice||0;
+    choice.addons=Array.isArray(saved.addons)?saved.addons.slice():[];
+    choice.stylist=saved.stylist||'Eduard'; choice.name=saved.name||''; choice.email=saved.email||'';
+    var today=startDay(new Date()); choice.dayIdx=0; choice.dayLabel=fullDayLabel(today,0); choice.price=priceForDay(0); choice.priceTier=1;
+    choice.time=saved.time||'10:00';
+    enterFlow(); setDaylight();
+    var chosen=(choice.stylist==='Eduard')?eduard:elena; setActiveStylist(chosen);
+    cust={x:0,y:CUST_SEAT_Y,z:-4.0,facing:FINAL_FACING,state:'sit'}; chair.rotation.y=FINAL_FACING;
+    sty={x:1.15,y:0,z:-4.2,facing:faceToward(1.15,-4.2,0,-4.0),state:'serve'};
+    bookCam={tx:0.1,ty:1.6,tz:-3.8,zoom:2.2,frontMix:1,rightShift:0.18};
+    buildConfirm(); showStep('confirm');
+  }
 
   function seatCustomer(done){
     deskReady=false; deskMoving=false; cust.state='walk'; cust.facing=Math.PI;
@@ -725,10 +773,16 @@ function start(){
 
   window.BS={
     tab:function(which){ document.getElementById('tab-login').classList.toggle('on',which==='login'); document.getElementById('tab-signup').classList.toggle('on',which==='signup');
-      document.getElementById('f-name').style.display=which==='signup'?'block':'none'; document.getElementById('login-go').textContent=(which==='signup'?'Create account & continue':'Log in & continue'); },
+      document.getElementById('f-name').style.display=which==='signup'?'block':'none'; document.getElementById('login-go').textContent=(which==='signup'?'Create account & pay':'Log in & pay'); },
+    fasttrack:function(){ var ei=document.getElementById('ft-email'); var val=ei?ei.value.trim():''; var err=document.getElementById('ft-err');
+      if(val.indexOf('@')<1 || val.length<5){ if(err) err.textContent='Please enter a valid email.'; return; }
+      var saved=loadBooking(val);
+      if(!saved){ if(err) err.innerHTML='No previous booking found for <b>'+val+'</b>. Scroll down to book from scratch.'; return; }
+      if(err) err.textContent=''; fastTrackConfirm(saved); },
     login:function(){ var em=document.getElementById('i-email').value.trim(), pw=document.getElementById('i-pass').value.trim(); var er=document.getElementById('login-err');
       if(em.indexOf('@')<1 || em.length<5){ er.textContent='Please enter a valid email.'; return; } if(pw.length<4){ er.textContent='Password must be at least 4 characters.'; return; }
-      er.textContent=''; showStep(''); arriveAtDesk(function(){ buildLength(); showStep('length'); }); },
+      er.textContent=''; choice.email=em; var nm=document.getElementById('i-name'); if(nm&&nm.value.trim()) choice.name=nm.value.trim();
+      saveBooking(); buildPay(); showStep('pay'); },
     haircut:function(type){ var c=CUTS[type]; if(!c) return; choice.haircut=type; choice.service=c.label; choice.fromPrice=c.from; choice.addons=[]; buildAddons(type); showStep('length'); },
     toggleAddon:function(el,name){ var i=choice.addons.indexOf(name); if(i>=0) choice.addons.splice(i,1); else choice.addons.push(name); el.classList.toggle('on',choice.addons.indexOf(name)>=0); },
     afterLength:function(){ buildCalendar(); showStep('calendar'); },
@@ -742,8 +796,10 @@ function start(){
     stylist:function(who){ choice.stylist=who; setActiveStylist(who==='Eduard'?eduard:null); showStep('');
       seatCustomer(function(){ stylistArriveAndCut(function(){ buildConfirm(); showStep('confirm'); }); }); },
     pickStylist:function(who){ choice.stylist=who; setActiveStylist(who==='Eduard'?eduard:elena); document.querySelectorAll('.qopt').forEach(function(el){ el.classList.toggle('on', el.textContent===who); }); },
-    confirm:function(){ buildPay(); showStep('pay'); },
-    pay:function(method){ choice.payment=method; showStep(''); suspenseReveal(function(){ buildDone(); showStep('done'); }); }
+    confirm:function(){ var em=document.getElementById('i-email'); if(em && choice.email) em.value=choice.email;
+      var nm=document.getElementById('i-name'); if(nm && choice.name) nm.value=choice.name;
+      showStep('login'); setTimeout(function(){ var e=document.getElementById('i-pass'); if(e) e.focus(); },250); },
+    pay:function(method){ choice.payment=method; saveBooking(); showStep(''); suspenseReveal(function(){ buildDone(); showStep('done'); }); }
   };
 
   /* mobile: drag the grabber to pull a sheet down (minimise) or back up; a tap toggles it */

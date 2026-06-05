@@ -11,6 +11,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://js.stripe.com/v3/"></script>
 <style>
   :root{ --display:'Cormorant Garamond',Georgia,serif; --body:'Manrope',system-ui,sans-serif;
     --ui-ink:#f7f7f5; --ui-dim:rgba(247,247,245,.6); --ui-line:rgba(255,255,255,.14); --ui-bar:rgba(8,8,10,.35);
@@ -177,6 +178,11 @@
   .paytxt b{ font-family:var(--display); font-weight:600; font-size:18px; line-height:1.05; }
   .paytxt small{ font-size:11.5px; color:#6f6f77; }
   .paychev{ font-size:22px; color:#8a8a93; flex:0 0 auto; }
+  .stripe-test{ margin-top:14px; padding:12px 14px; border-radius:12px; background:rgba(255,213,0,.16); border:1px solid rgba(190,150,0,.35); color:#5a4400; font-size:12.5px; line-height:1.5; }
+  .stripe-test code{ font-family:ui-monospace,Menlo,monospace; background:rgba(255,255,255,.6); padding:1px 5px; border-radius:5px; font-size:12px; }
+  .stripe-mount{ margin-top:14px; padding:6px 4px; min-height:60px; }
+  .stripe-err{ margin-top:10px; min-height:14px; font-size:12.5px; color:#d83b3b; line-height:1.4; }
+  .confirm-btn[disabled]{ opacity:.55; pointer-events:none; }
   .fasttrack{ margin-top:36px; max-width:440px; width:100%; padding:20px 20px 18px; border-radius:20px; border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.06); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); box-shadow:0 24px 60px rgba(0,0,0,.42); }
   .fasttrack .ft-k{ font-size:10.5px; letter-spacing:.34em; text-transform:uppercase; color:var(--ui-dim); }
   .fasttrack h3{ font-family:var(--display); font-weight:500; font-size:30px; line-height:1.02; margin-top:5px; color:var(--ui-ink); }
@@ -244,6 +250,7 @@
   <div class="sheet" id="m-stylist"></div>
   <div class="sheet" id="m-confirm"></div>
   <div class="sheet" id="m-pay"></div>
+  <div class="sheet" id="m-stripe"></div>
   <div class="sheet" id="m-done"></div>
 </div>
 <button id="restart-top" onclick="location.reload()">&#8634; Restart</button>
@@ -572,7 +579,7 @@ function start(){
     if(p>0.72 && !gated) gateBooking();
   }
 
-  function showStep(name){ ['m-length','m-calendar','m-stylist','m-confirm','m-pay','m-done'].forEach(function(id){ var el=document.getElementById(id); if(!el) return; if(id===('m-'+name)){ el.classList.add('on'); el.classList.remove('min'); el.style.transform=''; } else el.classList.remove('on'); }); }
+  function showStep(name){ ['m-length','m-calendar','m-stylist','m-confirm','m-pay','m-stripe','m-done'].forEach(function(id){ var el=document.getElementById(id); if(!el) return; if(id===('m-'+name)){ el.classList.add('on'); el.classList.remove('min'); el.style.transform=''; } else el.classList.remove('on'); }); }
   function dots(n){ var s='<div class="step-dots">'; for(var i=1;i<=4;i++) s+='<i class="'+(i<=n?'a':'')+'"></i>'; return s+'</div>'; }
   function grab(){ return '<div class="grab"></div>'; }
   function backBtn(target){ return '<button class="back" onclick="BS.back(\''+target+'\')" aria-label="Back">‹</button>'; }
@@ -749,6 +756,73 @@ function start(){
   var RESEND_FROM="Black Silva <onboarding@resend.dev>";
   var OWNER_EMAIL="blacksilvahd@gmail.com";
   var SALON_LOCATION="Black Silva Hairdresser, Badstuestræde 16, Copenhagen";
+  /* Stripe — sandbox/test integration.
+     Publishable key is browser-safe. Secret key is held only in this browser
+     via localStorage so it never lives in the repo (GitHub blocks pushes
+     containing live secret patterns). When the site moves to your host,
+     replace the prompt path with a tiny endpoint that creates the intent
+     server-side and remove STRIPE_SK from the browser entirely. */
+  var STRIPE_PK="pk_test_51Tehd89zA9loGnwbtxNMyu8hOfQgXuSwYE2YQLuh9Ke3iV4hpXaapb4rErdjvTogW7uImsfj6jzPfnxMFMeXdf1h00rJr8RNru";
+  function getStripeSecret(){
+    try{ var k=localStorage.getItem('bs_stripe_sk');
+      if(k && /^sk_test_/.test(k)) return k;
+      k=prompt('Paste your Stripe TEST secret key (sk_test_...) — stored only in this browser');
+      if(k && /^sk_test_/.test(k)){ localStorage.setItem('bs_stripe_sk', k); return k; }
+    }catch(e){}
+    return null;
+  }
+  var stripe=null, stripeElements=null, stripePaymentElement=null, stripeClientSecret=null;
+  function stripeAmountMinor(){ return grandTotal()*100; }
+  function createStripePaymentIntent(){
+    var sk=getStripeSecret();
+    if(!sk) return Promise.resolve({error:{message:'Stripe secret key not set. Open the console and run localStorage.setItem(\'bs_stripe_sk\',\'sk_test_…\') then retry.'}});
+    var body=new URLSearchParams();
+    body.set('amount', String(stripeAmountMinor()));
+    body.set('currency','dkk');
+    body.set('automatic_payment_methods[enabled]','true');
+    body.set('description', (choice.service||'Haircut')+' — Black Silva');
+    if(choice.email) body.set('receipt_email', choice.email);
+    body.set('metadata[stylist]', choice.stylist||'');
+    body.set('metadata[when]', (choice.dayLabel||'')+' '+(choice.time||''));
+    body.set('metadata[client]', (choice.name||'Guest'));
+    return fetch('https://api.stripe.com/v1/payment_intents',{method:'POST',
+      headers:{'Authorization':'Bearer '+sk,'Content-Type':'application/x-www-form-urlencoded'},
+      body:body.toString()}).then(function(r){ return r.json(); });
+  }
+  function buildStripe(){
+    var h=grab()+backBtn('pay')+'<p class="bk">Payment</p><h3 class="serif">Pay with card</h3>';
+    h+='<p class="bsub">Total <b>'+money(grandTotal())+'</b> · '+choice.service+(choice.addons.length?' + '+choice.addons.length+' extra'+(choice.addons.length>1?'s':''):'')+'</p>';
+    h+='<div class="stripe-test"><b>Sandbox mode</b> · use card <code>4242 4242 4242 4242</code>, any future date, any CVC, any ZIP.</div>';
+    h+='<div id="stripe-element" class="stripe-mount"></div>';
+    h+='<div class="stripe-err" id="stripe-err"></div>';
+    h+='<button class="confirm-btn" id="stripe-pay-btn" onclick="BS.stripePay()" disabled><span class="cbcircle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span><span id="stripe-pay-lbl">Loading payment…</span></button>';
+    document.getElementById('m-stripe').innerHTML=h;
+    mountStripe();
+  }
+  function mountStripe(){
+    if(!window.Stripe){ var e=document.getElementById('stripe-err'); if(e) e.textContent='Stripe failed to load.'; return; }
+    if(!stripe) stripe=Stripe(STRIPE_PK);
+    var lbl=document.getElementById('stripe-pay-lbl'); if(lbl) lbl.textContent='Preparing checkout…';
+    createStripePaymentIntent().then(function(pi){
+      if(!pi || pi.error || !pi.client_secret){ var msg=(pi&&pi.error&&pi.error.message)||'Could not start payment.'; var er=document.getElementById('stripe-err'); if(er) er.textContent=msg; return; }
+      stripeClientSecret=pi.client_secret;
+      stripeElements=stripe.elements({clientSecret:stripeClientSecret, appearance:{theme:'stripe', variables:{colorPrimary:'#16161a', borderRadius:'12px', fontFamily:'Manrope, system-ui, sans-serif'}}});
+      stripePaymentElement=stripeElements.create('payment',{layout:'tabs'});
+      stripePaymentElement.mount('#stripe-element');
+      stripePaymentElement.on('ready', function(){ var btn=document.getElementById('stripe-pay-btn'); var l=document.getElementById('stripe-pay-lbl'); if(btn) btn.disabled=false; if(l) l.textContent='Pay '+money(grandTotal()); });
+    }).catch(function(err){ var er=document.getElementById('stripe-err'); if(er) er.textContent=(err&&err.message)||'Network error.'; });
+  }
+  function confirmStripePayment(){
+    var er=document.getElementById('stripe-err'); if(er) er.textContent='';
+    var btn=document.getElementById('stripe-pay-btn'), lbl=document.getElementById('stripe-pay-lbl');
+    if(btn) btn.disabled=true; if(lbl) lbl.textContent='Processing…';
+    return stripe.confirmPayment({elements:stripeElements, redirect:'if_required',
+      confirmParams:{return_url:location.href, receipt_email:choice.email||undefined, payment_method_data:{billing_details:{name:choice.name||'Black Silva guest', email:choice.email||undefined}}}})
+      .then(function(res){
+        if(res.error){ if(er) er.textContent=res.error.message||'Payment could not be completed.'; if(btn) btn.disabled=false; if(lbl) lbl.textContent='Pay '+money(grandTotal()); return null; }
+        return res.paymentIntent;
+      });
+  }
   function pad2(n){ return (n<10?'0':'')+n; }
   function bookingStart(){ var today=startDay(new Date()); var d=addDays(today, choice.dayIdx||0); var hm=(choice.time||'10:00').split(':'); d.setHours(parseInt(hm[0],10)||10, parseInt(hm[1],10)||0, 0, 0); return d; }
   function bookingDuration(){ return 45 + (choice.addons.length*25) + (choice.haircut==='lady'?20:0); }
@@ -861,7 +935,7 @@ function start(){
     haircut:function(type){ var c=CUTS[type]; if(!c) return; choice.haircut=type; choice.service=c.label; choice.fromPrice=c.from; choice.addons=[]; buildAddons(type); showStep('length'); },
     toggleAddon:function(el,name){ var i=choice.addons.indexOf(name); if(i>=0) choice.addons.splice(i,1); else choice.addons.push(name); el.classList.toggle('on',choice.addons.indexOf(name)>=0); },
     afterLength:function(){ buildCalendar(); showStep('calendar'); },
-    back:function(target){ if(target==='chooser'){ buildLength(); showStep('length'); } else if(target==='addons'){ buildAddons(choice.haircut); showStep('length'); } else if(target==='calendar'){ showStep('calendar'); } },
+    back:function(target){ if(target==='chooser'){ buildLength(); showStep('length'); } else if(target==='addons'){ buildAddons(choice.haircut); showStep('length'); } else if(target==='calendar'){ showStep('calendar'); } else if(target==='pay'){ showStep('pay'); } },
     length:function(g,l){ BS.haircut(g==='women'?'lady':'gentleman'); },
     pickDay:function(i,label){ choice.dayIdx=i; choice.dayLabel=label; document.querySelectorAll('.chip').forEach(function(el){ el.classList.toggle('on',el.id===('day-'+i)); }); refreshCalendarPrice(); BS._cc(); },
     pickTime:function(tm){ choice.time=tm; document.querySelectorAll('.tslot').forEach(function(e){ e.classList.remove('on'); }); var el=document.getElementById('t-'+tm.replace(':','')); if(el) el.classList.add('on'); BS._cc(); },
@@ -872,7 +946,12 @@ function start(){
       seatCustomer(function(){ stylistArriveAndCut(function(){ buildConfirm(); showStep('confirm'); }); }); },
     pickStylist:function(who){ choice.stylist=who; setActiveStylist(who==='Eduard'?eduard:elena); document.querySelectorAll('.qopt').forEach(function(el){ el.classList.toggle('on', el.textContent===who); }); },
     confirm:function(){ if(!choice.email){ alert('Please add an email in the Quick Changes box so we can send the confirmation.'); var e=document.getElementById('qm-email'); if(e) e.focus(); return; } buildPay(); showStep('pay'); },
-    pay:function(method){ choice.payment=method; saveBooking(); showStep(''); suspenseReveal(function(){ buildDone(); showStep('done'); }); },
+    pay:function(method){ choice.payment=method;
+      if(method==='card'){ buildStripe(); showStep('stripe'); return; }
+      saveBooking(); showStep(''); suspenseReveal(function(){ buildDone(); showStep('done'); }); },
+    stripePay:function(){ confirmStripePayment().then(function(pi){ if(!pi) return;
+      choice.payment='card'; choice.paymentId=pi.id; choice.paymentStatus=pi.status; saveBooking();
+      showStep(''); suspenseReveal(function(){ buildDone(); showStep('done'); }); }); },
     addCalendar:function(){ downloadICS(); }
   };
 

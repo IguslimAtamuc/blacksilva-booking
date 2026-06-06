@@ -154,7 +154,9 @@ function start(){
   var stage=document.getElementById('stage');
   var scene=new THREE.Scene();
   scene.background=new THREE.Color('#0a0604');
-  scene.fog=new THREE.Fog(new THREE.Color('#0a0604'),14,42);
+  /* the ortho camera sits ~60 units from the target, so fog must reach well past
+     that or the entire room renders as solid fog (black). Keep it mild + far. */
+  scene.fog=new THREE.Fog(new THREE.Color('#0a0604'),78,170);
 
   var frustum=7.2;
   var camera=new THREE.OrthographicCamera(-1,1,1,-1,-200,500);
@@ -559,9 +561,6 @@ function start(){
 
   function applyReveal(p){
     if(mode!=='scroll') return;
-    /* fog clears as we approach */
-    scene.fog.near=lerp(10, 18, smooth(0.1, 0.6, p));
-    scene.fog.far=lerp(28, 46, smooth(0.1, 0.6, p));
     /* lights brighten as we cross the threshold */
     var lit=smooth(0.18, 0.55, p);
     chandelLight.intensity=lerp(0.0, 2.2, lit);
@@ -587,8 +586,10 @@ function start(){
   function enterFlow(){ gated=true; mode='flow'; document.body.classList.add('flow'); document.body.style.overflow='hidden';
     var rt=document.getElementById('restart-top'); if(rt) rt.style.display='block'; cashier.group.visible=true; cashierState='wave'; }
   function gate(){ if(gated) return; enterFlow();
-    cust={x:0, y:0, z:0.7, facing:Math.PI, state:'stand'};
-    view={tx:0, ty:1.5, tz:-1.5, zoom:1.05};
+    cust={x:0, y:0, z:0.7, facing:0.45, state:'stand'};
+    view={tx:-1.4, ty:1.45, tz:-0.8, zoom:1.22};
+    /* make sure the room is fully lit once we're inside, regardless of scroll */
+    chandelLight.intensity=2.2; lampLight.intensity=1.0; torchLights.forEach(function(l){ l.intensity=1.0; });
     renderCats(); showStep('cats'); }
 
   function showStep(name){ ['cats','shelf','stripe','done'].forEach(function(id){ var el=document.getElementById('m-'+id); if(el) el.classList.toggle('on', id===name); }); }
@@ -648,7 +649,8 @@ function start(){
       cust.state='hold'; renderShelf(key);
     },
     toCats:function(){ renderCats(); showStep('cats'); cust.state=basket.visible?'hold':'stand';
-      gsap.to(view, {tx:0, ty:1.5, tz:-1.5, zoom:1.05, duration:0.9, ease:'power2.inOut'}); },
+      gsap.to(cust, {facing:0.45, duration:0.6, ease:'power2.out'});
+      gsap.to(view, {tx:-1.4, ty:1.45, tz:-0.8, zoom:1.22, duration:0.9, ease:'power2.inOut'}); },
     checkout:function(){ if(!cart.length) return; showStep('');
       var facing=faceToward(TILL.stand.x, TILL.stand.z, TILL.counter.x, TILL.counter.z);
       gsap.to(view, {tx:TILL.counter.x+0.2, ty:1.6, tz:TILL.counter.z+0.6, zoom:1.4, duration:1.0, ease:'power2.inOut'});

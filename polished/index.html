@@ -218,6 +218,10 @@
     .modal,#m-login{ align-items:flex-end; justify-content:center; padding:0; } .mcard{ width:100%; border-radius:24px 24px 0 0; padding:26px 20px calc(26px + env(safe-area-inset-bottom)); }
   }
 
+  /* ===== dark-intro shader backdrop (radial light rays) ===== */
+  #shaderbg{ position:fixed; inset:0; z-index:1; pointer-events:none; opacity:1; }
+  #shaderbg canvas{ display:block; width:100%!important; height:100%!important; }
+
   /* ===== hero reviews preview — golden stars + 3 short cards ===== */
   #reviewbox .rv-sum{ display:flex; align-items:baseline; gap:10px; margin-top:6px; flex-wrap:wrap; }
   #reviewbox .rv-sum .rv-num{ font-family:var(--display); font-weight:600; font-size:32px; line-height:1; color:#e8c478; }
@@ -259,6 +263,7 @@
 </head>
 <body>
 <div id="stage"></div>
+<div id="shaderbg"></div>
 <div id="fx"></div>
 <nav>
   <div class="brand"><span class="dot"></span><b class="serif" style="font-size:17px;letter-spacing:.13em;">BLACK&nbsp;SILVA</b>
@@ -1083,6 +1088,62 @@ function start(){
       }).join('');
       if(cards) list.innerHTML=cards;
     }).catch(function(){});
+  })();
+</script>
+<script>
+  /* Dark-intro shader backdrop — radial light rays behind the hero, fading out as
+     you scroll into the light. Vanilla port of the supplied ShaderAnimation. */
+  (function(){
+    var host=document.getElementById('shaderbg'); if(!host) return;
+    var tries=0;
+    function go(){
+      if(!window.THREE){ if(tries++>200) return; return setTimeout(go,80); }
+      try{ init(); }catch(e){ host.style.display='none'; }
+    }
+    function init(){
+      var THREE=window.THREE;
+      var camera=new THREE.Camera(); camera.position.z=1;
+      var scene=new THREE.Scene();
+      var Geo=THREE.PlaneBufferGeometry||THREE.PlaneGeometry;
+      var geometry=new Geo(2,2);
+      var uniforms={ time:{value:1.0}, resolution:{value:new THREE.Vector2()} };
+      var vert='void main(){ gl_Position=vec4(position,1.0); }';
+      var frag=[
+        'precision highp float;',
+        'uniform vec2 resolution; uniform float time;',
+        'float random(in float x){ return fract(sin(x)*1e4); }',
+        'void main(void){',
+        '  vec2 uv=(gl_FragCoord.xy*2.0-resolution.xy)/min(resolution.x,resolution.y);',
+        '  vec2 fMosaicScal=vec2(4.0,2.0); vec2 vScreenSize=vec2(256.0,256.0);',
+        '  uv.x=floor(uv.x*vScreenSize.x/fMosaicScal.x)/(vScreenSize.x/fMosaicScal.x);',
+        '  uv.y=floor(uv.y*vScreenSize.y/fMosaicScal.y)/(vScreenSize.y/fMosaicScal.y);',
+        '  float t=time*0.06+random(uv.x)*0.4; float lineWidth=0.0008;',
+        '  vec3 color=vec3(0.0);',
+        '  for(int j=0;j<3;j++){ for(int i=0;i<5;i++){',
+        '    color[j]+=lineWidth*float(i*i)/abs(fract(t-0.01*float(j)+float(i)*0.01)*1.0-length(uv)); } }',
+        '  gl_FragColor=vec4(color[2],color[1],color[0],1.0);',
+        '}'
+      ].join('\n');
+      var material=new THREE.ShaderMaterial({uniforms:uniforms,vertexShader:vert,fragmentShader:frag});
+      scene.add(new THREE.Mesh(geometry,material));
+      var renderer=new THREE.WebGLRenderer({antialias:false});
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio,1.5));
+      host.appendChild(renderer.domElement);
+      function resize(){ var w=host.clientWidth||innerWidth, h=host.clientHeight||innerHeight;
+        renderer.setSize(w,h); uniforms.resolution.value.x=renderer.domElement.width; uniforms.resolution.value.y=renderer.domElement.height; }
+      resize(); addEventListener('resize',resize,false);
+
+      /* fade the rays out over the first stretch of scroll (into the light) */
+      var vis=1;
+      function fade(){ var max=document.documentElement.scrollHeight-innerHeight;
+        var p=max>0?(scrollY/max):0; vis=Math.max(0,1-p/0.26); host.style.opacity=vis.toFixed(3); }
+      fade(); addEventListener('scroll',fade,{passive:true});
+
+      (function loop(){ requestAnimationFrame(loop);
+        if(vis<=0.01) return;                 /* skip rendering once fully faded */
+        uniforms.time.value+=0.05; renderer.render(scene,camera); })();
+    }
+    go();
   })();
 </script>
 </body>

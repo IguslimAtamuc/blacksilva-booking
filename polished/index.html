@@ -240,6 +240,15 @@
       <div class="ft-row"><input id="ft-email" type="email" placeholder="Email from your last visit" autocomplete="email"><button onclick="BS.fasttrack()">Fast track</button></div>
       <div class="ft-err" id="ft-err"></div>
     </div>
+    <div class="fasttrack" id="reviewbox" data-fade style="margin-top:18px">
+      <p class="ft-k">★ Reviews</p>
+      <h3 class="serif">Voices of the chair</h3>
+      <p id="rv-teaser">See what guests say — and how the same guests rate us visit after visit, on one running thread.</p>
+      <div class="ft-row">
+        <button onclick="location.href='reviews.html'">Read all reviews</button>
+        <button onclick="location.href='reviews.html#write'" style="background:transparent;color:var(--ui-ink);border:1px solid rgba(255,255,255,.32)">Write a review</button>
+      </div>
+    </div>
   </section>
   <section id="s1" class="panel right"><div class="cap"><p class="k">Step into the light</p><h2 class="serif">Come<br>inside.</h2><p>The glass door opens and the studio warms from night into bright daylight.</p></div></section>
   <section id="s2" class="panel"><div class="cap"><p class="k">Almost there</p><h2 class="serif">Sign in<br>to begin.</h2><p>Create an account or log in to start your personalised booking.</p></div></section>
@@ -999,6 +1008,15 @@ function start(){
   var loader=document.getElementById('loader'); gsap.to(loader,{opacity:0,duration:.7,delay:.3,onComplete:function(){ loader.style.display='none'; }});
   setTimeout(function(){ ScrollTrigger.refresh(); window.scrollTo(0,0); },250);
 }
+</script>
+<script src="reviews.js"></script>
+<script>
+  /* hero reviews teaser — shows the running average + invites guests to the thread */
+  (function(){ if(!window.BSReviews) return;
+    BSReviews.summary().then(function(s){ var t=document.getElementById('rv-teaser'); if(!t||!s.threads) return;
+      t.innerHTML='★ '+(s.avg?s.avg.toFixed(1):'—')+' from '+s.visits+' visit'+(s.visits!==1?'s':'')+' across '+s.threads+' guest'+(s.threads!==1?'s':'')+'. Read the threads — or add yours and keep it going after every visit.';
+    }).catch(function(){});
+  })();
 </script>
 </body>
 </html>

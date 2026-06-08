@@ -22,7 +22,7 @@ const ALLOW = "*"; // tighten to "https://iguslimatamuc.github.io" once it works
 function cors(extra = {}) {
   return Object.assign({
     "Access-Control-Allow-Origin": ALLOW,
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
   }, extra);
 }
@@ -116,9 +116,59 @@ async function send(env, to, subject, html, ics) {
   return { ok: res.ok, status: res.status, data };
 }
 
+/* ============================================================
+ * Reviews API (stored in the REVIEWS KV namespace, shared by all visitors)
+ *   GET  /reviews         -> { threads: [...] }
+ *   POST /reviews         -> add a visit to a guest's thread (keyed by email)
+ *   POST /reviews/reply   -> salon reply (needs the OWNER_KEY passcode)
+ * Raw emails are never stored — only a hash that lets a returning guest
+ * continue the same thread.
+ * ============================================================ */
+function rhash(s){ s=String(s||"").trim().toLowerCase(); let h=5381; for(let i=0;i<s.length;i++){ h=((h<<5)+h)+s.charCodeAt(i); h|=0; } return "c"+(h>>>0).toString(36); }
+function ruid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function clip(s,n){ return String(s==null?"":s).slice(0,n); }
+async function loadThreads(env){ if(!env.REVIEWS) return []; try{ const s=await env.REVIEWS.get("all"); return s?JSON.parse(s):[]; }catch(e){ return []; } }
+async function saveThreads(env,arr){ await env.REVIEWS.put("all", JSON.stringify(arr)); }
+
+async function listReviews(env){ const t=await loadThreads(env); return json({ threads:t }); }
+async function addReview(request,env){
+  if(!env.REVIEWS) return json({ error:"Reviews storage (KV namespace REVIEWS) is not configured." }, 500);
+  let p; try{ p=await request.json(); }catch(e){ return json({ error:"invalid JSON" }, 400); }
+  if(!p.email || String(p.email).indexOf("@")<1) return json({ error:"email required" }, 400);
+  if(!p.rating) return json({ error:"rating required" }, 400);
+  const all=await loadThreads(env), eh=rhash(p.email), now=Date.now();
+  let th=all.find(t=>t.emailHash===eh);
+  if(!th) th={ id:ruid(), name:clip(p.name,40)||"Guest", emailHash:eh, created:now, posts:[] };
+  const visit=th.posts.filter(x=>x.role==="client").length+1;
+  th.posts.push({ role:"client", visit, rating:Math.max(1,Math.min(5,+p.rating||0)), service:clip(p.service,60), stylist:clip(p.stylist,40),
+    experience:clip(p.experience,800), recommend:(p.recommend==="no"?"no":"yes"), compare:clip(p.compare,800), text:clip(p.text,800), ts:now });
+  th.name=clip(p.name,40)||th.name; th.updated=now;
+  const rest=all.filter(t=>t.id!==th.id); rest.unshift(th);
+  await saveThreads(env, rest.slice(0,500));
+  return json({ ok:true, thread:th, visit });
+}
+async function replyReview(request,env){
+  if(!env.REVIEWS) return json({ error:"Reviews storage is not configured." }, 500);
+  let p; try{ p=await request.json(); }catch(e){ return json({ error:"invalid JSON" }, 400); }
+  if(!env.OWNER_KEY || p.passcode!==env.OWNER_KEY) return json({ error:"Wrong staff passcode." }, 403);
+  const all=await loadThreads(env), th=all.find(t=>t.id===p.threadId);
+  if(!th) return json({ error:"thread not found" }, 404);
+  th.posts.push({ role:"salon", text:clip(p.text,800), ts:Date.now() }); th.updated=Date.now();
+  await saveThreads(env, all);
+  return json({ ok:true, thread:th });
+}
+
 export default {
   async fetch(request, env) {
+    const url = new URL(request.url);
     if (request.method === "OPTIONS") return new Response(null, { headers: cors() });
+
+    // ---- Reviews API ----
+    if (url.pathname === "/reviews" && request.method === "GET")  return listReviews(env);
+    if (url.pathname === "/reviews" && request.method === "POST") return addReview(request, env);
+    if (url.pathname === "/reviews/reply" && request.method === "POST") return replyReview(request, env);
+
+    // ---- Booking mailer (default) ----
     if (request.method !== "POST") return json({ error: "POST only" }, 405);
     if (!env.RESEND_API_KEY) return json({ error: "RESEND_API_KEY secret is not set" }, 500);
 

@@ -4,3 +4,12 @@ compatibility_date = "2024-11-01"
 
 # The Resend API key is stored as a secret, NOT here:
 #   wrangler secret put RESEND_API_KEY
+
+# Reviews are stored in a KV namespace shared by all visitors. Create it once:
+#   npx wrangler kv namespace create REVIEWS
+# then paste the printed id below and uncomment the block.
+# The salon-staff reply passcode is a secret:
+#   wrangler secret put OWNER_KEY
+# [[kv_namespaces]]
+# binding = "REVIEWS"
+# id = "PASTE_YOUR_KV_NAMESPACE_ID_HERE"

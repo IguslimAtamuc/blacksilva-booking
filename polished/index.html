@@ -259,6 +259,35 @@
   @media(max-width:760px){ .gps-pill{ right:10px; bottom:10px; padding:9px 15px 9px 10px; gap:10px; }
     .gps-pill .gps-ico{ width:28px; height:28px; } .gps-pill .gps-ico svg{ width:15px; height:15px; }
     .gps-pill .gps-txt strong{ font-size:11.5px; } .gps-pill .gps-txt small{ font-size:8.5px; letter-spacing:.28em; } }
+
+  /* ===== Fast Track floating pill (replaces the GPS pill) ===== */
+  .gps-pill{ cursor:pointer; font-family:var(--body); text-align:left; }
+  .ft-fab{ position:fixed; right:14px; bottom:14px; z-index:15; display:flex; flex-direction:column; align-items:flex-end; gap:12px;
+    padding-bottom:max(0px, env(safe-area-inset-bottom)); }
+  .ft-fab .gps-pill{ position:static; right:auto; bottom:auto; }
+  .ft-panel{ width:min(330px, calc(100vw - 26px)); background:rgba(10,8,6,.94); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+    border:1px solid rgba(216,184,120,.5); border-radius:18px; padding:18px 16px 16px; color:#f4ecdc;
+    box-shadow:0 26px 64px rgba(0,0,0,.62); opacity:0; transform:translateY(10px) scale(.97); transform-origin:bottom right;
+    pointer-events:none; transition:opacity .28s ease, transform .28s cubic-bezier(.2,.8,.2,1); }
+  .ft-fab.open .ft-panel{ opacity:1; transform:translateY(0) scale(1); pointer-events:auto; }
+  .ftp-k{ font-size:10px; letter-spacing:.32em; text-transform:uppercase; color:rgba(255,255,255,.55); }
+  .ft-panel h4{ font-family:var(--display); font-weight:600; font-size:27px; line-height:1; margin-top:3px; color:#f7ecd6; }
+  .ftp-sub{ margin-top:9px; font-size:12.5px; line-height:1.5; color:rgba(244,236,220,.78); }
+  .ftp-sub b{ color:#f0d9a8; }
+  .ft-panel .ft-row{ margin-top:13px; }
+  .ft-panel .ft-row button{ background:#e8c478; color:#1a1208; }
+  .ft-panel .ft-err{ color:#ff9b8a; }
+
+  /* ===== isometric line minimap in the Find-the-salon box ===== */
+  .findbox .minimap{ display:block; position:relative; margin-top:12px; border-radius:14px; overflow:hidden;
+    border:1px solid rgba(255,255,255,.12); background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(0,0,0,.3)); transition:border-color .2s; }
+  .findbox .minimap:hover{ border-color:rgba(255,255,255,.32); }
+  .findbox .minimap svg{ display:block; width:100%; height:auto; }
+  .findbox .minimap .mm-tag{ position:absolute; left:10px; bottom:9px; font-size:10.5px; letter-spacing:.04em; color:rgba(255,255,255,.78);
+    background:rgba(0,0,0,.42); padding:3px 9px; border-radius:999px; -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px); }
+  .mm-pulse{ transform-box:fill-box; transform-origin:center; animation:mmpulse 2.4s ease-out infinite; }
+  @keyframes mmpulse{ 0%{ transform:scale(.35); opacity:.9; } 100%{ transform:scale(2.6); opacity:0; } }
+  @media (prefers-reduced-motion: reduce){ .mm-pulse{ animation:none; } }
 </style>
 </head>
 <body>
@@ -276,12 +305,41 @@
     <h1 data-fade>Black Silva<br><span class="thin">Hairdresser</span></h1>
     <p class="tagline" data-fade>Step out of the dark and into the chair. Scroll to walk into the studio and begin your booking.</p>
     <div class="scrollcue" data-fade><span class="track"></span> Scroll to walk in</div>
-    <div class="fasttrack" data-fade>
-      <p class="ft-k">Returning guest</p>
-      <h3 class="serif">Fast Track here!</h3>
-      <p>Skip the walkthrough. Enter the email from your last booking and we'll reload the exact same services — taking you straight to Confirm &amp; checkout.</p>
-      <div class="ft-row"><input id="ft-email" type="email" placeholder="Email from your last visit" autocomplete="email"><button onclick="BS.fasttrack()">Fast track</button></div>
-      <div class="ft-err" id="ft-err"></div>
+    <div class="fasttrack findbox" data-fade>
+      <p class="ft-k">Find us</p>
+      <h3 class="serif">Find the salon</h3>
+      <a class="minimap" href="https://www.google.com/maps/dir/?api=1&destination=Black+Silva+Hairdresser%2C+Badstuestr%C3%A6de+16%2C+1209+K%C3%B8benhavn+K%2C+Denmark" target="_blank" rel="noopener" aria-label="Open directions to Black Silva Hairdresser">
+      <svg viewBox="0 0 320 168" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <defs>
+          <linearGradient id="mmfade" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#ffffff" stop-opacity=".22"/><stop offset="1" stop-color="#ffffff" stop-opacity=".05"/>
+          </linearGradient>
+        </defs>
+        <g stroke="#ffffff" fill="none" stroke-linejoin="round" stroke-linecap="round">
+          <!-- isometric ground grid -->
+          <g stroke-opacity=".2" stroke-width="1">
+            <path d="M-40 86 L160 -14"/><path d="M0 106 L200 6"/><path d="M40 126 L240 26"/><path d="M80 146 L280 46"/><path d="M120 166 L320 66"/><path d="M160 182 L360 82"/>
+            <path d="M360 86 L160 -14"/><path d="M320 106 L120 6"/><path d="M280 126 L80 26"/><path d="M240 146 L40 46"/><path d="M200 166 L0 66"/><path d="M160 182 L-40 82"/>
+          </g>
+          <!-- a few minimal iso buildings (3D from lines) -->
+          <g stroke-opacity=".64" stroke-width="1.3">
+            <path d="M70 96 L96 83 L122 96 L96 109 Z" fill="url(#mmfade)"/><path d="M70 96 L70 74 L96 61 L96 83 Z" fill="#ffffff" fill-opacity=".05"/><path d="M122 96 L122 74 L96 61 L96 83 Z" fill="#ffffff" fill-opacity=".02"/>
+            <path d="M196 110 L224 96 L252 110 L224 124 Z" fill="url(#mmfade)"/><path d="M196 110 L196 84 L224 70 L224 96 Z" fill="#ffffff" fill-opacity=".05"/><path d="M252 110 L252 84 L224 70 L224 96 Z" fill="#ffffff" fill-opacity=".02"/>
+            <path d="M120 138 L142 127 L164 138 L142 149 Z" fill="url(#mmfade)"/><path d="M120 138 L120 122 L142 111 L142 127 Z" fill="#ffffff" fill-opacity=".05"/><path d="M164 138 L164 122 L142 111 L142 127 Z" fill="#ffffff" fill-opacity=".02"/>
+          </g>
+          <!-- the road to the salon -->
+          <path d="M150 150 L172 88" stroke-opacity=".35" stroke-width="2.4" stroke-dasharray="5 6"/>
+        </g>
+        <!-- the salon pin -->
+        <g class="mm-pin" transform="translate(172 80)">
+          <circle class="mm-pulse" cx="0" cy="6" r="6" fill="none" stroke="#ffffff" stroke-width="1.4"/>
+          <path d="M0 -16 C9 -16 13 -9 13 -3 C13 5 0 14 0 14 C0 14 -13 5 -13 -3 C-13 -9 -9 -16 0 -16 Z" fill="#0b0b0d" stroke="#ffffff" stroke-width="1.6"/>
+          <circle cx="0" cy="-3" r="4.2" fill="#ffffff"/>
+        </g>
+      </svg>
+      <span class="mm-tag">Badstuestræde 16 · Copenhagen K</span>
+      </a>
+      <div class="ft-row"><button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=Black+Silva+Hairdresser%2C+Badstuestr%C3%A6de+16%2C+1209+K%C3%B8benhavn+K%2C+Denmark','_blank')">Get directions ↗</button></div>
     </div>
     <div class="fasttrack" id="reviewbox" data-fade style="margin-top:18px">
       <p class="ft-k">★ Voices of the chair</p>
@@ -311,10 +369,19 @@
   <div class="sheet" id="m-done"></div>
 </div>
 <button id="restart-top" onclick="location.reload()">&#8634; Restart</button>
-<a class="gps-pill" href="https://www.google.com/maps/dir/?api=1&destination=Black+Silva+Hairdresser%2C+Badstuestr%C3%A6de+16%2C+1209+K%C3%B8benhavn+K%2C+Denmark" target="_blank" rel="noopener" aria-label="Open directions to Black Silva Hairdresser in Google Maps">
-  <span class="gps-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
-  <span class="gps-txt"><small>Press here</small><strong>GPS · Find the salon</strong></span>
-</a>
+<div class="ft-fab" id="ftFab">
+  <div class="ft-panel" id="ftPanel">
+    <p class="ftp-k">Returning guest</p>
+    <h4 class="serif">Fast Track</h4>
+    <p class="ftp-sub">Enter the email from your last booking and we'll reload the exact same services — straight to Confirm &amp; checkout. <b>First time here?</b> Just close this and scroll down to book step by step.</p>
+    <div class="ft-row"><input id="ft-email" type="email" placeholder="Email from your last visit" autocomplete="email"><button onclick="BS.fasttrack()">Book now</button></div>
+    <div class="ft-err" id="ft-err"></div>
+  </div>
+  <button class="gps-pill" id="ftPill" type="button" aria-label="Fast Track — book with your last email" aria-expanded="false">
+    <span class="gps-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 L4 14 h7 l-1 8 L20 9 h-7 z"/></svg></span>
+    <span class="gps-txt"><small>Press here</small><strong>Fast Track · Book now</strong></span>
+  </button>
+</div>
 <div id="loader"><div class="l">Black Silva</div><div class="bar"><i></i></div><div class="e" id="err"></div></div>
 
 <script>
@@ -1060,6 +1127,21 @@ function start(){
   var loader=document.getElementById('loader'); gsap.to(loader,{opacity:0,duration:.7,delay:.3,onComplete:function(){ loader.style.display='none'; }});
   setTimeout(function(){ ScrollTrigger.refresh(); window.scrollTo(0,0); },250);
 }
+</script>
+<script>
+  /* Fast Track floating pill — tap to open the email panel, tap outside / Esc to close */
+  (function(){
+    var fab=document.getElementById('ftFab'), pill=document.getElementById('ftPill'); if(!fab||!pill) return;
+    function close(){ fab.classList.remove('open'); pill.setAttribute('aria-expanded','false'); }
+    pill.addEventListener('click',function(e){ e.stopPropagation();
+      var open=fab.classList.toggle('open'); pill.setAttribute('aria-expanded', open?'true':'false');
+      if(open){ var i=document.getElementById('ft-email'); if(i) setTimeout(function(){ i.focus(); },120); }
+    });
+    document.addEventListener('click',function(e){ if(fab.classList.contains('open') && !fab.contains(e.target)) close(); });
+    document.addEventListener('keydown',function(e){ if(e.key==='Escape') close(); });
+    /* once Fast Track succeeds it enters the booking flow — close the panel */
+    var inp=document.getElementById('ft-email'); if(inp) inp.addEventListener('keydown',function(e){ if(e.key==='Enter' && window.BS && BS.fasttrack) BS.fasttrack(); });
+  })();
 </script>
 <script src="reviews.js"></script>
 <script>

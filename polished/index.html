@@ -281,10 +281,12 @@
   /* ===== isometric line minimap in the Find-the-salon box ===== */
   .findbox .minimap{ display:block; position:relative; margin-top:12px; border-radius:14px; overflow:hidden;
     border:1px solid rgba(255,255,255,.12); background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(0,0,0,.3)); transition:border-color .2s; }
-  .findbox .minimap:hover{ border-color:rgba(255,255,255,.32); }
-  .findbox .minimap svg{ display:block; width:100%; height:auto; }
-  .findbox .minimap .mm-tag{ position:absolute; left:10px; bottom:9px; font-size:10.5px; letter-spacing:.04em; color:rgba(255,255,255,.78);
-    background:rgba(0,0,0,.42); padding:3px 9px; border-radius:999px; -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px); }
+  .findbox .minimap:hover{ border-color:rgba(232,196,120,.4); }
+  .findbox .minimap svg,.findbox .minimap img{ display:block; width:100%; height:auto; }
+  .findbox .minimap img{ transition:transform .4s cubic-bezier(.2,.8,.2,1); }
+  .findbox .minimap:hover img{ transform:scale(1.03); }
+  .findbox .minimap .mm-tag{ position:absolute; right:10px; bottom:9px; font-size:10px; letter-spacing:.04em; color:rgba(255,255,255,.8);
+    background:rgba(0,0,0,.5); padding:3px 9px; border-radius:999px; -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px); }
   .mm-pulse{ transform-box:fill-box; transform-origin:center; animation:mmpulse 2.4s ease-out infinite; }
   @keyframes mmpulse{ 0%{ transform:scale(.35); opacity:.9; } 100%{ transform:scale(2.6); opacity:0; } }
   @media (prefers-reduced-motion: reduce){ .mm-pulse{ animation:none; } }
@@ -309,34 +311,7 @@
       <p class="ft-k">Find us</p>
       <h3 class="serif">Find the salon</h3>
       <a class="minimap" href="https://www.google.com/maps/dir/?api=1&destination=Black+Silva+Hairdresser%2C+Badstuestr%C3%A6de+16%2C+1209+K%C3%B8benhavn+K%2C+Denmark" target="_blank" rel="noopener" aria-label="Open directions to Black Silva Hairdresser">
-      <svg viewBox="0 0 320 168" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-        <defs>
-          <linearGradient id="mmfade" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="#ffffff" stop-opacity=".22"/><stop offset="1" stop-color="#ffffff" stop-opacity=".05"/>
-          </linearGradient>
-        </defs>
-        <g stroke="#ffffff" fill="none" stroke-linejoin="round" stroke-linecap="round">
-          <!-- isometric ground grid -->
-          <g stroke-opacity=".2" stroke-width="1">
-            <path d="M-40 86 L160 -14"/><path d="M0 106 L200 6"/><path d="M40 126 L240 26"/><path d="M80 146 L280 46"/><path d="M120 166 L320 66"/><path d="M160 182 L360 82"/>
-            <path d="M360 86 L160 -14"/><path d="M320 106 L120 6"/><path d="M280 126 L80 26"/><path d="M240 146 L40 46"/><path d="M200 166 L0 66"/><path d="M160 182 L-40 82"/>
-          </g>
-          <!-- a few minimal iso buildings (3D from lines) -->
-          <g stroke-opacity=".64" stroke-width="1.3">
-            <path d="M70 96 L96 83 L122 96 L96 109 Z" fill="url(#mmfade)"/><path d="M70 96 L70 74 L96 61 L96 83 Z" fill="#ffffff" fill-opacity=".05"/><path d="M122 96 L122 74 L96 61 L96 83 Z" fill="#ffffff" fill-opacity=".02"/>
-            <path d="M196 110 L224 96 L252 110 L224 124 Z" fill="url(#mmfade)"/><path d="M196 110 L196 84 L224 70 L224 96 Z" fill="#ffffff" fill-opacity=".05"/><path d="M252 110 L252 84 L224 70 L224 96 Z" fill="#ffffff" fill-opacity=".02"/>
-            <path d="M120 138 L142 127 L164 138 L142 149 Z" fill="url(#mmfade)"/><path d="M120 138 L120 122 L142 111 L142 127 Z" fill="#ffffff" fill-opacity=".05"/><path d="M164 138 L164 122 L142 111 L142 127 Z" fill="#ffffff" fill-opacity=".02"/>
-          </g>
-          <!-- the road to the salon -->
-          <path d="M150 150 L172 88" stroke-opacity=".35" stroke-width="2.4" stroke-dasharray="5 6"/>
-        </g>
-        <!-- the salon pin -->
-        <g class="mm-pin" transform="translate(172 80)">
-          <circle class="mm-pulse" cx="0" cy="6" r="6" fill="none" stroke="#ffffff" stroke-width="1.4"/>
-          <path d="M0 -16 C9 -16 13 -9 13 -3 C13 5 0 14 0 14 C0 14 -13 5 -13 -3 C-13 -9 -9 -16 0 -16 Z" fill="#0b0b0d" stroke="#ffffff" stroke-width="1.6"/>
-          <circle cx="0" cy="-3" r="4.2" fill="#ffffff"/>
-        </g>
-      </svg>
+      <img src="salon-map.webp" alt="Isometric map of Copenhagen with Black Silva Hairdresser highlighted" loading="lazy" decoding="async">
       <span class="mm-tag">Badstuestræde 16 · Copenhagen K</span>
       </a>
       <div class="ft-row"><button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=Black+Silva+Hairdresser%2C+Badstuestr%C3%A6de+16%2C+1209+K%C3%B8benhavn+K%2C+Denmark','_blank')">Get directions ↗</button></div>

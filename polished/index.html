@@ -1092,13 +1092,29 @@ function start(){
 </script>
 <script>
   /* Dark-intro shader backdrop — radial light rays behind the hero, fading out as
-     you scroll into the light. Vanilla port of the supplied ShaderAnimation. */
+     you scroll into the light. Vanilla port of the supplied ShaderAnimation.
+
+     Safety notes — DO NOT remove unless you really know what you're doing:
+     - We MUST wait until the salon has its own WebGL canvas before asking for ours.
+       If we ask first and the device only has one GL slot, the salon's renderer
+       fails with "Error creating WebGL context." — bricking the booking flow.
+     - We also bail silently if our own context can't be created or is later lost. */
   (function(){
     var host=document.getElementById('shaderbg'); if(!host) return;
+
+    function salonReady(){
+      /* salon has booted only when its <canvas> is attached to #stage */
+      if(!document.querySelector('#stage canvas')) return false;
+      /* if the salon's own loader is showing an error, do nothing */
+      var err=document.getElementById('err');
+      if(err && err.style.display && err.style.display!=='none' && err.textContent) return false;
+      return true;
+    }
     var tries=0;
     function go(){
-      if(!window.THREE){ if(tries++>200) return; return setTimeout(go,80); }
-      try{ init(); }catch(e){ host.style.display='none'; }
+      if(!window.THREE){ if(tries++>250){ host.style.display='none'; return; } return setTimeout(go,80); }
+      if(!salonReady()){ if(tries++>250){ host.style.display='none'; return; } return setTimeout(go,100); }
+      try{ init(); }catch(e){ host.style.display='none'; if(window.console) console.warn('Shader backdrop disabled:', e&&e.message); }
     }
     function init(){
       var THREE=window.THREE;
@@ -1126,9 +1142,16 @@ function start(){
       ].join('\n');
       var material=new THREE.ShaderMaterial({uniforms:uniforms,vertexShader:vert,fragmentShader:frag});
       scene.add(new THREE.Mesh(geometry,material));
-      var renderer=new THREE.WebGLRenderer({antialias:false});
+      /* try/catch around context creation specifically so a single-context device
+         can't take the salon down with us */
+      var renderer;
+      try{ renderer=new THREE.WebGLRenderer({antialias:false}); }
+      catch(e){ host.style.display='none'; if(window.console) console.warn('Shader backdrop skipped — no second GL context.'); return; }
       renderer.setPixelRatio(Math.min(window.devicePixelRatio,1.5));
       host.appendChild(renderer.domElement);
+      /* if the browser later steals our context, vanish quietly */
+      var lost=false;
+      renderer.domElement.addEventListener('webglcontextlost', function(ev){ ev.preventDefault(); lost=true; host.style.display='none'; }, false);
       function resize(){ var w=host.clientWidth||innerWidth, h=host.clientHeight||innerHeight;
         renderer.setSize(w,h); uniforms.resolution.value.x=renderer.domElement.width; uniforms.resolution.value.y=renderer.domElement.height; }
       resize(); addEventListener('resize',resize,false);
@@ -1139,9 +1162,11 @@ function start(){
         var p=max>0?(scrollY/max):0; vis=Math.max(0,1-p/0.26); host.style.opacity=vis.toFixed(3); }
       fade(); addEventListener('scroll',fade,{passive:true});
 
-      (function loop(){ requestAnimationFrame(loop);
+      (function loop(){ if(lost) return; requestAnimationFrame(loop);
         if(vis<=0.01) return;                 /* skip rendering once fully faded */
-        uniforms.time.value+=0.05; renderer.render(scene,camera); })();
+        try{ uniforms.time.value+=0.05; renderer.render(scene,camera); }
+        catch(e){ lost=true; host.style.display='none'; }
+      })();
     }
     go();
   })();

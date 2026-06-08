@@ -27,7 +27,7 @@
   .panel{ min-height:100svh; display:flex; flex-direction:column; padding:120px 7vw 80px; }
 
   nav{ position:fixed; top:0; left:0; right:0; z-index:6; display:flex; align-items:center; justify-content:space-between;
-    padding:18px 7vw; backdrop-filter:blur(8px); background:var(--ui-bar); border-bottom:1px solid var(--ui-line); transition:background .15s linear,border-color .15s linear; }
+    padding:18px 7vw; backdrop-filter:blur(8px); background:var(--ui-bar); border-bottom:1px solid var(--ui-line); transition:background .15s linear,border-color .15s linear,opacity .7s ease; }
   .brand{ display:flex; align-items:center; gap:11px; letter-spacing:.16em; }
   .brand .dot{ width:9px; height:9px; border-radius:50%; background:linear-gradient(140deg,#fff,#9aa0a6 60%,#3a3d42); box-shadow:0 0 14px rgba(255,255,255,.5); }
   .navlinks{ display:flex; gap:26px; font-size:12px; letter-spacing:.18em; color:var(--ui-dim); }
@@ -290,6 +290,13 @@
   .mm-pulse{ transform-box:fill-box; transform-origin:center; animation:mmpulse 2.4s ease-out infinite; }
   @keyframes mmpulse{ 0%{ transform:scale(.35); opacity:.9; } 100%{ transform:scale(2.6); opacity:0; } }
   @media (prefers-reduced-motion: reduce){ .mm-pulse{ animation:none; } }
+
+  /* ===== clean first impression: only the title + moving shader, until first scroll ===== */
+  .hero-reveal{ opacity:0; transform:translateY(20px); transition:opacity .9s ease, transform .9s cubic-bezier(.2,.8,.2,1); will-change:opacity,transform; }
+  body.revealed .hero-reveal{ opacity:1; transform:none; }
+  body:not(.revealed) nav{ opacity:0; pointer-events:none; }
+  body:not(.revealed) .ft-fab{ opacity:0; transform:translateY(14px); pointer-events:none; }
+  .ft-fab{ transition:opacity .8s ease, transform .8s cubic-bezier(.2,.8,.2,1); }
 </style>
 </head>
 <body>
@@ -303,11 +310,11 @@
 </nav>
 <main id="scroll">
   <section id="hero" class="panel">
-    <p class="eyebrow" data-fade>Copenhagen · Badstuestræde 16</p>
+    <p class="eyebrow hero-reveal" style="transition-delay:.02s">Copenhagen · Badstuestræde 16</p>
     <h1 data-fade>Black Silva<br><span class="thin">Hairdresser</span></h1>
-    <p class="tagline" data-fade>Step out of the dark and into the chair. Scroll to walk into the studio and begin your booking.</p>
-    <div class="scrollcue" data-fade><span class="track"></span> Scroll to walk in</div>
-    <div class="fasttrack findbox" data-fade>
+    <p class="tagline hero-reveal" style="transition-delay:.06s">Step out of the dark and into the chair. Scroll to walk into the studio and begin your booking.</p>
+    <div class="scrollcue hero-reveal" style="transition-delay:.1s"><span class="track"></span> Scroll to walk in</div>
+    <div class="fasttrack findbox hero-reveal" style="transition-delay:.16s">
       <p class="ft-k">Find us</p>
       <h3 class="serif">Find the salon</h3>
       <a class="minimap" href="https://www.google.com/maps/dir/?api=1&destination=Black+Silva+Hairdresser%2C+Badstuestr%C3%A6de+16%2C+1209+K%C3%B8benhavn+K%2C+Denmark" target="_blank" rel="noopener" aria-label="Open directions to Black Silva Hairdresser">
@@ -316,7 +323,7 @@
       </a>
       <div class="ft-row"><button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=Black+Silva+Hairdresser%2C+Badstuestr%C3%A6de+16%2C+1209+K%C3%B8benhavn+K%2C+Denmark','_blank')">Get directions ↗</button></div>
     </div>
-    <div class="fasttrack" id="reviewbox" data-fade style="margin-top:18px">
+    <div class="fasttrack hero-reveal" id="reviewbox" style="margin-top:18px;transition-delay:.22s">
       <p class="ft-k">★ Voices of the chair</p>
       <h3 class="serif">What guests say</h3>
       <div class="rv-sum">
@@ -1226,6 +1233,23 @@ function start(){
       })();
     }
     go();
+  })();
+</script>
+<script>
+  /* Clean first impression: keep only the title + moving shader until the guest
+     starts to scroll / swipe / wheel — then fade everything else in (once). */
+  (function(){
+    var done=false;
+    function reveal(){ if(done) return; done=true; document.body.classList.add('revealed'); off(); }
+    function onScroll(){ if((window.scrollY||window.pageYOffset||0)>2) reveal(); }
+    function onKey(e){ if(['ArrowDown','ArrowUp','PageDown','PageUp','End','Home',' ','Spacebar'].indexOf(e.key)>=0) reveal(); }
+    function off(){ removeEventListener('scroll',onScroll); removeEventListener('wheel',reveal); removeEventListener('touchmove',reveal); removeEventListener('keydown',onKey); }
+    addEventListener('scroll',onScroll,{passive:true});
+    addEventListener('wheel',reveal,{passive:true});
+    addEventListener('touchmove',reveal,{passive:true});
+    addEventListener('keydown',onKey);
+    /* if the page is reloaded already scrolled down, don't hide things */
+    setTimeout(function(){ if((window.scrollY||window.pageYOffset||0)>2) reveal(); }, 400);
   })();
 </script>
 </body>

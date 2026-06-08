@@ -245,6 +245,13 @@
     var f=$('feed');
     if(!ts.length){ f.innerHTML='<div class="empty">No reviews yet — be the first to share your visit.</div>'; return; }
     f.innerHTML=ts.map(cardHTML).join('');
+    /* deep-link: if the URL has #th-<id>, scroll to and highlight that thread */
+    if(/^#th-/.test(location.hash)){
+      var el=document.getElementById(location.hash.slice(1));
+      if(el){ setTimeout(function(){ el.scrollIntoView({behavior:'smooth',block:'center'});
+        el.style.outline='1px solid rgba(216,184,120,.6)'; el.style.boxShadow='0 0 0 6px rgba(216,184,120,.18)';
+        setTimeout(function(){ el.style.outline=''; el.style.boxShadow=''; },2400); },200); }
+    }
   }); }
   function refreshSummary(){ R.summary().then(function(s){
     $('ratingLine').innerHTML='<span class="big">'+(s.avg?s.avg.toFixed(1):'—')+'</span><span class="st">'+R.stars(s.avg)+'</span><span>'+s.visits+' visit'+(s.visits!==1?'s':'')+' · '+s.threads+' guest'+(s.threads!==1?'s':'')+'</span>';

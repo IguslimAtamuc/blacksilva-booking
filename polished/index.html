@@ -217,6 +217,44 @@
     .times{ grid-template-columns:repeat(2,1fr); }
     .modal,#m-login{ align-items:flex-end; justify-content:center; padding:0; } .mcard{ width:100%; border-radius:24px 24px 0 0; padding:26px 20px calc(26px + env(safe-area-inset-bottom)); }
   }
+
+  /* ===== hero reviews preview — golden stars + 3 short cards ===== */
+  #reviewbox .rv-sum{ display:flex; align-items:baseline; gap:10px; margin-top:6px; flex-wrap:wrap; }
+  #reviewbox .rv-sum .rv-num{ font-family:var(--display); font-weight:600; font-size:32px; line-height:1; color:#e8c478; }
+  #reviewbox .rv-sum .rv-st{ color:#e8c478; letter-spacing:2px; font-size:18px; text-shadow:0 0 14px rgba(232,196,120,.4); }
+  #reviewbox .rv-sum .rv-cnt{ color:var(--ui-dim); font-size:12px; }
+  #reviewbox .rv-list{ display:flex; flex-direction:column; gap:10px; margin-top:14px; }
+  #reviewbox .rv-card{ display:flex; gap:11px; align-items:flex-start; padding:11px 12px; background:rgba(0,0,0,.32);
+    border:1px solid rgba(255,255,255,.07); border-radius:14px; cursor:pointer; transition:.16s; text-decoration:none; color:inherit; }
+  #reviewbox .rv-card:hover,#reviewbox .rv-card:active{ border-color:rgba(232,196,120,.45); background:rgba(0,0,0,.5); transform:translateY(-1px); }
+  #reviewbox .rv-card .ra{ width:34px; height:34px; border-radius:50%; flex:0 0 auto; display:flex; align-items:center; justify-content:center; font-family:var(--display); font-size:16px; font-weight:600; color:#1a1208; background:linear-gradient(140deg,#f0d9a8,#d8b878); }
+  #reviewbox .rv-card .rb{ flex:1; min-width:0; }
+  #reviewbox .rv-card .rb1{ display:flex; align-items:center; gap:8px; font-size:13px; color:var(--ui-ink); font-weight:600; }
+  #reviewbox .rv-card .rb1 .rs{ color:#e8c478; letter-spacing:1px; font-size:12px; text-shadow:0 0 8px rgba(232,196,120,.45); }
+  #reviewbox .rv-card .rb2{ font-size:11px; color:var(--ui-dim); margin-top:1px; letter-spacing:.04em; }
+  #reviewbox .rv-card .rb3{ font-size:13px; color:rgba(255,255,255,.85); margin-top:5px; line-height:1.4; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+  #reviewbox .rv-empty{ margin-top:12px; font-size:13px; color:var(--ui-dim); }
+
+  /* ===== floating GPS pill — opens directions to the salon ===== */
+  .gps-pill{ position:fixed; right:14px; bottom:14px; z-index:14;
+    display:inline-flex; align-items:center; gap:12px; padding:11px 18px 11px 13px;
+    padding-bottom:max(11px, calc(env(safe-area-inset-bottom) + 4px));
+    background:rgba(10,8,6,.86); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+    border:1px solid rgba(216,184,120,.5); border-radius:999px;
+    color:#f4ecdc; text-decoration:none; font-family:var(--body);
+    box-shadow:0 18px 40px rgba(0,0,0,.55), inset 0 0 0 1px rgba(216,184,120,.15);
+    transition:transform .16s ease, box-shadow .16s ease, border-color .16s ease; }
+  .gps-pill .gps-ico{ width:32px; height:32px; border-radius:50%; background:linear-gradient(140deg,#f0d9a8,#d8b878); color:#1a1208;
+    display:flex; align-items:center; justify-content:center; flex:0 0 auto; animation:gpspulse 2.2s ease-in-out infinite; }
+  .gps-pill .gps-ico svg{ width:17px; height:17px; }
+  .gps-pill .gps-txt{ display:flex; flex-direction:column; line-height:1.08; }
+  .gps-pill .gps-txt small{ font-size:9px; letter-spacing:.32em; color:rgba(255,255,255,.6); text-transform:uppercase; font-weight:700; }
+  .gps-pill .gps-txt strong{ font-size:12.5px; font-weight:700; letter-spacing:.05em; color:#f7ecd6; }
+  .gps-pill:hover,.gps-pill:active{ transform:translateY(-2px); border-color:#e8c478; box-shadow:0 22px 48px rgba(0,0,0,.65), 0 0 22px rgba(232,196,120,.35), inset 0 0 0 1px rgba(216,184,120,.25); }
+  @keyframes gpspulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(232,196,120,.55);} 70%{ box-shadow:0 0 0 12px rgba(232,196,120,0);} }
+  @media(max-width:760px){ .gps-pill{ right:10px; bottom:10px; padding:9px 15px 9px 10px; gap:10px; }
+    .gps-pill .gps-ico{ width:28px; height:28px; } .gps-pill .gps-ico svg{ width:15px; height:15px; }
+    .gps-pill .gps-txt strong{ font-size:11.5px; } .gps-pill .gps-txt small{ font-size:8.5px; letter-spacing:.28em; } }
 </style>
 </head>
 <body>
@@ -241,10 +279,15 @@
       <div class="ft-err" id="ft-err"></div>
     </div>
     <div class="fasttrack" id="reviewbox" data-fade style="margin-top:18px">
-      <p class="ft-k">★ Reviews</p>
-      <h3 class="serif">Voices of the chair</h3>
-      <p id="rv-teaser">See what guests say — and how the same guests rate us visit after visit, on one running thread.</p>
-      <div class="ft-row">
+      <p class="ft-k">★ Voices of the chair</p>
+      <h3 class="serif">What guests say</h3>
+      <div class="rv-sum">
+        <span class="rv-num" id="rv-avg">—</span>
+        <span class="rv-st" id="rv-stars">☆☆☆☆☆</span>
+        <span class="rv-cnt" id="rv-cnt"></span>
+      </div>
+      <div class="rv-list" id="rv-list"><p class="rv-empty">Be the first to share your visit.</p></div>
+      <div class="ft-row" style="margin-top:14px">
         <button onclick="location.href='reviews.html'">Read all reviews</button>
         <button onclick="location.href='reviews.html#write'" style="background:transparent;color:var(--ui-ink);border:1px solid rgba(255,255,255,.32)">Write a review</button>
       </div>
@@ -263,6 +306,10 @@
   <div class="sheet" id="m-done"></div>
 </div>
 <button id="restart-top" onclick="location.reload()">&#8634; Restart</button>
+<a class="gps-pill" href="https://www.google.com/maps/dir/?api=1&destination=Black+Silva+Hairdresser%2C+Badstuestr%C3%A6de+16%2C+1209+K%C3%B8benhavn+K%2C+Denmark" target="_blank" rel="noopener" aria-label="Open directions to Black Silva Hairdresser in Google Maps">
+  <span class="gps-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
+  <span class="gps-txt"><small>Press here</small><strong>GPS · Find the salon</strong></span>
+</a>
 <div id="loader"><div class="l">Black Silva</div><div class="bar"><i></i></div><div class="e" id="err"></div></div>
 
 <script>
@@ -1011,10 +1058,30 @@ function start(){
 </script>
 <script src="reviews.js"></script>
 <script>
-  /* hero reviews teaser — shows the running average + invites guests to the thread */
-  (function(){ if(!window.BSReviews) return;
-    BSReviews.summary().then(function(s){ var t=document.getElementById('rv-teaser'); if(!t||!s.threads) return;
-      t.innerHTML='★ '+(s.avg?s.avg.toFixed(1):'—')+' from '+s.visits+' visit'+(s.visits!==1?'s':'')+' across '+s.threads+' guest'+(s.threads!==1?'s':'')+'. Read the threads — or add yours and keep it going after every visit.';
+  /* hero reviews preview — running average + 3 latest review cards with gold stars */
+  (function(){ if(!window.BSReviews) return; var R=window.BSReviews;
+    function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    function initial(n){ n=(n||'G').trim(); return n.charAt(0).toUpperCase(); }
+    Promise.all([R.summary(), R.list()]).then(function(res){
+      var s=res[0], ts=res[1]||[];
+      var avg=document.getElementById('rv-avg'), st=document.getElementById('rv-stars'), cnt=document.getElementById('rv-cnt'), list=document.getElementById('rv-list');
+      if(avg) avg.textContent = s.avg ? s.avg.toFixed(1) : '—';
+      if(st) st.textContent = R.stars(s.avg);
+      if(cnt && s.threads) cnt.textContent = '· '+s.visits+' visit'+(s.visits!==1?'s':'')+' from '+s.threads+' guest'+(s.threads!==1?'s':'');
+      if(!list) return;
+      var cards = ts.slice(0,3).map(function(t){
+        var posts=R.clientPosts(t), last=posts[posts.length-1]; if(!last) return '';
+        var snippet=last.text || last.experience || ''; if(snippet.length>140) snippet=snippet.slice(0,138).replace(/\s+\S*$/,'')+'…';
+        var svc=[last.service, last.stylist&&('with '+last.stylist)].filter(Boolean).join(' · ');
+        var meta=(posts.length>1?('visit #'+last.visit+(svc?' · ':'')):'')+svc;
+        return '<a class="rv-card" href="reviews.html#th-'+t.id+'">'
+          +'<span class="ra">'+esc(initial(t.name))+'</span>'
+          +'<span class="rb"><span class="rb1">'+esc(t.name)+' <span class="rs">'+R.stars(last.rating)+'</span></span>'
+          +(meta?'<span class="rb2">'+esc(meta)+'</span>':'')
+          +(snippet?'<span class="rb3">"'+esc(snippet)+'"</span>':'')
+          +'</span></a>';
+      }).join('');
+      if(cards) list.innerHTML=cards;
     }).catch(function(){});
   })();
 </script>

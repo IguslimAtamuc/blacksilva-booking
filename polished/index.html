@@ -32,7 +32,9 @@
   .brand .dot{ width:9px; height:9px; border-radius:50%; background:linear-gradient(140deg,#fff,#9aa0a6 60%,#3a3d42); box-shadow:0 0 14px rgba(255,255,255,.5); }
   .navlinks{ display:flex; gap:26px; font-size:12px; letter-spacing:.18em; color:var(--ui-dim); }
   .navlinks a{ color:inherit; text-decoration:none; }
-  @media(max-width:760px){ .navlinks{ display:none; } nav{ padding:14px 6vw; } }
+  @media(max-width:760px){ .navlinks{ display:none; } nav{ padding:14px 5vw; }
+    nav .brand span:not(.dot){ display:none; } /* hide 'HAIRDRESSER' so it never collides with Restart */
+    nav .brand b{ font-size:15px !important; } }
 
   #hero{ justify-content:center; align-items:flex-start; }
   .eyebrow{ font-size:11px; letter-spacing:.4em; color:var(--ui-dim); text-transform:uppercase; margin-bottom:20px; }
@@ -388,6 +390,15 @@
     .heroframe{ width:740px; padding:36px 40px 32px; }
     .heroframe h3{ font-size:54px; }
   }
+  /* the 'Scroll to start your booking' invite — plain centered text, no card */
+  .heroframe.startcue{ background:none; border:none; box-shadow:none; -webkit-backdrop-filter:none; backdrop-filter:none;
+    overflow:visible; text-align:center; max-height:none; padding:0; width:min(560px, calc(100% - 40px)); }
+  .startcue .sc-k{ font-size:11px; letter-spacing:.4em; text-transform:uppercase; color:rgba(232,196,120,.85); }
+  .startcue h2{ font-family:var(--display); font-weight:500; font-size:clamp(34px,9vw,68px); line-height:1.0; margin-top:14px; color:#f4ecdc; text-shadow:0 2px 30px rgba(0,0,0,.6); }
+  .startcue .sc-cue{ display:inline-block; margin-top:30px; }
+  .startcue .sc-track{ display:block; width:30px; height:48px; border:1px solid rgba(232,196,120,.5); border-radius:18px; position:relative; margin:0 auto; }
+  .startcue .sc-track::after{ content:""; position:absolute; left:50%; top:9px; width:4px; height:9px; border-radius:2px; background:#d8b878; transform:translateX(-50%); animation:dot 1.7s ease-in-out infinite; }
+  @media(min-width:1280px){ .heroframe.startcue h2{ font-size:76px; } }
 
   /* ===== dark theme: dampen the booking sheets so the rest of the project reads moody, not white ===== */
   .sheet{ background:rgba(20,15,10,.86); -webkit-backdrop-filter:blur(22px) saturate(1.2); backdrop-filter:blur(22px) saturate(1.2);
@@ -420,6 +431,8 @@
   .cbcircle{ border-color:#1a1208; }
   .back, .cal-arrow{ background:rgba(255,255,255,.05); border-color:rgba(232,196,120,.18); color:#f4ecdc; }
   .back:hover, .cal-arrow:hover{ border-color:#d8b878; }
+  .cal-title{ color:#f4ecdc; }
+  .cal-dow i{ color:rgba(244,236,220,.5); }
   .qrow input, .qrow select, .field input{
     background:rgba(255,255,255,.04); border-color:rgba(232,196,120,.18); color:#f4ecdc; }
   .qrow input::placeholder, .field input::placeholder, .ft-row input::placeholder{ color:rgba(244,236,220,.4); }
@@ -441,6 +454,9 @@
   .stripe-mount{ background:rgba(255,255,255,.94); border-radius:12px; padding:6px 6px; }
   #restart-top{ background:rgba(20,15,10,.7); border-color:rgba(232,196,120,.32); color:#f4ecdc; }
   .ms-info{ color:rgba(244,236,220,.55); } .ms-ok{ color:#4ad27e; }
+  /* snappier, reliable taps on mobile (no 300ms delay / double-tap zoom on controls) */
+  .cont, .confirm-btn, .cutcard, .chip, .tslot, .scard, .addon, .qopt, .qdrop-btn, .qdrop-list button,
+  .payopt, .back, .cal-arrow, .restart, .addcal, .gobtn, .gcopy, .peek-toggle, .ft-row button, button{ touch-action:manipulation; }
   /* gift code card on the booking-confirmed sheet */
   .giftcard{ margin-top:14px; padding:18px 16px; border:1px solid rgba(216,184,120,.45); border-radius:14px; background:linear-gradient(160deg, rgba(216,184,120,.08), rgba(216,184,120,.02)); text-align:center; }
   .giftcard .gk{ font-size:11px; letter-spacing:.32em; text-transform:uppercase; color:#a0826a; margin:0; }
@@ -517,6 +533,7 @@
   <section id="s2" class="panel"></section>
   <section id="s3" class="panel"></section>
   <section id="s4" class="panel"></section>
+  <section id="s5" class="panel"></section>
 </main>
 
 <!-- scroll-driven centered overlays: these play out FULLY before the walking
@@ -543,6 +560,12 @@
     <button onclick="location.href='reviews.html'">Read all reviews</button>
     <button onclick="location.href='reviews.html#write'" style="background:transparent;color:var(--ui-ink);border:1px solid rgba(255,255,255,.32)">Write a review</button>
   </div>
+</div>
+<!-- elegant invite that fills the gap after the reviews, before the walk-in -->
+<div class="heroframe startcue" id="hf-start" data-fadein="2.20" data-peakin="2.48" data-peakout="2.92" data-fadeout="3.15">
+  <p class="sc-k">The chair is ready</p>
+  <h2 class="serif">Scroll to start<br>your booking</h2>
+  <span class="sc-cue" aria-hidden="true"><span class="sc-track"></span></span>
 </div>
 <div id="ui">
   <div class="sheet" id="m-length"></div>
@@ -1315,11 +1338,11 @@ function start(){
     back:function(target){ if(target==='chooser'){ buildLength(); showStep('length'); } else if(target==='addons'){ buildAddons(choice.haircut); showStep('length'); } else if(target==='day'){ buildCalendar(); showStep('calendar'); } else if(target==='time'){ buildTime(); showStep('time'); } else if(target==='calendar'){ buildCalendar(); showStep('calendar'); } else if(target==='pay'){ showStep('pay'); } },
     length:function(g,l){ BS.haircut(g==='women'?'lady':'gentleman'); },
     /* picking a day now AUTO-advances to its own Time slide */
-    pickDay:function(i,label){ choice.dayIdx=i; choice.dayLabel=label; document.querySelectorAll('.chip').forEach(function(el){ el.classList.toggle('on',el.id===('day-'+i)); }); refreshCalendarPrice();
-      gsap.delayedCall(0.32, function(){ choice.time=null; buildTime(); showStep('time'); }); },
+    pickDay:function(i,label){ if(BS._adv) return; choice.dayIdx=i; choice.dayLabel=label; document.querySelectorAll('.chip').forEach(function(el){ el.classList.toggle('on',el.id===('day-'+i)); }); refreshCalendarPrice();
+      BS._adv=true; setTimeout(function(){ BS._adv=false; choice.time=null; buildTime(); showStep('time'); }, 280); },
     /* picking a time now AUTO-advances to the stylist slide */
-    pickTime:function(tm){ choice.time=tm; document.querySelectorAll('.tslot').forEach(function(e){ e.classList.remove('on'); }); var el=document.getElementById('t-'+tm.replace(':','')); if(el) el.classList.add('on');
-      gsap.delayedCall(0.32, function(){ buildStylist(); showStep('stylist'); }); },
+    pickTime:function(tm){ if(BS._adv) return; choice.time=tm; document.querySelectorAll('.tslot').forEach(function(e){ e.classList.remove('on'); }); var el=document.getElementById('t-'+tm.replace(':','')); if(el) el.classList.add('on');
+      BS._adv=true; setTimeout(function(){ BS._adv=false; buildStylist(); showStep('stylist'); }, 280); },
     calMonth:function(dir){ calMonthOffset=Math.max(0,Math.min(2,calMonthOffset+dir)); renderCalendarDays(); },
     _cc:function(){},
     /* tap the round arrow to push the sheet down (and tap again to bring it back) */
@@ -1386,7 +1409,7 @@ function start(){
   var proxy={p:0};
   /* Hold the walking character perfectly still for the first stretch of scroll so the
      Find-us + reviews overlays can play out fully BEFORE the walk-in begins. */
-  var HOLD_VH=2.2;
+  var HOLD_VH=3.25;
   function sceneProgress(){
     var maxS=document.documentElement.scrollHeight-innerHeight;
     var holdFrac=maxS>0?Math.min(0.9,(HOLD_VH*innerHeight)/maxS):0;

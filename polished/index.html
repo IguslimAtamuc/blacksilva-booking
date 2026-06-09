@@ -406,6 +406,52 @@
   .stripe-mount{ background:rgba(255,255,255,.94); border-radius:12px; padding:6px 6px; }
   #restart-top{ background:rgba(20,15,10,.7); border-color:rgba(232,196,120,.32); color:#f4ecdc; }
   .ms-info{ color:rgba(244,236,220,.55); } .ms-ok{ color:#4ad27e; }
+
+  /* ===== keep autofill dark so Email/Name don't go light-blue/white when the browser fills them ===== */
+  .sheet input:-webkit-autofill, .sheet input:-webkit-autofill:hover, .sheet input:-webkit-autofill:focus, .sheet input:-webkit-autofill:active,
+  .heroframe input:-webkit-autofill, .heroframe input:-webkit-autofill:hover, .heroframe input:-webkit-autofill:focus,
+  .ft-row input:-webkit-autofill, .ft-row input:-webkit-autofill:hover, .ft-row input:-webkit-autofill:focus,
+  .mcard input:-webkit-autofill, .mcard input:-webkit-autofill:hover, .mcard input:-webkit-autofill:focus,
+  .ft-panel input:-webkit-autofill, .ft-panel input:-webkit-autofill:hover, .ft-panel input:-webkit-autofill:focus{
+    -webkit-text-fill-color:#f4ecdc !important;
+    -webkit-box-shadow:0 0 0 1000px rgba(20,15,10,1) inset !important;
+    caret-color:#f4ecdc !important;
+    border-color:rgba(232,196,120,.32) !important;
+    transition:background-color 9999s ease-in-out 0s;
+  }
+
+  /* ===== custom Time dropdown in the Confirm step — dark, no native blue selection ===== */
+  .qdrop{ position:relative; }
+  .qdrop-btn{ width:100%; padding:11px 12px; border-radius:11px; border:1px solid rgba(232,196,120,.18);
+    background:rgba(255,255,255,.04); color:#f4ecdc; font:inherit; font-size:14px; cursor:pointer;
+    text-align:left; display:flex; justify-content:space-between; align-items:center; font-family:inherit; }
+  .qdrop.open .qdrop-btn, .qdrop-btn:focus{ border-color:#d8b878; outline:none; }
+  .qdrop-caret{ color:rgba(244,236,220,.55); font-size:13px; transition:transform .15s; }
+  .qdrop.open .qdrop-caret{ transform:rotate(180deg); color:#d8b878; }
+  .qdrop-list{ position:absolute; left:0; right:0; top:calc(100% + 4px);
+    background:rgba(20,15,10,.97); border:1px solid rgba(232,196,120,.22); border-radius:11px;
+    padding:5px; max-height:220px; overflow:auto;
+    opacity:0; pointer-events:none; transform:translateY(-4px);
+    transition:opacity .14s ease, transform .14s ease; z-index:11;
+    box-shadow:0 18px 40px rgba(0,0,0,.55); scrollbar-width:none; }
+  .qdrop-list::-webkit-scrollbar{ width:0; }
+  .qdrop.open .qdrop-list{ opacity:1; pointer-events:auto; transform:translateY(0); }
+  .qdrop-list button{ display:block; width:100%; padding:9px 11px; border:none; background:transparent;
+    color:#f4ecdc; font:inherit; font-size:14px; text-align:left; border-radius:7px; cursor:pointer; font-family:inherit; }
+  .qdrop-list button:hover, .qdrop-list button:active{ background:rgba(255,255,255,.06); }
+  .qdrop-list button.on{ background:rgba(216,184,120,.18); color:#d8b878; font-weight:600; }
+
+  /* ===== round arrow button replaces the drag-down bar on mobile sheets ===== */
+  .peek-toggle{ display:none; padding:0; }
+  @media(max-width:760px){
+    .peek-toggle{ display:flex; align-items:center; justify-content:center; width:38px; height:38px; border-radius:50%;
+      border:1px solid rgba(255,255,255,.55); background:rgba(255,255,255,.08); color:#fff;
+      margin:0 auto 12px; cursor:pointer; transition:background .15s ease, border-color .15s ease, transform .15s ease; }
+    .peek-toggle:hover, .peek-toggle:active{ background:rgba(255,255,255,.18); border-color:#fff; }
+    .peek-toggle:active{ transform:scale(.94); }
+    .peek-toggle svg{ width:18px; height:18px; transition:transform .35s cubic-bezier(.2,.8,.2,1); }
+    .sheet.min .peek-toggle svg{ transform:rotate(180deg); }
+  }
 </style>
 </head>
 <body>
@@ -458,6 +504,7 @@
 <div id="ui">
   <div class="sheet" id="m-length"></div>
   <div class="sheet" id="m-calendar"></div>
+  <div class="sheet" id="m-time"></div>
   <div class="sheet" id="m-stylist"></div>
   <div class="sheet" id="m-confirm"></div>
   <div class="sheet" id="m-pay"></div>
@@ -812,9 +859,9 @@ function start(){
     if(p>0.72 && !gated) gateBooking();
   }
 
-  function showStep(name){ ['m-length','m-calendar','m-stylist','m-confirm','m-pay','m-stripe','m-done'].forEach(function(id){ var el=document.getElementById(id); if(!el) return; if(id===('m-'+name)){ el.classList.add('on'); el.classList.remove('min'); el.style.transform=''; } else el.classList.remove('on'); }); }
-  function dots(n){ var s='<div class="step-dots">'; for(var i=1;i<=4;i++) s+='<i class="'+(i<=n?'a':'')+'"></i>'; return s+'</div>'; }
-  function grab(){ return '<div class="grab"></div>'; }
+  function showStep(name){ ['m-length','m-calendar','m-time','m-stylist','m-confirm','m-pay','m-stripe','m-done'].forEach(function(id){ var el=document.getElementById(id); if(!el) return; if(id===('m-'+name)){ el.classList.add('on'); el.classList.remove('min'); el.style.transform=''; } else el.classList.remove('on'); }); }
+  function dots(n){ var s='<div class="step-dots">'; for(var i=1;i<=5;i++) s+='<i class="'+(i<=n?'a':'')+'"></i>'; return s+'</div>'; }
+  function grab(){ return '<button class="peek-toggle" type="button" onclick="BS.togglePeek(this)" aria-label="Show or hide the panel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></button>'; }
   function backBtn(target){ return '<button class="back" onclick="BS.back(\''+target+'\')" aria-label="Back">‹</button>'; }
 
   function enterFlow(){ gated=true; mode='flow'; document.body.classList.add('flow');
@@ -924,18 +971,26 @@ function start(){
     grid.innerHTML=html;
   }
   function buildCalendar(){ var today=startDay(new Date());
-    choice.dayIdx=0; choice.dayLabel=fullDayLabel(today,0); choice.time=null; choice.price=priceForDay(0); choice.priceTier=1;
-    calMonthOffset=0;
-    var h=grab()+backBtn('addons')+dots(2)+'<p class="bk">Step 2 · Date &amp; time</p><h3 class="serif">Pick a slot</h3>';
+    if(choice.dayIdx===null||typeof choice.dayIdx==='undefined'){ choice.dayIdx=0; choice.dayLabel=fullDayLabel(today,0); choice.price=priceForDay(0); choice.priceTier=1; }
+    if(!calMonthOffset) calMonthOffset=0;
+    var h=grab()+backBtn('addons')+dots(2)+'<p class="bk">Step 2 · Date</p><h3 class="serif">Pick your day</h3>';
     h+='<div class="pricebar"><span id="slot-tier">Week 1 price</span><b id="slot-price">'+money(choice.price)+'</b></div>';
     h+='<p class="bsub">Booking is open for two months ahead — book a month early and the price stays at its best 375 DKK.</p>';
     h+='<div class="cal-nav"><button class="cal-arrow" id="cal-prev" onclick="BS.calMonth(-1)" aria-label="Previous month">‹</button><b class="cal-title" id="cal-title"></b><button class="cal-arrow" id="cal-next" onclick="BS.calMonth(1)" aria-label="Next month">›</button></div>';
     h+='<div class="cal-dow"><i>Sun</i><i>Mon</i><i>Tue</i><i>Wed</i><i>Thu</i><i>Fri</i><i>Sat</i></div>';
-    h+='<div class="cal-days" id="cal-grid"></div><div class="times">';
-    ['10:00','11:30','13:00','14:30','16:00','17:30','19:00','20:00'].forEach(function(tm){ h+='<div class="tslot" id="t-'+tm.replace(':','')+'" onclick="BS.pickTime(\''+tm+'\')"><span>'+tm+'</span><small class="slot-price">'+money(choice.price)+'</small></div>'; });
-    h+='</div><button class="cont" id="cal-cont" onclick="BS.afterCalendar()">Continue</button>';
+    h+='<div class="cal-days" id="cal-grid"></div>';
     document.getElementById('m-calendar').innerHTML=h; renderCalendarDays(); }
-  function buildStylist(){ var h=grab()+backBtn('calendar')+dots(3)+'<p class="bk">Step 3 · Your stylist</p><h3 class="serif">Who cuts your hair?</h3><div class="scards">';
+  function buildTime(){
+    var h=grab()+backBtn('day')+dots(3)+'<p class="bk">Step 3 · Time</p><h3 class="serif">Pick your time</h3>';
+    h+='<p class="bsub">'+(choice.dayLabel||'')+' &middot; <b style="color:#d8b878">'+money(choice.price)+'</b></p>';
+    h+='<div class="times">';
+    ['10:00','11:30','13:00','14:30','16:00','17:30','19:00','20:00'].forEach(function(tm){
+      h+='<div class="tslot'+(choice.time===tm?' on':'')+'" id="t-'+tm.replace(':','')+'" onclick="BS.pickTime(\''+tm+'\')"><span>'+tm+'</span><small class="slot-price">'+money(choice.price)+'</small></div>';
+    });
+    h+='</div>';
+    document.getElementById('m-time').innerHTML=h;
+  }
+  function buildStylist(){ var h=grab()+backBtn('time')+dots(4)+'<p class="bk">Step 4 · Your stylist</p><h3 class="serif">Who cuts your hair?</h3><div class="scards">';
     h+='<div class="scard eduard" onclick="BS.stylist(\'Eduard\')"><div class="av"></div><b class="serif">Eduard</b><span>Men&#39;s grooming</span></div>';
     h+='<div class="scard elena" onclick="BS.stylist(\'Elena\')"><div class="av"></div><b class="serif">Elena</b><span>Women&#39;s styling</span></div></div>';
     document.getElementById('m-stylist').innerHTML=h; }
@@ -946,21 +1001,21 @@ function start(){
   function buildConfirm(){
     if(!choice.email) choice.email=loggedInEmail();
     if(!choice.name)  choice.name=loggedInName();
-    var h=grab()+dots(4)+'<p class="bk">Step 4 · Review</p><h3 class="serif">Confirm booking</h3>';
+    var h=grab()+dots(5)+'<p class="bk">Step 5 · Review</p><h3 class="serif">Confirm booking</h3>';
     h+='<div class="summary">Haircut&nbsp;&nbsp;<b>'+choice.service+'</b><br>Extras&nbsp;&nbsp;'+addonText()+'<br>When&nbsp;&nbsp;'+choice.dayLabel+' · '+choice.time+'<br>Stylist&nbsp;&nbsp;'+choice.stylist+'<br><span class="tot">Total&nbsp;&nbsp;'+totalLine()+'</span></div>';
     h+='<p class="qm-h">Quick changes</p><div class="qmenu">';
-    h+=' <div class="qrow"><label>Email</label><input id="qm-email" type="email" value="'+(choice.email||'')+'" placeholder="you@email.com"></div>';
-    h+=' <div class="qrow"><label>Name (for this visit)</label><input id="qm-name" type="text" value="'+(choice.name||'')+'" placeholder="Your name"></div>';
-    h+=' <div class="qrow"><label>Time</label><select id="qm-time">';
-    TIME_SLOTS.forEach(function(t){ h+='<option value="'+t+'"'+(t===choice.time?' selected':'')+'>'+t+'</option>'; });
-    h+=' </select></div>';
+    h+=' <div class="qrow"><label>Email</label><input id="qm-email" type="email" autocomplete="email" value="'+(choice.email||'')+'" placeholder="you@email.com"></div>';
+    h+=' <div class="qrow"><label>Name (for this visit)</label><input id="qm-name" type="text" autocomplete="name" value="'+(choice.name||'')+'" placeholder="Your name"></div>';
+    /* custom Time dropdown — same dark palette, no native styling, no blue selection highlight */
+    h+=' <div class="qrow"><label>Time</label><div class="qdrop" id="qm-time-drop"><button type="button" class="qdrop-btn" onclick="BS.toggleTime(event)"><span id="qm-time-text">'+(choice.time||TIME_SLOTS[0])+'</span><span class="qdrop-caret">▾</span></button><div class="qdrop-list" id="qm-time-list">';
+    TIME_SLOTS.forEach(function(t){ h+='<button type="button" class="'+(t===choice.time?'on':'')+'" onclick="BS.setTime(\''+t+'\')">'+t+'</button>'; });
+    h+='</div></div></div>';
     h+=' <div class="qrow"><label>Stylist</label><div class="qpick"><button class="qopt'+(choice.stylist==='Eduard'?' on':'')+'" onclick="BS.pickStylist(\'Eduard\')">Eduard</button><button class="qopt'+(choice.stylist==='Elena'?' on':'')+'" onclick="BS.pickStylist(\'Elena\')">Elena</button></div></div>';
     h+='</div>';
     h+='<button class="confirm-btn" onclick="BS.confirm()"><span class="cbcircle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span><span>Confirm booking</span></button>';
     document.getElementById('m-confirm').innerHTML=h;
     var qe=document.getElementById('qm-email'); if(qe) qe.addEventListener('input',function(){ choice.email=qe.value.trim(); });
     var qn=document.getElementById('qm-name'); if(qn) qn.addEventListener('input',function(){ choice.name=qn.value.trim(); });
-    var qt=document.getElementById('qm-time'); if(qt) qt.addEventListener('change',function(){ choice.time=qt.value; });
   }
   var PAY_METHODS=[
     {k:'card',  label:'Card', sub:'Visa · Mastercard · Amex'},
@@ -1168,13 +1223,25 @@ function start(){
     haircut:function(type){ var c=CUTS[type]; if(!c) return; choice.haircut=type; choice.service=c.label; choice.fromPrice=c.from; choice.addons=[]; buildAddons(type); showStep('length'); },
     toggleAddon:function(el,name){ var i=choice.addons.indexOf(name); if(i>=0) choice.addons.splice(i,1); else choice.addons.push(name); el.classList.toggle('on',choice.addons.indexOf(name)>=0); },
     afterLength:function(){ buildCalendar(); showStep('calendar'); },
-    back:function(target){ if(target==='chooser'){ buildLength(); showStep('length'); } else if(target==='addons'){ buildAddons(choice.haircut); showStep('length'); } else if(target==='calendar'){ showStep('calendar'); } else if(target==='pay'){ showStep('pay'); } },
+    back:function(target){ if(target==='chooser'){ buildLength(); showStep('length'); } else if(target==='addons'){ buildAddons(choice.haircut); showStep('length'); } else if(target==='day'){ buildCalendar(); showStep('calendar'); } else if(target==='time'){ buildTime(); showStep('time'); } else if(target==='calendar'){ buildCalendar(); showStep('calendar'); } else if(target==='pay'){ showStep('pay'); } },
     length:function(g,l){ BS.haircut(g==='women'?'lady':'gentleman'); },
-    pickDay:function(i,label){ choice.dayIdx=i; choice.dayLabel=label; document.querySelectorAll('.chip').forEach(function(el){ el.classList.toggle('on',el.id===('day-'+i)); }); refreshCalendarPrice(); BS._cc(); },
-    pickTime:function(tm){ choice.time=tm; document.querySelectorAll('.tslot').forEach(function(e){ e.classList.remove('on'); }); var el=document.getElementById('t-'+tm.replace(':','')); if(el) el.classList.add('on'); BS._cc(); },
+    /* picking a day now AUTO-advances to its own Time slide */
+    pickDay:function(i,label){ choice.dayIdx=i; choice.dayLabel=label; document.querySelectorAll('.chip').forEach(function(el){ el.classList.toggle('on',el.id===('day-'+i)); }); refreshCalendarPrice();
+      gsap.delayedCall(0.32, function(){ choice.time=null; buildTime(); showStep('time'); }); },
+    /* picking a time now AUTO-advances to the stylist slide */
+    pickTime:function(tm){ choice.time=tm; document.querySelectorAll('.tslot').forEach(function(e){ e.classList.remove('on'); }); var el=document.getElementById('t-'+tm.replace(':','')); if(el) el.classList.add('on');
+      gsap.delayedCall(0.32, function(){ buildStylist(); showStep('stylist'); }); },
     calMonth:function(dir){ calMonthOffset=Math.max(0,Math.min(2,calMonthOffset+dir)); renderCalendarDays(); },
-    _cc:function(){ var c=document.getElementById('cal-cont'); if(c) c.classList.toggle('go', !!(choice.dayIdx!==null&&choice.time)); },
-    afterCalendar:function(){ if(!(choice.dayIdx!==null&&choice.time)) return; buildStylist(); showStep('stylist'); },
+    _cc:function(){},
+    /* tap the round arrow to push the sheet down (and tap again to bring it back) */
+    togglePeek:function(btn){ var s=btn&&btn.closest&&btn.closest('.sheet'); if(s) s.classList.toggle('min'); },
+    /* custom Time dropdown in the Confirm step */
+    toggleTime:function(e){ if(e&&e.stopPropagation) e.stopPropagation();
+      var d=document.getElementById('qm-time-drop'); if(d) d.classList.toggle('open'); },
+    setTime:function(tm){ choice.time=tm;
+      var t=document.getElementById('qm-time-text'); if(t) t.textContent=tm;
+      document.querySelectorAll('#qm-time-list button').forEach(function(b){ b.classList.toggle('on', b.textContent===tm); });
+      var d=document.getElementById('qm-time-drop'); if(d) d.classList.remove('open'); },
     stylist:function(who){ choice.stylist=who; setActiveStylist(who==='Eduard'?eduard:null); showStep('');
       seatCustomer(function(){ stylistArriveAndCut(function(){ buildConfirm(); showStep('confirm'); }); }); },
     pickStylist:function(who){ choice.stylist=who; setActiveStylist(who==='Eduard'?eduard:elena); document.querySelectorAll('.qopt').forEach(function(el){ el.classList.toggle('on', el.textContent===who); }); },
@@ -1255,7 +1322,9 @@ function start(){
       var open=fab.classList.toggle('open'); pill.setAttribute('aria-expanded', open?'true':'false');
       if(open){ var i=document.getElementById('ft-email'); if(i) setTimeout(function(){ i.focus(); },120); }
     });
-    document.addEventListener('click',function(e){ if(fab.classList.contains('open') && !fab.contains(e.target)) close(); });
+    document.addEventListener('click',function(e){ if(fab.classList.contains('open') && !fab.contains(e.target)) close();
+      /* close the custom Time dropdown when clicking elsewhere */
+      var d=document.getElementById('qm-time-drop'); if(d && d.classList.contains('open') && !d.contains(e.target)) d.classList.remove('open'); });
     document.addEventListener('keydown',function(e){ if(e.key==='Escape') close(); });
     /* once Fast Track succeeds it enters the booking flow — close the panel */
     var inp=document.getElementById('ft-email'); if(inp) inp.addEventListener('keydown',function(e){ if(e.key==='Enter' && window.BS && BS.fasttrack) BS.fasttrack(); });

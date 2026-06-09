@@ -94,9 +94,10 @@
   .scard.elena .av{ background:radial-gradient(circle at 35% 30%,#ff7ab8,#ff2d8f); } .scard.eduard .av{ background:radial-gradient(circle at 35% 30%,#7c818a,#33363c); }
   .scard b{ font-family:var(--display); font-size:21px; } .scard span{ display:block; font-size:11.5px; color:#70707a; margin-top:3px; }
   .cal-days{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; padding:14px 0 4px; }
-  .chip{ min-height:58px; text-align:center; padding:9px 4px; border-radius:14px; border:1px solid rgba(0,0,0,.1); background:rgba(255,255,255,.5); cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  .chip{ min-height:72px; text-align:center; padding:7px 4px 6px; border-radius:14px; border:1px solid rgba(0,0,0,.1); background:rgba(255,255,255,.5); cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; }
   .chip small{ display:block; font-size:9px; letter-spacing:0; text-transform:none; color:#80808a; white-space:nowrap; } .chip b{ font-family:var(--display); font-size:22px; display:block; line-height:1.1; }
-  .chip.on{ background:var(--ink); color:#fff; } .chip.on small{ color:#c7c7cf; }
+  .chip .chip-price{ display:block; font-style:normal; font-size:9.5px; font-weight:700; letter-spacing:.02em; color:#d8b878; margin-top:2px; }
+  .chip.on{ background:var(--ink); color:#fff; } .chip.on small{ color:#c7c7cf; } .chip.on .chip-price{ color:#1a1208; }
   .times{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:14px; }
   .tslot{ min-height:58px; padding:9px 4px; text-align:center; border-radius:12px; border:1px solid rgba(0,0,0,.1);
     background:rgba(255,255,255,.5); cursor:pointer; font-weight:700; font-size:14px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; }
@@ -205,14 +206,48 @@
     .fasttrack{ margin-top:26px; padding:17px 16px 15px; } .fasttrack h3{ font-size:26px; } .fasttrack p{ font-size:12.5px; }
     .ft-row{ flex-direction:column; } .ft-row button{ padding:13px; }
     .grab{ display:block; width:44px; height:5px; border-radius:3px; background:rgba(0,0,0,.2); margin:0 auto 12px; touch-action:none; }
-    .sheet{ left:0; right:0; bottom:0; top:auto; width:auto; max-height:62svh; transform:translateY(112%); border-radius:24px 24px 0 0; padding:16px 18px calc(20px + env(safe-area-inset-bottom)); transition:opacity .4s ease, transform .4s cubic-bezier(.2,.8,.2,1); } .sheet.on{ transform:translateY(0); }
+    .sheet{ left:0; right:0; bottom:0; top:auto; width:auto; max-height:88svh; transform:translateY(112%); border-radius:24px 24px 0 0; padding:14px 16px calc(16px + env(safe-area-inset-bottom)); transition:opacity .4s ease, transform .4s cubic-bezier(.2,.8,.2,1); } .sheet.on{ transform:translateY(0); }
+    /* keep the primary action glued to the bottom of the sheet so it is ALWAYS
+       reachable — content above scrolls if needed. Background remains gold; we
+       wrap a faded dark band behind the button via a pseudo-element so the
+       scrolling content doesn't bleed through. */
+    .sheet.on .cont, .sheet.on .confirm-btn{ position:sticky; bottom:0; z-index:2; box-shadow:0 -20px 26px -10px rgba(20,15,10,.95); }
+    /* tighter spacing on phones so everything fits without internal scroll */
+    .sheet h3{ font-size:clamp(24px,6.8vw,32px); }
+    .bsub{ font-size:13px; line-height:1.45; margin-top:6px; }
+    .cutgrid{ margin-top:12px; gap:8px; }
+    .cutcard{ min-height:0; padding:9px; }
+    .cutart{ aspect-ratio:1/1; max-height:38vw; }
+    .cutcopy b{ font-size:18px; }
+    .svc{ margin-top:10px; }
+    .svc img{ width:64px; height:64px; border-radius:14px; }
+    .svc-name{ font-size:20px; }
+    .addons{ margin-top:10px; gap:8px; }
+    .addon{ padding:11px 10px; font-size:13px; }
+    .pricebar{ margin-top:10px; padding:10px 12px; }
+    .pricebar b{ font-size:18px; }
+    .price-info{ margin-top:8px; }
+    .cal-nav{ margin-top:10px; }
+    .cal-title{ font-size:17px; }
+    .cal-dow{ margin-top:6px; }
+    .cal-days{ gap:5px; padding:4px 0; }
+    .times{ margin-top:10px; }
+    .scards{ margin-top:12px; gap:8px; }
+    .scard{ padding:12px; }
+    .scard .av{ width:44px; height:44px; margin-bottom:6px; }
+    .step-dots{ margin-bottom:10px; }
+    .summary{ margin-top:10px; padding-top:10px; font-size:13px; line-height:1.7; }
+    .qmenu{ padding:10px 10px 6px; }
+    .qrow{ margin-bottom:8px; }
+    .qrow input,.qrow select,.qdrop-btn{ padding:10px 12px; font-size:14px; }
     .sheet.on.min{ transform:translateY(calc(100% - 50px)); } .sheet.dragging{ transition:none; }
     .cutgrid{ grid-template-columns:1fr 1fr; gap:10px; }
     .cutcard{ min-height:208px; padding:10px; }
     .cutcopy b{ font-size:20px; }
     .cal-days{ grid-template-columns:repeat(7,minmax(0,1fr)); gap:5px; }
-    .chip{ min-height:48px; padding:4px 2px; } .chip b{ font-size:18px; }
-    .chip small{ font-size:8px; letter-spacing:0; display:none; }
+    .chip{ min-height:60px; padding:4px 2px 5px; } .chip b{ font-size:18px; }
+    .chip small{ font-size:8px; letter-spacing:0; display:block; opacity:.78; }
+    .chip .chip-price{ font-size:8.5px; letter-spacing:0; }
     .cal-title{ font-size:18px; }
     .times{ grid-template-columns:repeat(2,1fr); }
     .modal,#m-login{ align-items:flex-end; justify-content:center; padding:0; } .mcard{ width:100%; border-radius:24px 24px 0 0; padding:26px 20px calc(26px + env(safe-area-inset-bottom)); }
@@ -966,7 +1001,8 @@ function start(){
       var idx=Math.round((d-today)/86400000);
       var dis=(d<today || d>end), on=(idx===choice.dayIdx);
       var lbl=fullDayLabel(d,idx);
-      html+='<div class="chip'+(dis?' blank':'')+(on?' on':'')+'" id="day-'+idx+'"'+(dis?'':' onclick="BS.pickDay('+idx+',\''+lbl+'\')"')+'><small>'+DAY_NAMES[d.getDay()].slice(0,3)+'</small><b>'+day+'</b></div>';
+      var dayPrice=dis?'':priceForDay(idx);
+      html+='<div class="chip'+(dis?' blank':'')+(on?' on':'')+'" id="day-'+idx+'"'+(dis?'':' onclick="BS.pickDay('+idx+',\''+lbl+'\')"')+'><small>'+DAY_NAMES[d.getDay()].slice(0,3)+'</small><b>'+day+'</b>'+(dis?'':'<em class="chip-price">'+dayPrice+'</em>')+'</div>';
     }
     grid.innerHTML=html;
   }
@@ -974,8 +1010,7 @@ function start(){
     if(choice.dayIdx===null||typeof choice.dayIdx==='undefined'){ choice.dayIdx=0; choice.dayLabel=fullDayLabel(today,0); choice.price=priceForDay(0); choice.priceTier=1; }
     if(!calMonthOffset) calMonthOffset=0;
     var h=grab()+backBtn('addons')+dots(2)+'<p class="bk">Step 2 · Date</p><h3 class="serif">Pick your day</h3>';
-    h+='<div class="pricebar"><span id="slot-tier">Week 1 price</span><b id="slot-price">'+money(choice.price)+'</b></div>';
-    h+='<p class="bsub">Booking is open for two months ahead — book a month early and the price stays at its best 375 DKK.</p>';
+    h+='<p class="bsub">Each day shows its price — book a month early and it stays at its best <b style="color:#d8b878">375 DKK</b>.</p>';
     h+='<div class="cal-nav"><button class="cal-arrow" id="cal-prev" onclick="BS.calMonth(-1)" aria-label="Previous month">‹</button><b class="cal-title" id="cal-title"></b><button class="cal-arrow" id="cal-next" onclick="BS.calMonth(1)" aria-label="Next month">›</button></div>';
     h+='<div class="cal-dow"><i>Sun</i><i>Mon</i><i>Tue</i><i>Wed</i><i>Thu</i><i>Fri</i><i>Sat</i></div>';
     h+='<div class="cal-days" id="cal-grid"></div>';
@@ -985,7 +1020,7 @@ function start(){
     h+='<p class="bsub">'+(choice.dayLabel||'')+' &middot; <b style="color:#d8b878">'+money(choice.price)+'</b></p>';
     h+='<div class="times">';
     ['10:00','11:30','13:00','14:30','16:00','17:30','19:00','20:00'].forEach(function(tm){
-      h+='<div class="tslot'+(choice.time===tm?' on':'')+'" id="t-'+tm.replace(':','')+'" onclick="BS.pickTime(\''+tm+'\')"><span>'+tm+'</span><small class="slot-price">'+money(choice.price)+'</small></div>';
+      h+='<div class="tslot'+(choice.time===tm?' on':'')+'" id="t-'+tm.replace(':','')+'" onclick="BS.pickTime(\''+tm+'\')"><span>'+tm+'</span></div>';
     });
     h+='</div>';
     document.getElementById('m-time').innerHTML=h;

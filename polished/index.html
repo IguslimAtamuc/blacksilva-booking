@@ -297,6 +297,17 @@
   body:not(.revealed) nav{ opacity:0; pointer-events:none; }
   body:not(.revealed) .ft-fab{ opacity:0; transform:translateY(14px); pointer-events:none; }
   .ft-fab{ transition:opacity .8s ease, transform .8s cubic-bezier(.2,.8,.2,1); }
+  /* the fab CONTAINER must not swallow taps (its hidden panel is wide and was
+     covering the booking cards on mobile) — only the pill + open panel are clickable */
+  .ft-fab{ pointer-events:none; }
+  .ft-fab .gps-pill{ pointer-events:auto; }
+  body.flow .ft-fab{ opacity:0; pointer-events:none; }
+
+  /* hide scrollbars everywhere on this immersive page (still scrolls) */
+  html, body{ scrollbar-width:none; -ms-overflow-style:none; }
+  html::-webkit-scrollbar, body::-webkit-scrollbar{ width:0; height:0; display:none; }
+  .heroframe, .sheet{ scrollbar-width:none; -ms-overflow-style:none; }
+  .heroframe::-webkit-scrollbar, .sheet::-webkit-scrollbar{ width:0; height:0; display:none; }
 
   /* ===== hero centered + scroll-driven overlay cards ===== */
   #hero.hero-centered{ justify-content:center; align-items:center; text-align:center; padding:120px 7vw; }
@@ -529,6 +540,9 @@ function start(){
   key.shadow.mapSize.set(1024,1024); key.shadow.camera.near=1; key.shadow.camera.far=60; key.shadow.camera.left=-16; key.shadow.camera.right=16; key.shadow.camera.top=16; key.shadow.camera.bottom=-16; key.shadow.bias=-0.0006; scene.add(key);
   var signLight=new THREE.PointLight(0xfff2cf,2.4,18,2); signLight.position.set(0,3.6,5.6); scene.add(signLight);
   var fillLight=new THREE.PointLight(0xffffff,0.0,26,2); fillLight.position.set(0,3.6,-2.5); scene.add(fillLight);
+  /* warm spotlight that follows YOU (the customer) — "that one is you" */
+  var heroSpot=new THREE.SpotLight(0xffce8a, 2.6, 26, Math.PI/6.5, 0.55, 1.1);
+  heroSpot.position.set(0,9,3); scene.add(heroSpot); scene.add(heroSpot.target);
 
   var room=new THREE.Group(); scene.add(room);
   var floor=new THREE.Mesh(new THREE.PlaneGeometry(40,60),mat('#0a0a0c','#e9e6df',{roughness:.55,metalness:.08})); floor.rotation.x=-Math.PI/2; floor.position.set(0,0,-6); floor.receiveShadow=true; room.add(floor);
@@ -596,7 +610,8 @@ function start(){
       var cheek=new THREE.Mesh(new THREE.SphereGeometry(.025,12,8),cheekMat); cheek.position.set(s*.12,2.035,.221); cheek.scale.set(1,.55,.35); bodyG.add(cheek);
     });
     var nose=new THREE.Mesh(new THREE.ConeGeometry(.024,.065,14),m.skin); nose.position.set(0,2.055,.245); nose.rotation.x=Math.PI/2; nose.castShadow=true; bodyG.add(nose);
-    var smile=new THREE.Mesh(new THREE.TorusGeometry(.045,.006,8,24,Math.PI*.9),faceMat); smile.position.set(0,2.0,.235); smile.rotation.set(0,0,Math.PI*.05); smile.scale.y=.45; bodyG.add(smile);
+    /* a happy smile: rotate the arc so it curves UP (∪) instead of down */
+    var smile=new THREE.Mesh(new THREE.TorusGeometry(.05,.007,8,24,Math.PI*.9),faceMat); smile.position.set(0,1.985,.235); smile.rotation.set(0,0,Math.PI*1.05); smile.scale.y=.5; bodyG.add(smile);
     var hairBase=new THREE.Mesh(new THREE.SphereGeometry(.265,24,14,0,Math.PI*2,0,Math.PI*0.62),m.hair); hairBase.position.y=2.12; hairBase.castShadow=true; bodyG.add(hairBase);
     function arm(side){ var g=new THREE.Group(); g.position.set(side*0.39,1.67,0);
       var up=capsule(.085,.54,m.cloth,'y'); up.position.y=-0.27; g.add(up);
@@ -1199,6 +1214,10 @@ function start(){
     if(mode==='scroll'){ bodyG.scale.y=1+Math.sin(t*1.6)*0.012; }
     foliage.rotation.z=Math.sin(t*0.8)*0.04; particles.rotation.y=t*0.01;
     if(mode!=='scroll'){ applyBookingChars(t); applyBookCam(); }
+    /* keep the warm spotlight glued to the customer wherever they stand/walk */
+    var px=person.position.x, pz=person.position.z;
+    heroSpot.position.set(px, 8.6, pz+2.6);
+    heroSpot.target.position.set(px, 0.4, pz); heroSpot.target.updateMatrixWorld();
     renderer.render(scene,camera); requestAnimationFrame(tick); }
 
   gsap.registerPlugin(ScrollTrigger);

@@ -304,7 +304,7 @@
   #hero.hero-centered .scrollcue{ justify-content:center; }
   #hero.hero-centered .tagline{ max-width:520px; }
   /* fixed overlay frames — opacity tied to scroll position in JS */
-  .heroframe{ position:fixed; left:50%; top:50%; width:min(440px, calc(100% - 32px));
+  .heroframe{ position:fixed; left:50%; top:50%; width:min(440px, calc(100% - 32px)); max-height:88svh; overflow:auto;
     z-index:8; opacity:0; pointer-events:none; will-change:opacity,transform;
     transform:translate(-50%,-46%); transition:transform .35s cubic-bezier(.2,.8,.2,1); }
   .heroframe.active{ pointer-events:auto; transform:translate(-50%,-50%); }
@@ -317,6 +317,31 @@
   .heroframe .ft-row button{ background:#d8b878; color:#1a1208; }
   .heroframe .ft-row button + button{ background:transparent; color:#f4ecdc; border:1px solid rgba(232,196,120,.32); }
   body.flow .heroframe{ opacity:0 !important; pointer-events:none !important; }
+  /* on desktop the Find-the-salon + reviews cards are much larger and more present */
+  @media(min-width:761px){
+    .heroframe{ width:min(640px, calc(100% - 80px)); padding:32px 34px 28px; border-radius:26px; }
+    .heroframe .ft-k{ font-size:12px; letter-spacing:.36em; }
+    .heroframe h3{ font-size:46px; margin-top:7px; }
+    .heroframe .ft-row{ margin-top:20px; gap:12px; }
+    .heroframe .ft-row button{ padding:15px 22px; font-size:14px; }
+    .findbox .minimap{ margin-top:18px; border-radius:16px; }
+    .findbox .minimap .mm-tag{ font-size:12px; bottom:12px; right:12px; }
+    .heroframe .rv-sum{ gap:14px; margin-top:10px; }
+    .heroframe .rv-sum .rv-num{ font-size:46px; }
+    .heroframe .rv-sum .rv-st{ font-size:26px; }
+    .heroframe .rv-sum .rv-cnt{ font-size:13.5px; }
+    .heroframe .rv-list{ gap:12px; margin-top:18px; }
+    .heroframe .rv-card{ padding:15px 16px; border-radius:16px; }
+    .heroframe .rv-card .ra{ width:46px; height:46px; font-size:22px; }
+    .heroframe .rv-card .rb1{ font-size:15px; }
+    .heroframe .rv-card .rb1 .rs{ font-size:14px; }
+    .heroframe .rv-card .rb2{ font-size:12.5px; }
+    .heroframe .rv-card .rb3{ font-size:14.5px; -webkit-line-clamp:3; }
+  }
+  @media(min-width:1280px){
+    .heroframe{ width:740px; padding:36px 40px 32px; }
+    .heroframe h3{ font-size:54px; }
+  }
 
   /* ===== dark theme: dampen the booking sheets so the rest of the project reads moody, not white ===== */
   .sheet{ background:rgba(20,15,10,.86); -webkit-backdrop-filter:blur(22px) saturate(1.2); backdrop-filter:blur(22px) saturate(1.2);
@@ -390,10 +415,13 @@
   </section>
   <section id="s1" class="panel"></section>
   <section id="s2" class="panel"></section>
+  <section id="s3" class="panel"></section>
+  <section id="s4" class="panel"></section>
 </main>
 
-<!-- scroll-driven centered overlays: appear/disappear in sequence as the guest scrolls -->
-<div class="heroframe findbox" id="hf-find" data-fadein=".30" data-peakin=".55" data-peakout=".75" data-fadeout=".97">
+<!-- scroll-driven centered overlays: these play out FULLY before the walking
+     character adventure begins (the scene is held still during this zone) -->
+<div class="heroframe findbox" id="hf-find" data-fadein=".30" data-peakin=".55" data-peakout=".85" data-fadeout="1.05">
   <p class="ft-k">Find us</p>
   <h3 class="serif">Find the salon</h3>
   <a class="minimap" href="https://www.google.com/maps/dir/?api=1&destination=Black+Silva+Hairdresser%2C+Badstuestr%C3%A6de+16%2C+1209+K%C3%B8benhavn+K%2C+Denmark" target="_blank" rel="noopener" aria-label="Open directions to Black Silva Hairdresser">
@@ -402,7 +430,7 @@
   </a>
   <div class="ft-row"><button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=Black+Silva+Hairdresser%2C+Badstuestr%C3%A6de+16%2C+1209+K%C3%B8benhavn+K%2C+Denmark','_blank')">Get directions ↗</button></div>
 </div>
-<div class="heroframe" id="hf-voices" data-fadein="1.02" data-peakin="1.20" data-peakout="1.32" data-fadeout="1.45">
+<div class="heroframe" id="hf-voices" data-fadein="1.25" data-peakin="1.50" data-peakout="1.80" data-fadeout="2.00">
   <p class="ft-k">★ Voices of the chair</p>
   <h3 class="serif">What guests say</h3>
   <div class="rv-sum">
@@ -1175,7 +1203,15 @@ function start(){
 
   gsap.registerPlugin(ScrollTrigger);
   var proxy={p:0};
-  gsap.timeline({scrollTrigger:{trigger:'#scroll',start:'top top',end:'bottom bottom',scrub:0.5}}).to(proxy,{p:1,ease:'none',onUpdate:function(){ applyScene(proxy.p); }},0);
+  /* Hold the walking character perfectly still for the first stretch of scroll so the
+     Find-us + reviews overlays can play out fully BEFORE the walk-in begins. */
+  var HOLD_VH=2.2;
+  function sceneProgress(){
+    var maxS=document.documentElement.scrollHeight-innerHeight;
+    var holdFrac=maxS>0?Math.min(0.9,(HOLD_VH*innerHeight)/maxS):0;
+    return holdFrac<1 ? Math.max(0, Math.min(1,(proxy.p-holdFrac)/(1-holdFrac))) : 0;
+  }
+  gsap.timeline({scrollTrigger:{trigger:'#scroll',start:'top top',end:'bottom bottom',scrub:0.5}}).to(proxy,{p:1,ease:'none',onUpdate:function(){ applyScene(sceneProgress()); }},0);
   gsap.to('[data-fade]',{scrollTrigger:{trigger:'#hero',start:'top top',end:'bottom top',scrub:true},opacity:0,y:-30,stagger:0.04});
   /* DARK THEME: keep nav/text light throughout (no dark-on-white flip) */
   ScrollTrigger.create({trigger:'#scroll',start:'top top',end:'bottom bottom',scrub:true,onUpdate:function(self){ if(mode!=='scroll') return;
@@ -1304,7 +1340,7 @@ function start(){
       /* fade the rays out over the first stretch of scroll (into the light) */
       var vis=1;
       function fade(){ var max=document.documentElement.scrollHeight-innerHeight;
-        var p=max>0?(scrollY/max):0; vis=Math.max(0,1-p/0.26); host.style.opacity=vis.toFixed(3); }
+        var p=max>0?(scrollY/max):0; vis=Math.max(0,1-p/0.45); host.style.opacity=vis.toFixed(3); }
       fade(); addEventListener('scroll',fade,{passive:true});
 
       (function loop(){ if(lost) return; requestAnimationFrame(loop);

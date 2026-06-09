@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Black Silva — Redeem a gift</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  *{ box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+  html,body{ height:100%; }
+  body{ font-family:'Manrope',system-ui,sans-serif; background:#0b0907 url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80'><rect width='80' height='80' fill='%230b0907'/></svg>"); color:#f4ecdc; min-height:100dvh;
+    display:flex; align-items:center; justify-content:center; padding:24px; line-height:1.45;
+    background-image:radial-gradient(120% 80% at 50% 0%, rgba(216,184,120,.08), transparent 60%); }
+  .wrap{ width:100%; max-width:440px; background:rgba(20,15,10,.86); border:1px solid rgba(232,196,120,.24); border-radius:22px;
+    padding:30px 26px calc(26px + env(safe-area-inset-bottom)); box-shadow:0 30px 90px rgba(0,0,0,.55); backdrop-filter:blur(18px); }
+  .home{ display:inline-flex; align-items:center; gap:7px; font-size:11px; letter-spacing:.24em; text-transform:uppercase; color:rgba(244,236,220,.55); text-decoration:none; margin-bottom:16px; }
+  .home:hover{ color:#f4ecdc; }
+  .k{ font-size:11px; letter-spacing:.34em; text-transform:uppercase; color:#a0826a; }
+  h1{ font-family:'Cormorant Garamond',Georgia,serif; font-weight:600; font-size:36px; line-height:1.02; margin-top:5px; }
+  .sub{ margin-top:10px; font-size:13.5px; color:rgba(244,236,220,.7); }
+  label{ display:block; font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:rgba(244,236,220,.55); margin:20px 0 8px; }
+  input{ width:100%; padding:14px 14px; border-radius:12px; border:1px solid rgba(232,196,120,.22); background:rgba(255,255,255,.04); color:#f4ecdc;
+    font:inherit; font-size:18px; outline:none; letter-spacing:.18em; font-family:'Courier New',monospace; text-align:center; text-transform:uppercase; }
+  input:focus{ border-color:#d8b878; }
+  button{ width:100%; margin-top:18px; padding:15px; border:none; border-radius:14px; background:#d8b878; color:#1a1208; font-weight:800; letter-spacing:.12em; text-transform:uppercase; font-size:12.5px; cursor:pointer; font-family:inherit; transition:.15s; }
+  button:hover{ transform:translateY(-2px); box-shadow:0 14px 28px rgba(216,184,120,.25); }
+  .msg{ margin-top:14px; min-height:18px; font-size:13px; line-height:1.5; }
+  .msg.ok{ color:#4ad27e; } .msg.err{ color:#ff9b8a; }
+  .panel-ok{ display:none; margin-top:18px; padding:18px; border:1px solid #d8b878; border-radius:14px; background:linear-gradient(160deg, rgba(216,184,120,.08), rgba(216,184,120,.02)); text-align:center; }
+  .panel-ok.on{ display:block; }
+  .panel-ok .gcode{ font-family:'Courier New',monospace; font-size:26px; letter-spacing:.2em; color:#e8c478; font-weight:700; }
+  .panel-ok .gsub{ margin-top:8px; font-size:12.5px; color:rgba(244,236,220,.7); }
+  .panel-ok .gcta{ display:inline-block; margin-top:14px; padding:12px 20px; background:#d8b878; color:#1a1208; text-decoration:none; border-radius:11px; font-weight:700; font-size:12.5px; letter-spacing:.1em; text-transform:uppercase; }
+  .support{ margin-top:22px; padding:14px 16px; border-top:1px solid rgba(232,196,120,.16); }
+  .support .sk{ font-size:11px; letter-spacing:.28em; text-transform:uppercase; color:rgba(244,236,220,.55); }
+  .support .sp{ margin-top:6px; font-size:13px; color:rgba(244,236,220,.7); }
+  .support .row{ margin-top:12px; display:flex; gap:8px; flex-wrap:wrap; }
+  .support .row a{ flex:1; padding:11px 14px; border-radius:11px; font-weight:700; font-size:12.5px; text-decoration:none; text-align:center; }
+  .support .row a.insta{ background:#16161a; color:#fff; border:1px solid #16161a; }
+  .support .row a.mail{ background:transparent; color:#f4ecdc; border:1px solid rgba(232,196,120,.32); }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="home" href="index.html">‹ Back to the salon</a>
+    <p class="k">Gift code</p>
+    <h1>Redeem your gift</h1>
+    <p class="sub">A friend booked at Black Silva and shared their gift code with you. Enter it below to verify it.</p>
+
+    <label for="code">Code</label>
+    <input id="code" type="text" maxlength="9" placeholder="XXXX-XXXX" autocomplete="off" inputmode="text">
+    <button id="go">Check the code</button>
+    <div class="msg" id="msg"></div>
+
+    <div class="panel-ok" id="ok">
+      <p class="gcode" id="okcode"></p>
+      <p class="gsub" id="oksub"></p>
+      <a class="gcta" href="index.html">Book your visit ↗</a>
+    </div>
+
+    <div class="support">
+      <p class="sk">Contact support</p>
+      <p class="sp">For a <b>faster reply we recommend Instagram</b> — email may take a bit longer.</p>
+      <div class="row">
+        <a class="insta" href="https://www.instagram.com/blacksilvahd/?hl=da" target="_blank" rel="noopener">Instagram (fastest)</a>
+        <a class="mail" href="mailto:blacksilvahd@gmail.com">Email us</a>
+      </div>
+    </div>
+  </div>
+
+<script>
+(function(){
+  /* If a Worker URL is set the verification is server-side and one-way (mark used);
+     otherwise we check the local code store from this same browser. */
+  var API=(localStorage.getItem('bs_booking_api')||'').replace(/\/+$/,'');
+  var inp=document.getElementById('code'), msg=document.getElementById('msg'), ok=document.getElementById('ok');
+  function norm(v){ v=String(v||'').toUpperCase().replace(/[^A-Z0-9]/g,''); if(v.length>4) v=v.slice(0,4)+'-'+v.slice(4,8); return v; }
+  inp.addEventListener('input',function(){ inp.value=norm(inp.value); });
+  /* prefill from ?code= */
+  var pre=new URLSearchParams(location.search).get('code'); if(pre){ inp.value=norm(pre); }
+
+  function show(text,kind){ msg.textContent=text; msg.className='msg '+(kind||''); }
+  function showOk(rec){
+    var d=new Date(rec.expiresAt||Date.now()).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+    document.getElementById('okcode').textContent=rec.code||inp.value;
+    document.getElementById('oksub').textContent='Valid · single-use · expires '+d+'.'+(rec.issuedBy?' From '+rec.issuedBy+'.':'');
+    ok.classList.add('on');
+  }
+
+  document.getElementById('go').addEventListener('click', function(){
+    var code=norm(inp.value);
+    if(code.length<9){ show('Please enter the full 8-character code.','err'); return; }
+    ok.classList.remove('on');
+    if(API){
+      fetch(API+'/codes/redeem',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:code})})
+        .then(function(r){ return r.json().then(function(d){ return {ok:r.ok,d:d}; }); })
+        .then(function(res){ if(res.ok){ show('Code verified ✓','ok'); showOk(res.d); } else show(res.d&&res.d.error||'Could not verify.','err'); })
+        .catch(function(){ show('Network error — try again.','err'); });
+      return;
+    }
+    /* on-device fallback */
+    var all={}; try{ all=JSON.parse(localStorage.getItem('bs_codes')||'{}'); }catch(e){}
+    var rec=all[code];
+    if(!rec){ show('Code not found on this device. Ask the salon to verify it for you — Instagram is fastest.','err'); return; }
+    if(rec.used){ show('Code already used on '+new Date(rec.usedAt).toLocaleDateString('en-GB')+'.','err'); return; }
+    if(Date.now()>rec.expiresAt){ show('Code expired.','err'); return; }
+    rec.used=true; rec.usedAt=Date.now(); all[code]=rec; localStorage.setItem('bs_codes',JSON.stringify(all));
+    show('Code verified ✓','ok'); showOk({code:code, issuedBy:rec.issuedBy, expiresAt:rec.expiresAt});
+  });
+})();
+</script>
+</body>
+</html>

@@ -441,6 +441,14 @@
   .stripe-mount{ background:rgba(255,255,255,.94); border-radius:12px; padding:6px 6px; }
   #restart-top{ background:rgba(20,15,10,.7); border-color:rgba(232,196,120,.32); color:#f4ecdc; }
   .ms-info{ color:rgba(244,236,220,.55); } .ms-ok{ color:#4ad27e; }
+  /* gift code card on the booking-confirmed sheet */
+  .giftcard{ margin-top:14px; padding:18px 16px; border:1px solid rgba(216,184,120,.45); border-radius:14px; background:linear-gradient(160deg, rgba(216,184,120,.08), rgba(216,184,120,.02)); text-align:center; }
+  .giftcard .gk{ font-size:11px; letter-spacing:.32em; text-transform:uppercase; color:#a0826a; margin:0; }
+  .giftcard .gcode{ font-family:'Courier New',ui-monospace,monospace; font-size:30px; letter-spacing:.22em; font-weight:700; color:#e8c478; margin:10px 0 6px; text-shadow:0 0 22px rgba(232,196,120,.35); }
+  .giftcard .gsub{ font-size:12.5px; color:rgba(244,236,220,.7); margin:0 0 12px; }
+  .giftcard .gsub b{ color:#f4ecdc; }
+  .giftcard .gcopy{ padding:10px 18px; border:1px solid rgba(232,196,120,.6); background:transparent; color:#e8c478; border-radius:10px; font-weight:700; font-size:12px; letter-spacing:.1em; text-transform:uppercase; cursor:pointer; transition:.15s; }
+  .giftcard .gcopy:hover, .giftcard .gcopy:active{ background:#d8b878; color:#1a1208; border-color:#d8b878; }
 
   /* ===== keep autofill dark so Email/Name don't go light-blue/white when the browser fills them ===== */
   .sheet input:-webkit-autofill, .sheet input:-webkit-autofill:hover, .sheet input:-webkit-autofill:focus, .sheet input:-webkit-autofill:active,
@@ -1166,7 +1174,32 @@ function start(){
     setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(url); },300); }
   function bookingPayload(){ return { name:choice.name||'Guest', email:choice.email||'', service:choice.service, addons:choice.addons,
       stylist:choice.stylist, dateLabel:choice.dayLabel, time:choice.time, startISO:bookingStart().toISOString(),
-      durationMin:bookingDuration(), price:grandTotal(), currency:'DKK', payment:choice.payment, location:SALON_LOCATION }; }
+      durationMin:bookingDuration(), price:grandTotal(), currency:'DKK', payment:choice.payment, location:SALON_LOCATION,
+      redeemCode:choice.redeemCode, redeemExpiry:choice.redeemExpiry }; }
+  /* ===== Redeem-a-friend gift code: random 8-char (no 0/O/1/I), 14-day single-use,
+     issued on booking confirm. Stored locally; the deployed Worker can also persist
+     it server-side via POST /codes/issue for cross-device validation. */
+  function genRedeemCode(){
+    var a='ABCDEFGHJKLMNPQRSTUVWXYZ23456789', s=''; var arr=null;
+    try{ if(window.crypto&&crypto.getRandomValues){ arr=new Uint8Array(8); crypto.getRandomValues(arr); } }catch(e){}
+    for(var i=0;i<8;i++){ var n=arr?arr[i]:Math.floor(Math.random()*256); s+=a[n%a.length]; }
+    return s.slice(0,4)+'-'+s.slice(4,8);
+  }
+  function issueRedeemCode(){
+    if(choice.redeemCode) return choice.redeemCode;
+    var code=genRedeemCode(), exp=Date.now()+14*24*3600000;
+    choice.redeemCode=code; choice.redeemExpiry=exp;
+    try{ var all=JSON.parse(localStorage.getItem('bs_codes')||'{}');
+      all[code]={ issuedTo:choice.email||'', issuedBy:choice.name||'Guest', issuedAt:Date.now(), expiresAt:exp, used:false };
+      localStorage.setItem('bs_codes', JSON.stringify(all)); }catch(e){}
+    if(BOOKING_API){ try{ fetch(BOOKING_API+'/codes/issue',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({code:code, email:choice.email||'', name:choice.name||'', expiresAt:exp})}); }catch(e){} }
+    return code;
+  }
+  function redeemExpiryLabel(){
+    var d=new Date(choice.redeemExpiry||Date.now()+14*24*3600000);
+    return d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+  }
   function icsB64(){ var s=buildICS(); try{ return btoa(unescape(encodeURIComponent(s))); }catch(e){ return btoa(s); } }
   function escHtml(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
   function gcalLink(){ var s=bookingStart(), e=new Date(s.getTime()+bookingDuration()*60000);
@@ -1175,7 +1208,21 @@ function start(){
     var loc=encodeURIComponent(SALON_LOCATION);
     return 'https://www.google.com/calendar/render?action=TEMPLATE&text='+text+'&dates='+icsStamp(s)+'/'+icsStamp(e)+'&details='+details+'&location='+loc;
   }
-  function emailHtml(title,intro){ var g=gcalLink();
+  function emailHtml(title,intro,opts){ var g=gcalLink(); opts=opts||{};
+    var code=opts.code||choice.redeemCode||'', expLabel=opts.expiry||redeemExpiryLabel();
+    var giftBlock=code?
+      '<div style="margin:22px 0; padding:22px; background:#0a0806; color:#f4ecdc; border:1px solid #d8b878; border-radius:14px; text-align:center">'+
+        '<p style="font-size:11px; letter-spacing:.34em; text-transform:uppercase; color:#a0826a; margin:0">Gift this haircut</p>'+
+        '<p style="font-size:32px; letter-spacing:.22em; font-weight:700; margin:10px 0 6px; font-family:\'Courier New\',Courier,monospace; color:#e8c478">'+escHtml(code)+'</p>'+
+        '<p style="font-size:13px; color:#cfc1a0; line-height:1.5; margin:0">Share this code with a friend. <b style="color:#f4ecdc">Single use</b> — valid until <b style="color:#f4ecdc">'+escHtml(expLabel)+'</b>.</p>'+
+      '</div>' : '';
+    var supportBlock=
+      '<div style="margin:22px 0 4px; padding:18px 20px; background:#f7f5f0; border:1px solid #e7e2d4; border-radius:14px">'+
+        '<p style="font-size:11px; letter-spacing:.3em; text-transform:uppercase; color:#888; margin:0">Contact support</p>'+
+        '<p style="margin:8px 0 14px; font-size:13.5px; color:#444; line-height:1.55">For a <b>faster reply we recommend Instagram</b> — email may take a little longer.</p>'+
+        '<a href="https://www.instagram.com/blacksilvahd/?hl=da" style="display:inline-block; padding:11px 18px; background:#16161a; color:#fff; text-decoration:none; border-radius:10px; font-weight:700; font-size:13px; margin:0 8px 6px 0">Open Instagram (fastest)</a>'+
+        '<a href="mailto:blacksilvahd@gmail.com" style="display:inline-block; padding:11px 18px; background:transparent; color:#16161a; text-decoration:none; border:1px solid #16161a; border-radius:10px; font-weight:700; font-size:13px">Email us</a>'+
+      '</div>';
     return '<div style="font-family:Arial,Helvetica,sans-serif;max-width:540px;margin:0 auto;color:#16161a">'+
       '<h2 style="font-family:Georgia,serif;font-weight:600;margin:0 0 4px">'+title+'</h2>'+
       '<p style="color:#444;line-height:1.5">'+intro+'</p>'+
@@ -1188,6 +1235,8 @@ function start(){
         '<tr><td style="padding:6px 14px 6px 0;color:#777">Total</td><td style="padding:6px 0;font-weight:600">'+escHtml(money(grandTotal()))+'</td></tr>'+
       '</table>'+
       '<a href="'+g+'" style="display:inline-block;background:#16161a;color:#fff;text-decoration:none;padding:12px 20px;border-radius:10px;font-weight:700;font-size:14px">Add to Google Calendar</a>'+
+      giftBlock+
+      supportBlock+
       '<p style="color:#888;font-size:13px;margin-top:16px">A calendar file (.ics) is attached — open it on your phone to add the appointment.</p>'+
       '<p style="color:#aaa;font-size:12px;margin-top:18px">Black Silva Hairdresser · '+escHtml(SALON_LOCATION)+'</p>'+
     '</div>';
@@ -1218,9 +1267,14 @@ function start(){
         : '<span class="ms-err">Browser couldn\'t reach Resend (CORS). The .ics below still works — use the worker for full automation.</span>';
     }).catch(function(){ if(st) st.innerHTML='<span class="ms-err">Browser couldn\'t reach Resend (CORS). Use the worker endpoint to enable auto-emails.</span>'; });
   }
-  function buildDone(){ var h='<div class="check"><svg viewBox="0 0 24 24" fill="none" stroke="#2fd27e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>';
+  function buildDone(){ var code=issueRedeemCode(), expLabel=redeemExpiryLabel();
+    var h='<div class="check"><svg viewBox="0 0 24 24" fill="none" stroke="#2fd27e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>';
     h+='<h3 class="serif">Booking confirmed</h3><p class="bsub">A fresh new look! A confirmation with a calendar invite is on its way to your email.</p>';
     h+='<div class="summary">'+choice.stylist+' · '+choice.service+(choice.addons.length?' + '+addonText():'')+'<br>'+choice.dayLabel+' · '+choice.time+'<br><span class="tot">'+money(grandTotal())+'</span></div>';
+    h+='<div class="giftcard"><p class="gk">Gift this haircut to a friend</p>'+
+       '<p class="gcode" id="gcode">'+code+'</p>'+
+       '<p class="gsub">Single use · valid until <b>'+expLabel+'</b></p>'+
+       '<button class="gcopy" onclick="BS.copyCode()">Copy code</button></div>';
     h+='<div class="mail-status" id="mail-status"></div>';
     h+='<button class="addcal" onclick="BS.addCalendar()">＋ Add to my calendar</button>';
     h+='<button class="restart" onclick="location.reload()">Book again</button>';
@@ -1287,7 +1341,13 @@ function start(){
     stripePay:function(){ confirmStripePayment().then(function(pi){ if(!pi) return;
       choice.payment='card'; choice.paymentId=pi.id; choice.paymentStatus=pi.status; saveBooking();
       showStep(''); suspenseReveal(function(){ buildDone(); showStep('done'); }); }); },
-    addCalendar:function(){ downloadICS(); }
+    addCalendar:function(){ downloadICS(); },
+    copyCode:function(){ var t=document.getElementById('gcode'); if(!t) return;
+      var txt=t.textContent.trim();
+      function fb(){ try{ var ta=document.createElement('textarea'); ta.value=txt; ta.style.position='fixed'; ta.style.opacity=0; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); }catch(e){} }
+      if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).catch(fb); } else fb();
+      var b=document.querySelector('.gcopy'); if(b){ var o=b.textContent; b.textContent='Copied ✓'; setTimeout(function(){ b.textContent=o; },1400); }
+    }
   };
 
   /* mobile: drag the grabber to pull a sheet down (minimise) or back up; a tap toggles it */

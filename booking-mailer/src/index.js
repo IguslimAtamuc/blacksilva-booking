@@ -78,6 +78,24 @@ function row(label, value) {
   return '<tr><td style="padding:6px 14px 6px 0;color:#777;white-space:nowrap">' + label +
     '</td><td style="padding:6px 0;color:#16161a;font-weight:600">' + value + "</td></tr>";
 }
+function giftBlock(b){
+  if(!b.redeemCode) return "";
+  const exp = b.redeemExpiry ? new Date(b.redeemExpiry) : new Date(Date.now()+14*86400000);
+  const expLabel = exp.toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"});
+  return '<div style="margin:22px 0; padding:22px; background:#0a0806; color:#f4ecdc; border:1px solid #d8b878; border-radius:14px; text-align:center">' +
+    '<p style="font-size:11px; letter-spacing:.34em; text-transform:uppercase; color:#a0826a; margin:0">Gift this haircut</p>' +
+    '<p style="font-size:32px; letter-spacing:.22em; font-weight:700; margin:10px 0 6px; font-family:Courier,monospace; color:#e8c478">' + esc2(b.redeemCode) + '</p>' +
+    '<p style="font-size:13px; color:#cfc1a0; line-height:1.5; margin:0">Share this code with a friend. <b style="color:#f4ecdc">Single use</b> — valid until <b style="color:#f4ecdc">' + esc2(expLabel) + '</b>.</p>' +
+  '</div>';
+}
+function supportBlock(){
+  return '<div style="margin:22px 0 4px; padding:18px 20px; background:#f7f5f0; border:1px solid #e7e2d4; border-radius:14px">' +
+    '<p style="font-size:11px; letter-spacing:.3em; text-transform:uppercase; color:#888; margin:0">Contact support</p>' +
+    '<p style="margin:8px 0 14px; font-size:13.5px; color:#444; line-height:1.55">For a <b>faster reply we recommend Instagram</b> — email may take a little longer.</p>' +
+    '<a href="https://www.instagram.com/blacksilvahd/?hl=da" style="display:inline-block; padding:11px 18px; background:#16161a; color:#fff; text-decoration:none; border-radius:10px; font-weight:700; font-size:13px; margin:0 8px 6px 0">Open Instagram (fastest)</a>' +
+    '<a href="mailto:blacksilvahd@gmail.com" style="display:inline-block; padding:11px 18px; background:transparent; color:#16161a; text-decoration:none; border:1px solid #16161a; border-radius:10px; font-weight:700; font-size:13px">Email us</a>' +
+  '</div>';
+}
 function shell(title, intro, b, glink) {
   return '<div style="font-family:Arial,Helvetica,sans-serif;max-width:540px;margin:0 auto;color:#16161a">' +
     '<h2 style="font-family:Georgia,serif;font-weight:600;margin:0 0 4px">' + title + "</h2>" +
@@ -92,6 +110,8 @@ function shell(title, intro, b, glink) {
     "</table>" +
     '<a href="' + glink + '" style="display:inline-block;background:#16161a;color:#fff;text-decoration:none;' +
       'padding:12px 20px;border-radius:10px;font-weight:700;font-size:14px">Add to Google Calendar</a>' +
+    giftBlock(b) +
+    supportBlock() +
     '<p style="color:#888;font-size:13px;margin-top:16px">A calendar file (.ics) is attached — open it on your ' +
       'phone to add the appointment to your calendar.</p>' +
     '<p style="color:#aaa;font-size:12px;margin-top:18px">Black Silva Hairdresser · ' + SALON + "</p>" +
@@ -158,6 +178,35 @@ async function replyReview(request,env){
   return json({ ok:true, thread:th });
 }
 
+/* ============================================================
+ * Redeem codes (gift-this-haircut)
+ *   POST /codes/issue   { code, email, name, expiresAt }   -> persist
+ *   POST /codes/redeem  { code }                            -> verify + mark used
+ * Stored in CODES KV namespace (one entry per code).
+ * ============================================================ */
+async function codeIssue(request,env){
+  if(!env.CODES) return json({ error:"CODES KV namespace not configured." }, 500);
+  let p; try{ p=await request.json(); }catch(e){ return json({ error:"invalid JSON" }, 400); }
+  const code=String(p.code||"").toUpperCase().replace(/[^A-Z0-9-]/g,"").slice(0,12);
+  if(!code) return json({ error:"code required" }, 400);
+  const exp = +p.expiresAt || (Date.now()+14*86400000);
+  await env.CODES.put(code, JSON.stringify({ code, email:clip(p.email,80), name:clip(p.name,40), issuedAt:Date.now(), expiresAt:exp, used:false }), { expirationTtl: Math.max(60, Math.ceil((exp-Date.now())/1000)+86400) });
+  return json({ ok:true, code });
+}
+async function codeRedeem(request,env){
+  if(!env.CODES) return json({ error:"CODES KV namespace not configured." }, 500);
+  let p; try{ p=await request.json(); }catch(e){ return json({ error:"invalid JSON" }, 400); }
+  const code=String(p.code||"").toUpperCase().replace(/[^A-Z0-9-]/g,"").slice(0,12);
+  if(!code) return json({ error:"code required" }, 400);
+  const raw=await env.CODES.get(code); if(!raw) return json({ error:"Code not found" }, 404);
+  let rec; try{ rec=JSON.parse(raw); }catch(e){ return json({ error:"corrupt record" }, 500); }
+  if(rec.used) return json({ error:"Code already redeemed", at:rec.usedAt }, 409);
+  if(Date.now()>rec.expiresAt) return json({ error:"Code expired" }, 410);
+  rec.used=true; rec.usedAt=Date.now();
+  await env.CODES.put(code, JSON.stringify(rec));
+  return json({ ok:true, code:rec.code, issuedBy:rec.name||"", expiresAt:rec.expiresAt });
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -168,6 +217,10 @@ export default {
     if (url.pathname === "/reviews" && request.method === "POST") return addReview(request, env);
     if (url.pathname === "/reviews/reply" && request.method === "POST") return replyReview(request, env);
 
+    // ---- Redeem-code API ----
+    if (url.pathname === "/codes/issue" && request.method === "POST") return codeIssue(request, env);
+    if (url.pathname === "/codes/redeem" && request.method === "POST") return codeRedeem(request, env);
+
     // ---- Booking mailer (default) ----
     if (request.method !== "POST") return json({ error: "POST only" }, 405);
     if (!env.RESEND_API_KEY) return json({ error: "RESEND_API_KEY secret is not set" }, 500);
@@ -175,6 +228,15 @@ export default {
     let b;
     try { b = await request.json(); } catch (e) { return json({ error: "invalid JSON" }, 400); }
     if (!b.startISO) b.startISO = new Date().toISOString();
+    /* if the site didn't carry a code, mint one now and persist it */
+    if (!b.redeemCode) {
+      const A="ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; let s="";
+      const buf = new Uint8Array(8); crypto.getRandomValues(buf);
+      for (let i=0;i<8;i++) s += A[buf[i]%A.length];
+      b.redeemCode = s.slice(0,4)+"-"+s.slice(4,8);
+      b.redeemExpiry = Date.now()+14*86400000;
+      if (env.CODES) { try{ await env.CODES.put(b.redeemCode, JSON.stringify({ code:b.redeemCode, email:b.email||"", name:b.name||"", issuedAt:Date.now(), expiresAt:b.redeemExpiry, used:false }), { expirationTtl: 15*86400 }); }catch(e){} }
+    }
 
     const ics = buildICS(b);
     const glink = gcalLink(b);

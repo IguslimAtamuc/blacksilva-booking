@@ -13,3 +13,11 @@ compatibility_date = "2024-11-01"
 # [[kv_namespaces]]
 # binding = "REVIEWS"
 # id = "PASTE_YOUR_KV_NAMESPACE_ID_HERE"
+
+# Redeem-a-friend codes — another KV namespace, one entry per code (auto-expires
+# after ~15 days). Create with:
+#   npx wrangler kv namespace create CODES
+# and paste the id below:
+# [[kv_namespaces]]
+# binding = "CODES"
+# id = "PASTE_YOUR_CODES_KV_NAMESPACE_ID_HERE"

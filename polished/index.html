@@ -338,7 +338,25 @@
      covering the booking cards on mobile) — only the pill + open panel are clickable */
   .ft-fab{ pointer-events:none; }
   .ft-fab .gps-pill{ pointer-events:auto; }
-  body.flow .ft-fab{ opacity:0; pointer-events:none; }
+  body.flow .ft-fab{ display:none; }
+  /* booking-flow scroll cue: replaces 'Continue' / 'Confirm' on steps where the
+     next step is reached by scrolling down (or tapping the cue itself) */
+  .scrollcue-msg{ display:flex; flex-direction:column; align-items:center; gap:6px;
+    width:100%; margin:18px 0 0; padding:18px 14px;
+    background:transparent; border:1px dashed rgba(232,196,120,.32); border-radius:14px;
+    color:rgba(244,236,220,.62); font-size:10px; letter-spacing:.32em; text-transform:uppercase;
+    font-family:inherit; cursor:pointer; transition:.18s; }
+  .scrollcue-msg:hover, .scrollcue-msg:active{ border-color:#d8b878; background:rgba(216,184,120,.06); color:rgba(244,236,220,.9); }
+  .scrollcue-msg span{ color:rgba(244,236,220,.5); }
+  .scrollcue-msg b{ font-family:var(--display); font-size:18px; letter-spacing:.02em; text-transform:none; color:#f4ecdc; font-weight:500; line-height:1.05; }
+  .scrollcue-msg svg{ width:22px; height:22px; color:#d8b878; animation:scrollchev 1.5s ease-in-out infinite; }
+  @keyframes scrollchev{ 0%,100%{ transform:translateY(0); opacity:.55 } 50%{ transform:translateY(6px); opacity:1 } }
+  @media(max-width:760px){
+    .sheet.on .scrollcue-msg{ position:sticky; bottom:0; z-index:2;
+      background:linear-gradient(to top, rgba(20,15,10,.99), rgba(20,15,10,.94));
+      padding-bottom:calc(14px + env(safe-area-inset-bottom)); padding-top:14px;
+      box-shadow:0 -20px 26px -10px rgba(20,15,10,.95); }
+  }
 
   /* hide scrollbars everywhere on this immersive page (still scrolls) */
   html, body{ scrollbar-width:none; -ms-overflow-style:none; }
@@ -1089,6 +1107,13 @@ function start(){
   function showStep(name){ ['m-length','m-calendar','m-time','m-stylist','m-confirm','m-pay','m-stripe','m-done'].forEach(function(id){ var el=document.getElementById(id); if(!el) return; if(id===('m-'+name)){ el.classList.add('on'); el.classList.remove('min'); el.style.transform=''; } else el.classList.remove('on'); }); }
   function dots(n){ var s='<div class="step-dots">'; for(var i=1;i<=5;i++) s+='<i class="'+(i<=n?'a':'')+'"></i>'; return s+'</div>'; }
   function grab(){ return '<button class="peek-toggle" type="button" onclick="BS.togglePeek(this)" aria-label="Show or hide the panel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></button>'; }
+  /* the scroll-down cue that replaces the Continue/Confirm buttons — scrolling
+     down (or tapping the cue) advances; scrolling up runs the back button. */
+  function scrollCue(top){ return '<button type="button" class="scrollcue-msg" onclick="BS.advance()" aria-label="Continue to the next step">'+
+    '<span>'+(top||'When you are ready')+'</span>'+
+    '<b>Scroll down to continue</b>'+
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>'+
+  '</button>'; }
   function backBtn(target){ return '<button class="back" onclick="BS.back(\''+target+'\')" aria-label="Back">‹</button>'; }
 
   function enterFlow(){ gated=true; mode='flow'; document.body.classList.add('flow');
@@ -1167,7 +1192,7 @@ function start(){
     h+='<div class="svc"><img src="'+CUT_IMAGES[type]+'" alt="'+c.label+'"><div><b class="svc-name serif">'+c.label+'</b><span class="svc-price">from '+c.from+'DKK</span></div></div>';
     h+='<p class="bsub">Optional extras — tap any you would like to add.</p><div class="addons">';
     SERVICE_ADDONS[type].forEach(function(name){ var on=choice.addons.indexOf(name)>=0; h+='<button class="addon'+(on?' on':'')+'" onclick="BS.toggleAddon(this,\''+name+'\')"><span class="an">'+name+'</span><span class="ap">+'+ADDON_PRICE+' DKK</span></button>'; });
-    h+='</div><button class="cont go" onclick="BS.afterLength()">Continue</button>';
+    h+='</div>'+scrollCue('Extras are optional');
     document.getElementById('m-length').innerHTML=h; }
   function refreshCalendarPrice(){
     var idx=choice.dayIdx===null?0:choice.dayIdx; choice.price=priceForDay(idx); choice.priceTier=priceTier(idx)+1;
@@ -1239,7 +1264,7 @@ function start(){
     h+='</div></div></div>';
     h+=' <div class="qrow"><label>Stylist</label><div class="qpick"><button class="qopt'+(choice.stylist==='Eduard'?' on':'')+'" onclick="BS.pickStylist(\'Eduard\')">Eduard</button><button class="qopt'+(choice.stylist==='Elena'?' on':'')+'" onclick="BS.pickStylist(\'Elena\')">Elena</button></div></div>';
     h+='</div>';
-    h+='<button class="confirm-btn" onclick="BS.confirm()"><span class="cbcircle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span><span>Confirm booking</span></button>';
+    h+=scrollCue('Looks good?');
     document.getElementById('m-confirm').innerHTML=h;
     var qe=document.getElementById('qm-email'); if(qe) qe.addEventListener('input',function(){ choice.email=qe.value.trim(); });
     var qn=document.getElementById('qm-name'); if(qn) qn.addEventListener('input',function(){ choice.name=qn.value.trim(); });
@@ -1526,6 +1551,18 @@ function start(){
       choice.payment='card'; choice.paymentId=pi.id; choice.paymentStatus=pi.status; saveBooking();
       showStep(''); suspenseReveal(function(){ buildDone(); showStep('done'); }); }); },
     addCalendar:function(){ downloadICS(); },
+    /* advance to the next booking step (tapping the scroll-cue or via the
+       global wheel/touch listener below). Each step decides what 'next' means. */
+    advance:function(){
+      var on=null; document.querySelectorAll('.sheet.on').forEach(function(el){ on=el.id; });
+      if(!on) return;
+      if(on==='m-length'){
+        var s=document.getElementById('m-length');
+        if(s && s.innerHTML.indexOf('Add to your visit')>=0){ BS.afterLength(); }
+      } else if(on==='m-confirm'){
+        BS.confirm();
+      }
+    },
     copyCode:function(){ var t=document.getElementById('gcode'); if(!t) return;
       var txt=t.textContent.trim();
       function fb(){ try{ var ta=document.createElement('textarea'); ta.value=txt; ta.style.position='fixed'; ta.style.opacity=0; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); }catch(e){} }
@@ -1591,6 +1628,39 @@ function start(){
   applyScene(0); tick();
   var loader=document.getElementById('loader'); gsap.to(loader,{opacity:0,duration:.7,delay:.3,onComplete:function(){ loader.style.display='none'; }});
   setTimeout(function(){ ScrollTrigger.refresh(); window.scrollTo(0,0); },250);
+
+  /* ===== flow-mode navigation by scroll: wheel/touch on the active sheet
+     advances to the next step when content is at the bottom edge, or runs the
+     Back button when it's at the top. The Continue/Confirm buttons are gone —
+     the scroll cue inside the sheet is also tappable. ===== */
+  (function(){
+    var cooldown=0, accumDown=0, accumUp=0;
+    function curSheet(){ var found=null; document.querySelectorAll('.sheet.on').forEach(function(el){ found=el; }); return found; }
+    function elig(id,dir){ if(dir>0){ if(id==='m-length'){ var s=document.getElementById('m-length'); return !!(s && s.innerHTML.indexOf('Add to your visit')>=0); } return id==='m-confirm'; }
+      var s=document.getElementById(id); return !!(s && s.querySelector('.back')); }
+    function fire(dir){ if(Date.now()<cooldown) return;
+      var s=curSheet(); if(!s) return; var id=s.id; if(!elig(id,dir)) return;
+      if(dir>0 && BS.advance){ BS.advance(); cooldown=Date.now()+900; accumDown=accumUp=0; }
+      else if(dir<0){ var b=s.querySelector('.back'); if(b){ b.click(); cooldown=Date.now()+700; accumDown=accumUp=0; } }
+    }
+    function atTop(s){ return s.scrollTop<=2; }
+    function atBottom(s){ return s.scrollTop+s.clientHeight>=s.scrollHeight-4; }
+    function onWheel(e){ if(!document.body.classList.contains('flow')) return;
+      var s=curSheet(); if(!s) return;
+      if(e.deltaY>0){ if(atBottom(s)){ accumDown+=e.deltaY; if(accumDown>60) fire(1); } else accumDown=0; }
+      else if(e.deltaY<0){ if(atTop(s)){ accumUp+=-e.deltaY; if(accumUp>60) fire(-1); } else accumUp=0; }
+    }
+    var tY=0;
+    function onTouchStart(e){ var s=curSheet(); if(!s) return; var t=e.touches&&e.touches[0]; if(!t) return; tY=t.clientY; }
+    function onTouchMove(e){ var s=curSheet(); if(!s) return; var t=e.touches&&e.touches[0]; if(!t) return;
+      var dy=tY-t.clientY; /* >0 = swipe up = advance, <0 = swipe down = back */
+      if(dy>90 && atBottom(s)){ fire(1); tY=t.clientY; }
+      else if(dy<-90 && atTop(s)){ fire(-1); tY=t.clientY; }
+    }
+    addEventListener('wheel', onWheel, {passive:true});
+    addEventListener('touchstart', onTouchStart, {passive:true});
+    addEventListener('touchmove', onTouchMove, {passive:true});
+  })();
 }
 </script>
 <script>

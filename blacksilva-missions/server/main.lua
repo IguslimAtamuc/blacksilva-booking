@@ -305,6 +305,74 @@ RegisterCommand('resetmisiuni', function(source, args)
     end)
 end, false)
 
+-- =====================================================================
+--  Admin: /skip [numar misiune] [serverId?]
+--  Marcheaza misiunile ca fiind COMPLETATE pana la (si inclusiv) numarul
+--  dat. Completam tot lantul pana acolo ca sa respectam blocarea
+--  secventiala (altfel o misiune din mijloc ar aparea "completata" dar
+--  blocata). Recompensa NU se da automat - se revendica din meniu.
+--    /skip 30        -> sare misiunile 1..30 pentru tine
+--    /skip 30 12     -> sare misiunile 1..30 pentru jucatorul cu id 12
+--  Ca sa-l faci disponibil pentru TOTI jucatorii, sterge blocul de mai jos
+--  cu verificarea "caller.getGroup() ~= 'admin'".
+-- =====================================================================
+RegisterCommand('skip', function(source, args)
+    local src = source
+    if src ~= 0 then
+        local caller = ESX.GetPlayerFromId(src)
+        if not caller or caller.getGroup() ~= 'admin' then
+            TriggerClientEvent('esx:showNotification', src, '~r~Nu ai permisiunea!')
+            return
+        end
+    end
+
+    local missionId = tonumber(args[1])
+    if not missionId then
+        if src ~= 0 then TriggerClientEvent('esx:showNotification', src, '~r~Foloseste: /skip [numar misiune]') end
+        return
+    end
+    if not getMission(missionId) then
+        if src ~= 0 then TriggerClientEvent('esx:showNotification', src, '~r~Misiunea #' .. missionId .. ' nu exista!') end
+        return
+    end
+
+    -- jucatorul tinta: implicit cel care a dat comanda; admin poate da un al 2-lea arg
+    local targetId = tonumber(args[2]) or src
+    if targetId == 0 then
+        TriggerClientEvent('esx:showNotification', src, '~r~Ruleaza /skip din joc sau da un serverId: /skip [id] [serverId]')
+        return
+    end
+    local target = ESX.GetPlayerFromId(targetId)
+    if not target then
+        if src ~= 0 then TriggerClientEvent('esx:showNotification', src, '~r~Jucatorul nu este online!') end
+        return
+    end
+
+    local identifier = target.getIdentifier()
+    loadProgress(identifier, function(data)
+        local count = 0
+        -- iteram in ORDINEA din Config.Missions si ne oprim dupa misiunea ceruta
+        for _, m in ipairs(Config.Missions) do
+            local key = tostring(m.id)
+            if not data[key] then data[key] = { current = 0, completed = false, claimed = false } end
+            if not data[key].completed then
+                data[key].completed = true
+                data[key].current   = getTarget(m)
+                count = count + 1
+            end
+            if m.id == missionId then break end
+        end
+        saveProgress(identifier)
+        pushData(targetId, data)
+        if src ~= 0 then
+            TriggerClientEvent('esx:showNotification', src, ('~g~Gata pana la misiunea #%d (%d marcate). Revendica din meniu.'):format(missionId, count))
+        end
+        if targetId ~= src then
+            TriggerClientEvent('esx:showNotification', targetId, ('~y~Un admin ti-a deblocat misiunile pana la #%d!'):format(missionId))
+        end
+    end)
+end, false)
+
 -- elibereaza din cache la deconectare
 AddEventHandler('playerDropped', function()
     local src = source

@@ -35,6 +35,10 @@ Config.Emote = {
 -- Culoarea principala a meniului (accent)
 Config.Accent = '#E8930C' -- portocaliu (ca in design)
 
+-- Pozitia orizontala a panoului (in vw, masurat din dreapta ecranului).
+-- Valoare MAI MARE = panoul se muta mai spre STANGA (mai echilibrat estetic).
+Config.PanelRight = 9
+
 -- Pozitionarea camerei (regula treimilor).
 -- Personajul trebuie sa apara pe TREIMEA din STANGA, panoul pe dreapta.
 -- 'sideAim' NEGATIV = personajul se muta spre STANGA ecranului.
@@ -46,6 +50,12 @@ Config.Camera = {
     pointZ    = 0.55,   -- inaltimea punctului catre care priveste camera
     fov       = 38.0,
     interp    = 1200,   -- durata tranzitiei (ms)
+
+    -- Blur de fundal (Depth of Field): personajul ramane clar, fundalul blurat.
+    dof         = true,
+    dofNear     = 0.6,  -- de la ce distanta incepe sa fie clar
+    dofFar      = 3.2,  -- dupa aceasta distanta fundalul devine blurat
+    dofStrength = 1.0,  -- intensitatea blur-ului (0.0 - 1.0)
 }
 
 -- Markerul folosit pentru misiunile cu locatie (job center, gunshop-uri etc.)

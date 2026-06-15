@@ -85,7 +85,7 @@ local function buildPayload(data)
     local prevCompleted = true
     for _, m in ipairs(Config.Missions) do
         local key  = tostring(m.id)
-        local prog = data[key] or { current = 0, completed = false }
+        local prog = data[key] or { current = 0, completed = false, claimed = false }
         local target = getTarget(m)
         local completed = prog.completed or false
         missions[#missions + 1] = {
@@ -99,6 +99,7 @@ local function buildPayload(data)
             current     = math.min(prog.current or 0, target),
             target      = target,
             completed   = completed,
+            claimed     = prog.claimed or false,
             locked      = not prevCompleted,
         }
         if not completed then prevCompleted = false end
@@ -121,9 +122,11 @@ AddEventHandler('blacksilva-missions:requestData', function()
 end)
 
 -- =====================================================================
---  Acordare recompensa + experienta
+--  Revendicare recompensa (banii + experienta) - manual, din meniu
+--  La finalizarea unei misiuni NU se da nimic automat si NU apare nicio
+--  notificare; jucatorul apasa "Revendica" in meniu.
 -- =====================================================================
-local function giveReward(src, xPlayer, mission)
+local function grantReward(src, xPlayer, mission)
     if mission.reward and mission.reward > 0 then
         if Config.RewardAccount == 'bank' then
             xPlayer.addAccountMoney('bank', mission.reward)
@@ -131,14 +134,67 @@ local function giveReward(src, xPlayer, mission)
             xPlayer.addMoney(mission.reward)
         end
     end
-
     local lvl = mission.level or 1
     if lvl > 0 and Config.ExpCommand and Config.ExpCommand ~= '' then
         ExecuteCommand(('%s %d %d'):format(Config.ExpCommand, src, lvl))
     end
-
-    TriggerClientEvent('blacksilva-missions:missionCompleted', src, mission.id, mission.title, mission.reward, lvl)
+    return mission.reward or 0, lvl
 end
+
+-- revendica o singura misiune (returneaza bani, niveluri revendicate)
+local function claimOne(src, xPlayer, data, mission)
+    if not mission then return 0, 0 end
+    local key = tostring(mission.id)
+    local prog = data[key]
+    if not prog or not prog.completed or prog.claimed then return 0, 0 end
+    if not isUnlocked(data, mission.id) then return 0, 0 end
+    prog.claimed = true
+    return grantReward(src, xPlayer, mission)
+end
+
+RegisterNetEvent('blacksilva-missions:claim')
+AddEventHandler('blacksilva-missions:claim', function(missionId)
+    local src = source
+    local xPlayer = ESX.GetPlayerFromId(src)
+    if not xPlayer then return end
+    local mission = getMission(missionId)
+    if not mission then return end
+
+    local identifier = xPlayer.getIdentifier()
+    loadProgress(identifier, function(data)
+        local money, lvl = claimOne(src, xPlayer, data, mission)
+        if money > 0 or lvl > 0 then
+            saveProgress(identifier)
+            pushData(src, data)
+            TriggerClientEvent('blacksilva-missions:claimed', src, money, lvl, mission.title)
+        end
+    end)
+end)
+
+RegisterNetEvent('blacksilva-missions:claimAll')
+AddEventHandler('blacksilva-missions:claimAll', function()
+    local src = source
+    local xPlayer = ESX.GetPlayerFromId(src)
+    if not xPlayer then return end
+
+    local identifier = xPlayer.getIdentifier()
+    loadProgress(identifier, function(data)
+        local totalMoney, totalLvl, count = 0, 0, 0
+        for _, mission in ipairs(Config.Missions) do
+            local money, lvl = claimOne(src, xPlayer, data, mission)
+            if money > 0 or lvl > 0 then
+                totalMoney = totalMoney + money
+                totalLvl   = totalLvl + lvl
+                count = count + 1
+            end
+        end
+        if count > 0 then
+            saveProgress(identifier)
+            pushData(src, data)
+            TriggerClientEvent('blacksilva-missions:claimed', src, totalMoney, totalLvl, count .. ' misiuni')
+        end
+    end)
+end)
 
 -- =====================================================================
 --  Actualizare progres (apelat din client)
@@ -158,7 +214,7 @@ AddEventHandler('blacksilva-missions:updateProgress', function(missionId, value,
         if not isUnlocked(data, missionId) then return end
 
         local key = tostring(missionId)
-        if not data[key] then data[key] = { current = 0, completed = false } end
+        if not data[key] then data[key] = { current = 0, completed = false, claimed = false } end
         if data[key].completed then return end
 
         local target = getTarget(mission)
@@ -171,19 +227,14 @@ AddEventHandler('blacksilva-missions:updateProgress', function(missionId, value,
         end
         if data[key].current > target then data[key].current = target end
 
-        local justCompleted = false
+        -- la finalizare doar marcam misiunea (recompensa se revendica din meniu)
         if data[key].current >= target and not data[key].completed then
             data[key].completed = true
             data[key].current = target
-            justCompleted = true
         end
 
         saveProgress(identifier)
         pushData(src, data) -- payload complet -> actualizeaza si blocarile
-
-        if justCompleted then
-            giveReward(src, xPlayer, mission)
-        end
     end)
 end)
 
@@ -202,20 +253,15 @@ AddEventHandler('blacksilva-missions:playerKill', function()
         for _, mission in ipairs(Config.Missions) do
             if mission.type == 'kill_players' then
                 local key = tostring(mission.id)
-                if not data[key] then data[key] = { current = 0, completed = false } end
+                if not data[key] then data[key] = { current = 0, completed = false, claimed = false } end
                 if not data[key].completed and isUnlocked(data, mission.id) then
                     local target = getTarget(mission)
                     data[key].current = math.min((data[key].current or 0) + 1, target)
-                    local justCompleted = false
                     if data[key].current >= target then
                         data[key].completed = true
-                        justCompleted = true
                     end
                     saveProgress(identifier)
                     pushData(src, data)
-                    if justCompleted then
-                        giveReward(src, xPlayer, mission)
-                    end
                     return -- un kill = un singur progres
                 end
             end

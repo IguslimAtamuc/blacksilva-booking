@@ -60,11 +60,24 @@ unei misiuni blocate apare gri, cu lacat, si nu primeste progres pana cand
 misiunea anterioara nu e completata. Ordinea = ordinea elementelor din lista, nu
 neaparat `id`-ul (poti rearanja blocurile ca sa schimbi ordinea).
 
-## Recompense
-La fiecare misiune completata:
-- primesti banii din `reward` (cont configurat in `Config.RewardAccount`);
-- primesti experienta prin comanda din `Config.ExpCommand` rulata pe server ca
+## Recompense (revendicare manuala)
+Cand termini o misiune **nu primesti nimic automat si nu apare nicio
+notificare** in joc. Recompensa se ia manual din meniu:
+- apesi pe card → butonul **Revendica** (bani + nivel), sau
+- butonul **Revendica tot** din footer pentru toate misiunile terminate.
+
+La revendicare primesti:
+- banii din `reward` (cont configurat in `Config.RewardAccount`);
+- experienta prin comanda din `Config.ExpCommand` rulata pe server ca
   `addlevel <serverId> <level>` (configurabil).
+
+## Estetica (camera, blur, pozitie)
+- Personajul e incadrat pe treimea din stanga (`Config.Camera.sideAim`).
+- Fundalul jocului este **blurat** (Depth of Field) ca focusul sa fie pe
+  personaj si pe meniu; se regleaza din `Config.Camera.dof / dofNear / dofFar /
+  dofStrength` (sau `dof = false` ca sa-l dezactivezi).
+- Pozitia orizontala a panoului se regleaza din `Config.PanelRight` (valoare mai
+  mare = panoul mai spre stanga).
 
 ## Misiunile incluse (cerute)
 1. Foloseste bauturile energizante `exp`, `exp2`, `exp3` — 10.000$

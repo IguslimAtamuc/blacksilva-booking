@@ -11,6 +11,7 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; }
     html, body { height: 100%; margin: 0; }
+    :root { --panel-right: 9vw; }
     body {
       background: transparent;
       color: #f2f2f4;
@@ -21,10 +22,10 @@
       user-select: none;
     }
 
-    /* vignette cinematic, mai intunecat in dreapta unde e meniul */
+    /* vignette usor, fara dreptunghi negru (fundalul e blurat din joc prin DOF) */
     .vignette {
       position: fixed; inset: 0; z-index: 1; pointer-events: none;
-      background: radial-gradient(120% 90% at 30% 50%, transparent 0%, transparent 38%, rgba(0,0,0,.5) 78%, rgba(0,0,0,.72) 100%);
+      background: radial-gradient(130% 100% at 32% 50%, transparent 0%, transparent 52%, rgba(0,0,0,.32) 82%, rgba(0,0,0,.5) 100%);
       animation: fade .8s ease forwards;
     }
     @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
@@ -37,30 +38,31 @@
     .letterbox-bottom { bottom: 0; }
     .letterbox-top.active, .letterbox-bottom.active { height: 50px; }
 
-    /* ancora panoului - treimea din dreapta */
+    /* ancora panoului - pozitionabila din Config.PanelRight */
     .panel-anchor {
-      position: fixed; top: 50%; right: 4vw; transform: translateY(-50%);
+      position: fixed; top: 50%; right: var(--panel-right, 9vw); transform: translateY(-50%);
       z-index: 10; width: min(440px, 40vw);
     }
 
-    /* ====================== DESIGN PANOU (ca in zip) ====================== */
+    /* ====================== DESIGN PANOU ====================== */
     .dt-wrap {
       --accent: #E8930C;
       --line: rgba(255,255,255,.07);
       --muted: rgba(255,255,255,.42);
       --text: #f3f3f5;
-      --card: rgba(255,255,255,.025);
+      --card: rgba(255,255,255,.03);
       --accent-soft: color-mix(in srgb, var(--accent) 16%, transparent);
       --accent-line: color-mix(in srgb, var(--accent) 38%, transparent);
       --accent-glow: color-mix(in srgb, var(--accent) 45%, transparent);
+      --green: #34d27b;
       --pad: 20px; --gap: 10px; --cardpad: 14px;
       width: 100%;
       color: var(--text);
-      background: linear-gradient(168deg, rgba(20,20,25,.92), rgba(11,11,14,.94));
-      border: .5px solid rgba(255,255,255,.09);
+      /* fundal translucid (FARA backdrop-filter ca sa nu apara box negru in CEF) */
+      background: linear-gradient(168deg, rgba(19,19,24,.80), rgba(10,10,13,.86));
+      border: .5px solid rgba(255,255,255,.10);
       border-radius: 16px;
-      box-shadow: 0 1px 0 rgba(255,255,255,.06) inset, 0 30px 80px -20px rgba(0,0,0,.8), 0 0 0 1px rgba(0,0,0,.4);
-      -webkit-backdrop-filter: blur(20px) saturate(140%); backdrop-filter: blur(20px) saturate(140%);
+      box-shadow: 0 24px 60px -30px rgba(0,0,0,.75);
       overflow: hidden; position: relative;
       animation: panelIn .45s cubic-bezier(.16,1,.3,1);
     }
@@ -78,13 +80,13 @@
       box-shadow: 0 0 24px -8px var(--accent-glow) inset; }
     .dt-title { font-weight: 600; font-size: 21px; letter-spacing: .04em; text-transform: uppercase; line-height: 1; }
     .dt-sub { font-weight: 400; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-top: 5px; white-space: nowrap; }
-    .dt-chip { display: flex; align-items: center; gap: 7px; flex: none; padding: 7px 11px; border-radius: 9px; background: rgba(0,0,0,.35); border: .5px solid var(--line); }
+    .dt-chip { display: flex; align-items: center; gap: 7px; flex: none; padding: 7px 11px; border-radius: 9px; background: rgba(0,0,0,.30); border: .5px solid var(--line); }
     .dt-chip svg { color: var(--accent); }
     .dt-chip-lbl { font-size: 9.5px; letter-spacing: .12em; color: var(--muted); text-transform: uppercase; line-height: 1; white-space: nowrap; }
     .dt-chip-val { font-size: 15px; font-weight: 600; letter-spacing: .05em; font-variant-numeric: tabular-nums; line-height: 1; margin-top: 3px; }
 
     /* Strip progres total */
-    .dt-level { display: flex; align-items: center; gap: 13px; margin: 0 var(--pad); padding: 13px 15px; border-radius: 12px; background: rgba(0,0,0,.28); border: .5px solid var(--line); }
+    .dt-level { display: flex; align-items: center; gap: 13px; margin: 0 var(--pad); padding: 13px 15px; border-radius: 12px; background: rgba(0,0,0,.24); border: .5px solid var(--line); }
     .dt-lvl-num { position: relative; width: 46px; height: 46px; flex: none; display: grid; place-items: center; }
     .dt-lvl-num .lv { font-size: 17px; font-weight: 700; line-height: 1; }
     .dt-lvl-num .lv-lbl { position: absolute; bottom: -2px; font-size: 7px; letter-spacing: .14em; color: var(--muted); text-transform: uppercase; }
@@ -107,19 +109,21 @@
     /* Card */
     .dt-card { position: relative; border-radius: 12px; background: var(--card); border: .5px solid var(--line); overflow: hidden; transition: border-color .2s, background .2s; }
     .dt-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--accent); opacity: 0; transition: opacity .2s; }
-    .dt-card:hover { background: rgba(255,255,255,.045); border-color: rgba(255,255,255,.13); }
+    .dt-card:hover { background: rgba(255,255,255,.05); border-color: rgba(255,255,255,.13); }
     .dt-card:hover::before { opacity: .55; }
-    .dt-card.open { border-color: var(--accent-line); background: rgba(255,255,255,.04); }
+    .dt-card.open { border-color: var(--accent-line); background: rgba(255,255,255,.045); }
     .dt-card.open::before { opacity: 1; }
-    .dt-card.comp { opacity: .72; }
+    .dt-card.claimed { opacity: .6; }
     .dt-card.locked { opacity: .5; }
     .dt-card.locked .dt-row { cursor: default; }
+    .dt-card.claimable { border-color: var(--accent-line); box-shadow: 0 0 0 1px var(--accent-soft), 0 0 30px -14px var(--accent-glow); }
 
     .dt-row { display: flex; align-items: center; gap: 13px; padding: var(--cardpad); cursor: pointer; user-select: none; }
     .dt-ico { width: 42px; height: 42px; flex: none; display: grid; place-items: center; border-radius: 10px;
       background: rgba(255,255,255,.05); border: .5px solid var(--line); color: rgba(255,255,255,.85); transition: .2s; }
     .dt-card:hover .dt-ico, .dt-card.open .dt-ico { color: var(--accent); border-color: var(--accent-line); background: var(--accent-soft); }
     .dt-card.locked .dt-ico { color: rgba(255,255,255,.4); }
+    .dt-card.claimed .dt-ico { color: var(--green); border-color: rgba(52,210,123,.3); background: rgba(52,210,123,.1); }
 
     .dt-info { flex: 1; min-width: 0; }
     .dt-name { font-size: 15px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; line-height: 1.15; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
@@ -129,7 +133,8 @@
     .dt-dot { width: 6px; height: 6px; border-radius: 99px; background: currentColor; }
     .dt-status.low { color: #ef4444; }
     .dt-status.mid { color: #eab308; }
-    .dt-status.comp { color: #34d27b; }
+    .dt-status.claimable { color: var(--accent); }
+    .dt-status.comp { color: var(--green); }
     .dt-status.locked { color: rgba(255,255,255,.4); }
     .dt-minibar { flex: 1; max-width: 120px; height: 4px; border-radius: 99px; background: rgba(255,255,255,.08); overflow: hidden; }
     .dt-minibar > i { display: block; height: 100%; border-radius: 99px; transition: width .5s cubic-bezier(.2,.8,.25,1), background .3s; }
@@ -142,7 +147,10 @@
     .dt-reward { text-align: right; min-width: 64px; white-space: nowrap; }
     .dt-reward .xp { font-size: 15px; font-weight: 700; color: var(--accent); line-height: 1; letter-spacing: .02em; font-variant-numeric: tabular-nums; }
     .dt-reward .xp-lbl { font-size: 9px; letter-spacing: .16em; color: var(--muted); text-transform: uppercase; margin-top: 3px; }
-    .dt-card.comp .dt-reward .xp { color: #34d27b; }
+    .dt-card.claimed .dt-reward .xp { color: var(--green); }
+    /* puls pe cardurile de revendicat */
+    @keyframes dt-pulse { 0%,100% { box-shadow: 0 0 0 0 var(--accent-glow); } 50% { box-shadow: 0 0 0 6px transparent; } }
+    .dt-card.claimable .dt-ring::after { content: ""; position: absolute; inset: -3px; border-radius: 99px; animation: dt-pulse 1.8s ease-in-out infinite; }
 
     /* Expand */
     .dt-exp { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .32s cubic-bezier(.3,.8,.3,1); }
@@ -156,22 +164,30 @@
     .dt-locknote { display: flex; align-items: center; gap: 8px; font-size: 12px; color: rgba(255,255,255,.5); letter-spacing: .03em; }
     .dt-locknote svg { color: var(--muted); }
 
+    /* Butoane */
+    .btn { appearance: none; font-family: inherit; cursor: pointer; border: 0; border-radius: 9px; font-weight: 600; letter-spacing: .08em;
+      text-transform: uppercase; transition: .16s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+    .btn-claim { width: 100%; padding: 11px 14px; font-size: 12px; background: var(--accent); color: #1a1205; box-shadow: 0 8px 22px -10px var(--accent-glow); }
+    .btn-claim:hover { filter: brightness(1.08); }
+    .btn-claimed { width: 100%; padding: 11px 14px; font-size: 12px; background: rgba(52,210,123,.12); color: var(--green); border: .5px solid rgba(52,210,123,.3); cursor: default; }
+
     /* Footer */
-    .dt-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px var(--pad) var(--pad); border-top: .5px solid var(--line); background: rgba(0,0,0,.22); }
+    .dt-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px var(--pad) var(--pad); border-top: .5px solid var(--line); background: rgba(0,0,0,.20); }
     .dt-foot-l { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
     .dt-foot-l b { color: var(--text); font-weight: 600; }
-    .dt-foot-r { font-size: 13px; font-weight: 700; color: var(--accent); letter-spacing: .03em; font-variant-numeric: tabular-nums; }
+    .dt-foot-txt { font-size: 13px; font-weight: 700; color: var(--accent); letter-spacing: .03em; font-variant-numeric: tabular-nums; }
+    .btn-claimall { padding: 10px 16px; font-size: 12px; background: var(--accent); color: #1a1205; box-shadow: 0 10px 26px -12px var(--accent-glow); white-space: nowrap; }
+    .btn-claimall:hover { filter: brightness(1.08); }
 
     /* Hint */
-    .hint { position: fixed; bottom: 16px; right: 4vw; font-size: 11px; color: rgba(255,255,255,.35); letter-spacing: .5px; z-index: 11; }
+    .hint { position: fixed; bottom: 16px; right: var(--panel-right, 9vw); font-size: 11px; color: rgba(255,255,255,.35); letter-spacing: .5px; z-index: 11; }
     .hint kbd { background: rgba(255,255,255,.08); border: .5px solid rgba(255,255,255,.14); border-radius: 5px; padding: 3px 7px; font-family: 'Oswald', sans-serif; font-size: 10px; }
 
-    /* Toast */
-    .toasts { position: fixed; left: 34%; bottom: 28px; transform: translateX(-50%); display: flex; flex-direction: column; gap: 8px; z-index: 50; pointer-events: none; align-items: center; }
-    .toast { display: flex; align-items: center; gap: 10px; padding: 12px 18px; border-radius: 11px; background: rgba(15,15,18,.94); border: .5px solid var(--toast-line, rgba(232,147,12,.4));
-      box-shadow: 0 16px 40px -12px rgba(0,0,0,.7); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
-      font-size: 13px; letter-spacing: .04em; text-transform: uppercase; font-weight: 600; animation: toastIn .35s cubic-bezier(.2,.9,.3,1); }
-    .toast .tag { color: #34d27b; font-weight: 700; }
+    /* Toast (doar in meniu, la revendicare) */
+    .toasts { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); display: flex; flex-direction: column; gap: 8px; z-index: 50; pointer-events: none; align-items: center; }
+    .toast { display: flex; align-items: center; gap: 10px; padding: 12px 18px; border-radius: 11px; background: rgba(15,15,18,.95); border: .5px solid rgba(52,210,123,.4);
+      box-shadow: 0 16px 40px -12px rgba(0,0,0,.7); font-size: 13px; letter-spacing: .04em; text-transform: uppercase; font-weight: 600; animation: toastIn .35s cubic-bezier(.2,.9,.3,1); }
+    .toast .tag { color: var(--green); font-weight: 700; }
     @keyframes toastIn { from { opacity: 0; transform: translateY(14px) scale(.96); } to { opacity: 1; transform: none; } }
     .toast.out { animation: toastOut .3s ease forwards; }
     @keyframes toastOut { to { opacity: 0; transform: translateY(-8px); } }
@@ -217,7 +233,7 @@
 
       <div class="dt-foot">
         <div class="dt-foot-l"><b id="f-done">0</b> / <span id="f-total">0</span> completate</div>
-        <div class="dt-foot-r" id="f-reward">$0</div>
+        <div id="f-action"></div>
       </div>
     </div>
   </div>
@@ -246,7 +262,7 @@
       bolt:   '<path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z"/>',
       check:  '<path d="M4 12.5 9 17.5 20 6.5"/>',
       lock:   '<rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>',
-      clock:  '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+      coins:  '<ellipse cx="9" cy="6" rx="6" ry="2.6"/><path d="M3 6v5c0 1.4 2.7 2.6 6 2.6s6-1.2 6-2.6V6"/><path d="M9 13.6v4c0 1.4 2.7 2.6 6 2.6s6-1.2 6-2.6v-6"/><ellipse cx="15" cy="11.6" rx="6" ry="2.6"/>',
       trophy: '<path d="M7 4h10v4a5 5 0 0 1-10 0V4z"/><path d="M7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3"/><path d="M9 17h6M10 21h4M12 13v4"/>',
     };
     function icon(name, size) { return svg(ICONS[name] || ICONS.target, size); }
@@ -265,7 +281,8 @@
     }
     function statusFor(m, pct) {
       if (m.locked) return { t: 'Blocat', c: 'locked', dot: false };
-      if (m.completed) return { t: 'Completat', c: 'comp', dot: true };
+      if (m.completed && !m.claimed) return { t: 'De revendicat', c: 'claimable', dot: true };
+      if (m.claimed) return { t: 'Revendicat', c: 'comp', dot: true };
       if (pct >= 50) return { t: 'In progres', c: 'mid', dot: true };
       return { t: 'Inceput', c: 'low', dot: true };
     }
@@ -286,15 +303,17 @@
       document.getElementById('chip-ico').innerHTML = icon('trophy', 16);
 
       const total = missions.length;
-      let done = 0, toEarn = 0;
-      missions.forEach(m => { if (m.completed) done++; else toEarn += (m.reward || 0); });
+      let done = 0, claimableSum = 0, claimableN = 0;
+      missions.forEach(m => {
+        if (m.completed) done++;
+        if (m.completed && !m.claimed) { claimableSum += (m.reward || 0); claimableN++; }
+      });
 
       document.getElementById('chip-val').textContent = done + ' / ' + total;
       document.getElementById('ov-done').textContent = done;
       document.getElementById('ov-total').textContent = total;
       document.getElementById('f-done').textContent = done;
       document.getElementById('f-total').textContent = total;
-      document.getElementById('f-reward').textContent = fmt(toEarn) + ' de castigat';
 
       const ovPct = total ? Math.round((done / total) * 100) : 0;
       document.getElementById('ov-bar').style.width = ovPct + '%';
@@ -302,6 +321,17 @@
       document.getElementById('lvl-ring').innerHTML =
         ringSvg(ovPct, allDone ? '#34d27b' : 'var(--accent)', 46, 3.5) +
         '<span class="lv">' + done + '</span><span class="lv-lbl">DONE</span>';
+
+      // footer: buton "Revendica tot" daca exista de revendicat
+      const fa = document.getElementById('f-action');
+      if (claimableN > 0) {
+        fa.innerHTML = '<button class="btn btn-claimall" id="claim-all">' + icon('coins', 15) + ' Revendica tot · ' + fmt(claimableSum) + '</button>';
+        fa.querySelector('#claim-all').addEventListener('click', () => {
+          fetch('https://blacksilva-missions/claimAll', { method: 'POST', body: '{}' });
+        });
+      } else {
+        fa.innerHTML = '<span class="dt-foot-txt">Nimic de revendicat</span>';
+      }
 
       const list = document.getElementById('list');
       list.innerHTML = '';
@@ -311,11 +341,12 @@
         const pct = m.completed ? 100 : Math.round((current / target) * 100);
         const col = colorFor(pct, m.completed);
         const st = statusFor(m, pct);
+        const claimable = m.completed && !m.claimed && !m.locked;
         const isOpen = openId === m.id && !m.locked;
 
-        const cls = ['dt-card', isOpen && 'open', m.completed && 'comp', m.locked && 'locked'].filter(Boolean).join(' ');
+        const cls = ['dt-card', isOpen && 'open', claimable && 'claimable', m.claimed && 'claimed', m.locked && 'locked'].filter(Boolean).join(' ');
 
-        // continut cluster dreapta
+        // inel dreapta
         let ringInner;
         if (m.locked) {
           ringInner = '<span class="frac" style="color:rgba(255,255,255,.4)">' + icon('lock', 16) + '</span>';
@@ -326,12 +357,22 @@
           ringInner = ringSvg(pct, col) + '<span class="frac">' + fracTxt + '</span>';
         }
 
-        // nota de blocare
-        let lockNote = '';
+        // continut expand
+        let expContent;
         if (m.locked) {
           const prev = missions.find(x => x.id === m.id - 1);
-          lockNote = '<div class="dt-locknote">' + icon('lock', 14) +
+          expContent = '<div class="dt-locknote">' + icon('lock', 14) +
             ' Completeaza intai misiunea #' + (m.id - 1) + (prev ? ' (' + prev.title + ')' : '') + '</div>';
+        } else if (claimable) {
+          expContent = '<button class="btn btn-claim" data-claim="' + m.id + '">' + icon('coins', 15) +
+            ' Revendica ' + fmt(m.reward) + ' · +' + (m.level || 1) + ' nivel</button>';
+        } else if (m.claimed) {
+          expContent = '<span class="btn btn-claimed">' + icon('check', 15) + ' Recompensa revendicata</span>';
+        } else {
+          expContent = '<div class="dt-foot-row">' +
+            '<span class="dt-tag">' + icon('coins', 14) + ' Recompensa <b>' + fmt(m.reward) + '</b></span>' +
+            '<span class="dt-tag">' + icon('trophy', 14) + ' <b>+' + (m.level || 1) + '</b> nivel</span>' +
+          '</div>';
         }
 
         const card = document.createElement('div');
@@ -353,16 +394,12 @@
           '</div>' +
           '<div class="dt-exp"><div class="dt-exp-in"><div class="dt-exp-pad">' +
             '<div class="dt-desc">' + (m.description || '') + '</div>' +
-            (lockNote ? lockNote :
-              '<div class="dt-foot-row">' +
-                '<span class="dt-tag">' + icon('bolt', 14) + ' Recompensa <b>' + fmt(m.reward) + '</b></span>' +
-                '<span class="dt-tag">' + icon('trophy', 14) + ' <b>+' + (m.level || 1) + '</b> nivel</span>' +
-              '</div>') +
+            expContent +
           '</div></div></div>';
         list.appendChild(card);
       });
 
-      // click pentru expand (doar misiunile deblocate)
+      // expand pe click (doar misiuni deblocate)
       list.querySelectorAll('.dt-row').forEach(row => {
         row.addEventListener('click', () => {
           const id = parseInt(row.getAttribute('data-id'), 10);
@@ -372,9 +409,18 @@
           render();
         });
       });
+
+      // butoane de revendicare per card
+      list.querySelectorAll('[data-claim]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const id = parseInt(btn.getAttribute('data-claim'), 10);
+          fetch('https://blacksilva-missions/claim', { method: 'POST', body: JSON.stringify({ id: id }) });
+        });
+      });
     }
 
-    /* ---------- Toasts ---------- */
+    /* ---------- Toasts (revendicare) ---------- */
     function toast(tag, body) {
       const wrap = document.getElementById('toasts');
       const el = document.createElement('div');
@@ -386,8 +432,9 @@
     }
 
     /* ---------- Deschidere/inchidere ---------- */
-    function openUI(accent) {
+    function openUI(accent, panelRight) {
       if (accent) document.getElementById('wrap').style.setProperty('--accent', accent);
+      if (panelRight != null) document.documentElement.style.setProperty('--panel-right', panelRight + 'vw');
       document.body.style.display = 'block';
       document.getElementById('vignette').style.display = 'block';
       setTimeout(() => {
@@ -408,15 +455,17 @@
         missions = d.missions || [];
         openId = null;
         render();
-        openUI(d.accent);
+        openUI(d.accent, d.panelRight);
       } else if (d.type === 'updateMissions') {
         missions = d.missions || [];
-        // daca misiunea deschisa s-a blocat/disparut, inchide expandul
         const cur = missions.find(x => x.id === openId);
         if (!cur || cur.locked) openId = null;
         render();
-      } else if (d.type === 'missionCompleted') {
-        toast('Completat', d.title + ' · ' + fmt(d.reward));
+      } else if (d.type === 'claimed') {
+        let body = '';
+        if (d.money) body += fmt(d.money);
+        if (d.level) body += (body ? '  ·  ' : '') + '+' + d.level + ' nivel';
+        toast('Revendicat', body || (d.label || ''));
       } else if (d.type === 'closeUI') {
         closeUI();
       }

@@ -100,12 +100,12 @@ AddEventHandler('blacksilva-missions:receiveData', function(data)
     end
 end)
 
-RegisterNetEvent('blacksilva-missions:missionCompleted')
-AddEventHandler('blacksilva-missions:missionCompleted', function(id, title, reward, level)
-    PlaySoundFrontend(-1, "RANK_UP", "HUD_AWARDS", true)
-    notify(('~g~Misiune completata!~s~\n~y~%s~s~\nRecompensa: ~g~$%s~s~  +%d nivel'):format(title, reward, level))
+-- recompensa revendicata din meniu (fara notificare de joc)
+RegisterNetEvent('blacksilva-missions:claimed')
+AddEventHandler('blacksilva-missions:claimed', function(money, level, label)
     if isUIOpen then
-        SendNUIMessage({ type = 'missionCompleted', id = id, title = title, reward = reward })
+        PlaySoundFrontend(-1, "PURCHASE", "HUD_LIQUOR_STORE_SOUNDSET", true)
+        SendNUIMessage({ type = 'claimed', money = money, level = level, label = label })
     end
 end)
 
@@ -164,6 +164,20 @@ local function stopClipboardEmote()
     end
 end
 
+-- thread care mentine blur-ul de fundal (DOF) cat timp meniul e deschis
+local dofThreadRunning = false
+local function startDofThread()
+    if dofThreadRunning then return end
+    dofThreadRunning = true
+    CreateThread(function()
+        while isUIOpen and missionCam do
+            SetUseHiDof()
+            Wait(0)
+        end
+        dofThreadRunning = false
+    end)
+end
+
 local function createMissionCamera()
     local ped = PlayerPedId()
     local c   = Config.Camera
@@ -175,6 +189,16 @@ local function createMissionCamera()
     SetCamCoord(missionCam, camCoords.x, camCoords.y, camCoords.z)
     PointCamAtCoord(missionCam, aim.x, aim.y, aim.z)
     SetCamFov(missionCam, c.fov)
+
+    -- Depth of Field: personajul ramane clar, fundalul devine blurat
+    if c.dof then
+        SetCamUseShallowDofMode(missionCam, true)
+        SetCamNearDof(missionCam, c.dofNear or 0.6)
+        SetCamFarDof(missionCam, c.dofFar or 3.2)
+        SetCamDofStrength(missionCam, c.dofStrength or 1.0)
+        startDofThread()
+    end
+
     SetCamActiveWithInterp(missionCam, GetRenderingCam(), c.interp, true, true)
     RenderScriptCams(true, true, c.interp, true, false)
 
@@ -211,7 +235,7 @@ function OpenMissionsMenu()
     -- cere date proaspete
     TriggerServerEvent('blacksilva-missions:requestData')
 
-    SendNUIMessage({ type = 'openUI', missions = missions, accent = Config.Accent })
+    SendNUIMessage({ type = 'openUI', missions = missions, accent = Config.Accent, panelRight = Config.PanelRight })
 end
 
 function CloseMissionsMenu()
@@ -228,6 +252,18 @@ end
 
 RegisterNUICallback('close', function(_, cb)
     CloseMissionsMenu()
+    cb('ok')
+end)
+
+RegisterNUICallback('claim', function(data, cb)
+    if data and data.id then
+        TriggerServerEvent('blacksilva-missions:claim', data.id)
+    end
+    cb('ok')
+end)
+
+RegisterNUICallback('claimAll', function(_, cb)
+    TriggerServerEvent('blacksilva-missions:claimAll')
     cb('ok')
 end)
 

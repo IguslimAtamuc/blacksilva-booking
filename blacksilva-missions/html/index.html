@@ -107,7 +107,9 @@
     .dt-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,.14); border-radius: 4px; border: 2px solid transparent; background-clip: content-box; }
 
     /* Card */
-    .dt-card { position: relative; border-radius: 12px; background: var(--card); border: .5px solid var(--line); overflow: hidden; transition: border-color .2s, background .2s; }
+    /* flex: 0 0 auto = cardurile isi pastreaza inaltimea naturala (nu se mai
+       comprima cand sunt multe misiuni); lista capata scroll vertical. */
+    .dt-card { flex: 0 0 auto; position: relative; border-radius: 12px; background: var(--card); border: .5px solid var(--line); overflow: hidden; transition: border-color .2s, background .2s; }
     .dt-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--accent); opacity: 0; transition: opacity .2s; }
     .dt-card:hover { background: rgba(255,255,255,.05); border-color: rgba(255,255,255,.13); }
     .dt-card:hover::before { opacity: .55; }

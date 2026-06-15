@@ -5,6 +5,11 @@ local missions   = {}            -- starea misiunilor (din server)
 local missionCfg = {}            -- index pe id catre config
 for _, m in ipairs(Config.Missions) do missionCfg[m.id] = m end
 
+local activities = {}            -- starea activitatilor (din server)
+local activityCfg = {}           -- index pe id catre config
+for _, a in ipairs(Config.Activities or {}) do activityCfg[a.id] = a end
+local activeActivityId = nil     -- activitatea pornita acum (client)
+
 -- =====================================================================
 --  Helpers
 -- =====================================================================
@@ -93,10 +98,12 @@ end
 -- =====================================================================
 RegisterNetEvent('blacksilva-missions:receiveData')
 AddEventHandler('blacksilva-missions:receiveData', function(data)
-    missions = data or {}
+    data = data or {}
+    missions   = data.missions or {}
+    activities = data.activities or {}
     refreshBlips()
     if isUIOpen then
-        SendNUIMessage({ type = 'updateMissions', missions = missions })
+        SendNUIMessage({ type = 'update', missions = missions, activities = activities, activeActivity = activeActivityId })
     end
 end)
 
@@ -235,7 +242,14 @@ function OpenMissionsMenu()
     -- cere date proaspete
     TriggerServerEvent('blacksilva-missions:requestData')
 
-    SendNUIMessage({ type = 'openUI', missions = missions, accent = Config.Accent, panelRight = Config.PanelRight })
+    SendNUIMessage({
+        type = 'openUI',
+        missions = missions,
+        activities = activities,
+        activeActivity = activeActivityId,
+        accent = Config.Accent,
+        panelRight = Config.PanelRight,
+    })
 end
 
 function CloseMissionsMenu()
@@ -265,6 +279,26 @@ end)
 RegisterNUICallback('claimAll', function(_, cb)
     TriggerServerEvent('blacksilva-missions:claimAll')
     cb('ok')
+end)
+
+RegisterNUICallback('startActivity', function(data, cb)
+    cb('ok')
+    if data and data.id then
+        CloseMissionsMenu()
+        StartActivity(data.id)
+    end
+end)
+
+RegisterNUICallback('cancelActivity', function(_, cb)
+    cb('ok')
+    CancelActivity()
+end)
+
+RegisterNUICallback('claimActivity', function(data, cb)
+    cb('ok')
+    if data and data.id then
+        TriggerServerEvent('blacksilva-missions:activityClaim', data.id)
+    end
 end)
 
 -- tasta F5 (configurabila din setarile FiveM) + comanda /misiuni
@@ -579,6 +613,179 @@ AddEventHandler('gameEventTriggered', function(name, args)
 end)
 
 -- =====================================================================
+--  MOTOR ACTIVITATI (pornite din meniul F5, fara NPC)
+-- =====================================================================
+local activityRunning = false
+local activityBlip    = nil
+local activityProp    = nil
+
+local function clearActivityWorld()
+    if activityBlip and DoesBlipExist(activityBlip) then RemoveBlip(activityBlip) end
+    activityBlip = nil
+    if activityProp and DoesEntityExist(activityProp) then DeleteEntity(activityProp) end
+    activityProp = nil
+    local ped = PlayerPedId()
+    if not IsEntityDead(ped) then
+        ClearPedTasks(ped)
+        FreezeEntityPosition(ped, false)
+    end
+end
+
+local function setActivityBlip(coord, label)
+    if activityBlip and DoesBlipExist(activityBlip) then RemoveBlip(activityBlip) end
+    activityBlip = AddBlipForCoord(coord.x, coord.y, coord.z)
+    SetBlipSprite(activityBlip, 1)
+    SetBlipColour(activityBlip, 5)
+    SetBlipScale(activityBlip, 0.9)
+    SetBlipRoute(activityBlip, true)
+    SetBlipRouteColour(activityBlip, 5)
+    BeginTextCommandSetBlipName("STRING")
+    AddTextComponentSubstringPlayerName(label or "Activitate")
+    EndTextCommandSetBlipName(activityBlip)
+end
+
+local function drawTxt3D(x, y, z, text)
+    SetDrawOrigin(x, y, z, 0)
+    SetTextScale(0.35, 0.35)
+    SetTextFont(4)
+    SetTextProportional(1)
+    SetTextColour(255, 255, 255, 215)
+    SetTextEntry("STRING")
+    SetTextCentre(true)
+    AddTextComponentString(text)
+    DrawText(0.0, 0.0)
+    ClearDrawOrigin()
+end
+
+local function playActionAnim(anim, propModel, duration)
+    local ped = PlayerPedId()
+    if anim and anim[1] then
+        RequestAnimDict(anim[1])
+        local t = 0
+        while not HasAnimDictLoaded(anim[1]) and t < 60 do Wait(10); t = t + 1 end
+        TaskPlayAnim(ped, anim[1], anim[2], 4.0, -4.0, duration, 1, 0, false, false, false)
+    end
+    if propModel then
+        local m = GetHashKey(propModel)
+        RequestModel(m)
+        local t = 0
+        while not HasModelLoaded(m) and t < 60 do Wait(10); t = t + 1 end
+        local c = GetEntityCoords(ped)
+        activityProp = CreateObject(m, c.x, c.y, c.z, true, true, true)
+        local bone = GetPedBoneIndex(ped, 28422) -- mana dreapta
+        AttachEntityToEntity(activityProp, ped, bone, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, true, true, false, true, 1, true)
+    end
+    Wait(duration)
+    if activityProp and DoesEntityExist(activityProp) then DeleteEntity(activityProp) end
+    activityProp = nil
+    if not IsEntityDead(ped) then ClearPedTasks(ped) end
+end
+
+-- construieste pasii unei activitati din config
+local function buildSteps(a)
+    local def   = (Config.ActivityDefaults or {})[a.type] or {}
+    local steps = {}
+    if a.type == 'delivery' then
+        steps[#steps + 1] = {
+            coord = a.pickup,
+            label = a.pickupLabel or def.pickupLabel or 'Ridica',
+            anim  = a.pickupAnim or def.pickupAnim,
+            prop  = a.pickupProp or def.pickupProp,
+            dur   = a.duration or def.duration or 2500,
+        }
+        for _, d in ipairs(a.dropoffs or {}) do
+            steps[#steps + 1] = {
+                coord = d,
+                label = a.deliverLabel or def.deliverLabel or 'Livreaza',
+                anim  = a.deliverAnim or def.deliverAnim,
+                dur   = a.duration or def.duration or 2200,
+            }
+        end
+    else
+        for _, p in ipairs(a.points or {}) do
+            steps[#steps + 1] = {
+                coord = p,
+                label = a.label or def.label or 'Actiune',
+                anim  = a.anim or def.anim,
+                prop  = a.prop or def.prop,
+                dur   = a.duration or def.duration or 2500,
+            }
+        end
+    end
+    return steps
+end
+
+function StartActivity(id)
+    if activityRunning then
+        notify('~y~Ai deja o activitate in desfasurare. Deschide F5 -> Renunta pentru a o opri.')
+        return
+    end
+    local a = activityCfg[id]
+    if not a then return end
+    local steps = buildSteps(a)
+    if #steps == 0 then return end
+
+    activeActivityId = id
+    activityRunning  = true
+    TriggerServerEvent('blacksilva-missions:activityStart', id)
+    notify(('~b~Activitate pornita: ~w~%s ~b~(%d pasi). Urmareste GPS-ul.'):format(a.title, #steps))
+
+    CreateThread(function()
+        local stepIndex = 1
+        while activityRunning and stepIndex <= #steps do
+            local step = steps[stepIndex]
+            if not step.coord then break end
+            setActivityBlip(step.coord, a.title)
+
+            local done = false
+            while activityRunning and not done do
+                Wait(0)
+                local ped  = PlayerPedId()
+                local pc   = GetEntityCoords(ped)
+                local dist = #(pc - vector3(step.coord.x, step.coord.y, step.coord.z))
+                if dist <= 60.0 then
+                    DrawMarker(1, step.coord.x, step.coord.y, step.coord.z - 0.95, 0,0,0, 0,0,0,
+                        1.5, 1.5, 0.8, 233, 147, 12, 140, false, true, 2, false, nil, nil, false)
+                end
+                if dist <= 2.0 then
+                    drawTxt3D(step.coord.x, step.coord.y, step.coord.z + 0.5,
+                        ('[E] %s  (%d/%d)'):format(step.label, stepIndex, #steps))
+                    if IsControlJustPressed(0, 38) then -- E
+                        FreezeEntityPosition(ped, true)
+                        playActionAnim(step.anim, step.prop, step.dur)
+                        FreezeEntityPosition(ped, false)
+                        done = true
+                        notify(('~g~%s (%d/%d)'):format(step.label, stepIndex, #steps))
+                    end
+                end
+            end
+
+            if not activityRunning then break end
+            stepIndex = stepIndex + 1
+        end
+
+        if activityRunning and stepIndex > #steps then
+            TriggerServerEvent('blacksilva-missions:activityComplete', id)
+            notify('~g~Activitate finalizata! Deschide F5 si apasa Revendica.')
+        end
+
+        activityRunning  = false
+        activeActivityId = nil
+        clearActivityWorld()
+        if isUIOpen then SendNUIMessage({ type = 'setActive', id = nil }) end
+    end)
+end
+
+function CancelActivity()
+    if not activityRunning then return end
+    activityRunning  = false
+    activeActivityId = nil
+    clearActivityWorld()
+    notify('~r~Activitate anulata.')
+    if isUIOpen then SendNUIMessage({ type = 'setActive', id = nil }) end
+end
+
+-- =====================================================================
 --  Blocare controale cat timp meniul e deschis
 -- =====================================================================
 CreateThread(function()
@@ -614,5 +821,7 @@ AddEventHandler('onResourceStop', function(res)
         end
         if clipboardProp and DoesEntityExist(clipboardProp) then DeleteEntity(clipboardProp) end
         if missionCam then RenderScriptCams(false, false, 0, true, false); DestroyCam(missionCam, false) end
+        if activityBlip and DoesBlipExist(activityBlip) then RemoveBlip(activityBlip) end
+        if activityProp and DoesEntityExist(activityProp) then DeleteEntity(activityProp) end
     end
 end)

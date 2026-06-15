@@ -100,6 +100,33 @@
     .dt-bar > i { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, color-mix(in srgb,var(--accent) 70%,#fff), var(--accent));
       box-shadow: 0 0 12px -2px var(--accent-glow); transition: width .7s cubic-bezier(.2,.8,.25,1); }
 
+    /* Tabs */
+    .dt-tabs { display: flex; gap: 0; margin: 14px var(--pad) 0; border-bottom: .5px solid var(--line); }
+    .dt-tab { appearance: none; background: none; border: 0; cursor: pointer; position: relative; padding: 9px 2px; margin-right: 24px;
+      color: var(--muted); font-family: inherit; font-size: 13px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+      transition: color .18s; display: flex; align-items: center; gap: 7px; }
+    .dt-tab:hover { color: rgba(255,255,255,.7); }
+    .dt-tab.on { color: var(--text); }
+    .dt-tab.on::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--accent); box-shadow: 0 0 10px var(--accent-glow); }
+    .dt-tab .cnt { font-size: 10px; padding: 2px 6px; border-radius: 99px; line-height: 1; background: rgba(255,255,255,.08); color: var(--muted); font-weight: 600; }
+    .dt-tab.on .cnt { background: var(--accent-soft); color: var(--accent); }
+
+    /* Difficulty chip */
+    .dt-diff { font-size: 9.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: 2px 7px; border-radius: 6px; }
+    .diff-EASY    { color: #34d27b; background: rgba(52,210,123,.14); }
+    .diff-MEDIUM  { color: #eab308; background: rgba(234,179,8,.14); }
+    .diff-HARD    { color: #f59e0b; background: rgba(245,158,11,.16); }
+    .diff-ILLEGAL { color: #ef4444; background: rgba(239,68,68,.16); }
+
+    /* Activity buttons */
+    .btn-start  { width: 100%; padding: 11px 14px; font-size: 12px; background: var(--accent); color: #1a1205; box-shadow: 0 8px 22px -10px var(--accent-glow); }
+    .btn-start:hover { filter: brightness(1.08); }
+    .btn-cancel { width: 100%; padding: 11px 14px; font-size: 12px; background: rgba(239,68,68,.12); color: #f87171; border: .5px solid rgba(239,68,68,.3); }
+    .btn-cancel:hover { background: rgba(239,68,68,.2); }
+    .btn-cool   { width: 100%; padding: 11px 14px; font-size: 12px; background: rgba(255,255,255,.05); color: var(--muted); cursor: default; }
+    .dt-status.active { color: var(--accent); }
+    .dt-status.cool   { color: rgba(255,255,255,.4); }
+
     /* Lista */
     .dt-list { display: flex; flex-direction: column; gap: var(--gap); padding: 16px var(--pad); max-height: 52vh; overflow-y: auto; overflow-x: hidden;
       scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.14) transparent; }
@@ -212,7 +239,7 @@
         <div class="dt-chip">
           <span id="chip-ico"></span>
           <div>
-            <div class="dt-chip-lbl">Completate</div>
+            <div class="dt-chip-lbl" id="chip-lbl">Completate</div>
             <div class="dt-chip-val" id="chip-val">0 / 0</div>
           </div>
         </div>
@@ -222,11 +249,16 @@
         <div class="dt-lvl-num" id="lvl-ring"></div>
         <div class="dt-lvl-mid">
           <div class="dt-lvl-rank">
-            <b>Progres Total</b>
-            <span class="dt-lvl-xp"><span class="cur" id="ov-done">0</span> / <span id="ov-total">0</span> misiuni</span>
+            <b id="lvl-rank">Progres Total</b>
+            <span class="dt-lvl-xp"><span class="cur" id="ov-done">0</span> / <span id="ov-total">0</span> <span id="ov-unit">misiuni</span></span>
           </div>
           <div class="dt-bar"><i id="ov-bar" style="width:0%"></i></div>
         </div>
+      </div>
+
+      <div class="dt-tabs">
+        <button class="dt-tab on" id="tab-missions" data-tab="missions">Misiuni <span class="cnt" id="cnt-missions">0</span></button>
+        <button class="dt-tab" id="tab-activities" data-tab="activities">Activitati <span class="cnt" id="cnt-activities">0</span></button>
       </div>
 
       <div class="dt-list" id="list"></div>
@@ -269,11 +301,16 @@
 
     /* ---------- Stare ---------- */
     let missions = [];
+    let activities = [];
+    let activeTab = 'missions';
+    let activeActivityId = null;
     let openId = null;
+    let openAct = null;
+    let cdTimer = null;
 
     const fmt = (n) => '$' + (n || 0).toLocaleString('en-US');
+    const mmss = (s) => { s = Math.max(0, s | 0); const m = Math.floor(s / 60), x = s % 60; return (m < 10 ? '0' : '') + m + ':' + (x < 10 ? '0' : '') + x; };
 
-    /* culorile cerute: rosu < 50%, galben >= 50%, verde = 100%/completat */
     function colorFor(pct, completed) {
       if (completed || pct >= 100) return '#34d27b';
       if (pct >= 50) return '#eab308';
@@ -286,7 +323,6 @@
       if (pct >= 50) return { t: 'In progres', c: 'mid', dot: true };
       return { t: 'Inceput', c: 'low', dot: true };
     }
-
     function ringSvg(pct, color, size, stroke) {
       size = size || 44; stroke = stroke || 4;
       const r = (size - stroke) / 2;
@@ -298,37 +334,40 @@
         '</svg>';
     }
 
+    /* ---------- Dispatch ---------- */
     function render() {
       document.getElementById('badge').innerHTML = icon('grid', 20);
       document.getElementById('chip-ico').innerHTML = icon('trophy', 16);
+      document.getElementById('cnt-missions').textContent = missions.length;
+      document.getElementById('cnt-activities').textContent = activities.length;
+      document.getElementById('tab-missions').classList.toggle('on', activeTab === 'missions');
+      document.getElementById('tab-activities').classList.toggle('on', activeTab === 'activities');
+      if (activeTab === 'activities') renderActivities(); else renderMissions();
+    }
 
+    /* ---------- MISIUNI ---------- */
+    function renderMissions() {
       const total = missions.length;
       let done = 0, claimableSum = 0, claimableN = 0;
-      missions.forEach(m => {
-        if (m.completed) done++;
-        if (m.completed && !m.claimed) { claimableSum += (m.reward || 0); claimableN++; }
-      });
+      missions.forEach(m => { if (m.completed) done++; if (m.completed && !m.claimed) { claimableSum += (m.reward || 0); claimableN++; } });
 
+      document.getElementById('chip-lbl').textContent = 'Completate';
       document.getElementById('chip-val').textContent = done + ' / ' + total;
+      document.getElementById('lvl-rank').textContent = 'Progres Misiuni';
       document.getElementById('ov-done').textContent = done;
       document.getElementById('ov-total').textContent = total;
-      document.getElementById('f-done').textContent = done;
-      document.getElementById('f-total').textContent = total;
-
+      document.getElementById('ov-unit').textContent = 'misiuni';
       const ovPct = total ? Math.round((done / total) * 100) : 0;
       document.getElementById('ov-bar').style.width = ovPct + '%';
       const allDone = total && done === total;
-      document.getElementById('lvl-ring').innerHTML =
-        ringSvg(ovPct, allDone ? '#34d27b' : 'var(--accent)', 46, 3.5) +
-        '<span class="lv">' + done + '</span><span class="lv-lbl">DONE</span>';
+      document.getElementById('lvl-ring').innerHTML = ringSvg(ovPct, allDone ? '#34d27b' : 'var(--accent)', 46, 3.5) + '<span class="lv">' + done + '</span><span class="lv-lbl">DONE</span>';
+      document.getElementById('f-done').textContent = done;
+      document.getElementById('f-total').textContent = total;
 
-      // footer: buton "Revendica tot" daca exista de revendicat
       const fa = document.getElementById('f-action');
       if (claimableN > 0) {
         fa.innerHTML = '<button class="btn btn-claimall" id="claim-all">' + icon('coins', 15) + ' Revendica tot · ' + fmt(claimableSum) + '</button>';
-        fa.querySelector('#claim-all').addEventListener('click', () => {
-          fetch('https://blacksilva-missions/claimAll', { method: 'POST', body: '{}' });
-        });
+        fa.querySelector('#claim-all').addEventListener('click', () => fetch('https://blacksilva-missions/claimAll', { method: 'POST', body: '{}' }));
       } else {
         fa.innerHTML = '<span class="dt-foot-txt">Nimic de revendicat</span>';
       }
@@ -343,36 +382,23 @@
         const st = statusFor(m, pct);
         const claimable = m.completed && !m.claimed && !m.locked;
         const isOpen = openId === m.id && !m.locked;
-
         const cls = ['dt-card', isOpen && 'open', claimable && 'claimable', m.claimed && 'claimed', m.locked && 'locked'].filter(Boolean).join(' ');
 
-        // inel dreapta
         let ringInner;
-        if (m.locked) {
-          ringInner = '<span class="frac" style="color:rgba(255,255,255,.4)">' + icon('lock', 16) + '</span>';
-        } else if (m.completed) {
-          ringInner = ringSvg(100, '#34d27b') + '<span class="frac" style="color:#34d27b">' + icon('check', 16) + '</span>';
-        } else {
-          const fracTxt = target > 50 ? pct + '%' : current + '/' + target;
-          ringInner = ringSvg(pct, col) + '<span class="frac">' + fracTxt + '</span>';
-        }
+        if (m.locked) ringInner = '<span class="frac" style="color:rgba(255,255,255,.4)">' + icon('lock', 16) + '</span>';
+        else if (m.completed) ringInner = ringSvg(100, '#34d27b') + '<span class="frac" style="color:#34d27b">' + icon('check', 16) + '</span>';
+        else { const fracTxt = target > 50 ? pct + '%' : current + '/' + target; ringInner = ringSvg(pct, col) + '<span class="frac">' + fracTxt + '</span>'; }
 
-        // continut expand
         let expContent;
         if (m.locked) {
           const prev = missions.find(x => x.id === m.id - 1);
-          expContent = '<div class="dt-locknote">' + icon('lock', 14) +
-            ' Completeaza intai misiunea #' + (m.id - 1) + (prev ? ' (' + prev.title + ')' : '') + '</div>';
+          expContent = '<div class="dt-locknote">' + icon('lock', 14) + ' Completeaza intai misiunea #' + (m.id - 1) + (prev ? ' (' + prev.title + ')' : '') + '</div>';
         } else if (claimable) {
-          expContent = '<button class="btn btn-claim" data-claim="' + m.id + '">' + icon('coins', 15) +
-            ' Revendica ' + fmt(m.reward) + ' · +' + (m.level || 1) + ' nivel</button>';
+          expContent = '<button class="btn btn-claim" data-claim="' + m.id + '">' + icon('coins', 15) + ' Revendica ' + fmt(m.reward) + ' · +' + (m.level || 1) + ' nivel</button>';
         } else if (m.claimed) {
           expContent = '<span class="btn btn-claimed">' + icon('check', 15) + ' Recompensa revendicata</span>';
         } else {
-          expContent = '<div class="dt-foot-row">' +
-            '<span class="dt-tag">' + icon('coins', 14) + ' Recompensa <b>' + fmt(m.reward) + '</b></span>' +
-            '<span class="dt-tag">' + icon('trophy', 14) + ' <b>+' + (m.level || 1) + '</b> nivel</span>' +
-          '</div>';
+          expContent = '<div class="dt-foot-row"><span class="dt-tag">' + icon('coins', 14) + ' Recompensa <b>' + fmt(m.reward) + '</b></span><span class="dt-tag">' + icon('trophy', 14) + ' <b>+' + (m.level || 1) + '</b> nivel</span></div>';
         }
 
         const card = document.createElement('div');
@@ -382,43 +408,129 @@
             '<div class="dt-ico">' + (m.locked ? icon('lock') : icon(m.icon)) + '</div>' +
             '<div class="dt-info">' +
               '<div class="dt-name"><span class="dt-num">#' + m.id + '</span>' + m.title + '</div>' +
-              '<div class="dt-meta">' +
-                '<span class="dt-status ' + st.c + '">' + (st.dot ? '<span class="dt-dot"></span>' : '') + st.t + '</span>' +
-                '<span class="dt-minibar"><i style="width:' + pct + '%;background:' + col + '"></i></span>' +
-              '</div>' +
+              '<div class="dt-meta"><span class="dt-status ' + st.c + '">' + (st.dot ? '<span class="dt-dot"></span>' : '') + st.t + '</span>' +
+              '<span class="dt-minibar"><i style="width:' + pct + '%;background:' + col + '"></i></span></div>' +
             '</div>' +
-            '<div class="dt-right">' +
-              '<div class="dt-ring">' + ringInner + '</div>' +
-              '<div class="dt-reward"><div class="xp">' + fmt(m.reward) + '</div><div class="xp-lbl">recompensa</div></div>' +
-            '</div>' +
+            '<div class="dt-right"><div class="dt-ring">' + ringInner + '</div>' +
+              '<div class="dt-reward"><div class="xp">' + fmt(m.reward) + '</div><div class="xp-lbl">recompensa</div></div></div>' +
           '</div>' +
-          '<div class="dt-exp"><div class="dt-exp-in"><div class="dt-exp-pad">' +
-            '<div class="dt-desc">' + (m.description || '') + '</div>' +
-            expContent +
+          '<div class="dt-exp"><div class="dt-exp-in"><div class="dt-exp-pad"><div class="dt-desc">' + (m.description || '') + '</div>' + expContent + '</div></div></div>';
+        list.appendChild(card);
+      });
+
+      list.querySelectorAll('.dt-row').forEach(row => row.addEventListener('click', () => {
+        const id = parseInt(row.getAttribute('data-id'), 10);
+        const m = missions.find(x => x.id === id);
+        if (!m || m.locked) return;
+        openId = (openId === id) ? null : id;
+        renderMissions();
+      }));
+      list.querySelectorAll('[data-claim]').forEach(btn => btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        fetch('https://blacksilva-missions/claim', { method: 'POST', body: JSON.stringify({ id: parseInt(btn.getAttribute('data-claim'), 10) }) });
+      }));
+    }
+
+    /* ---------- ACTIVITATI ---------- */
+    function actStatus(a) {
+      if (activeActivityId === a.id) return { t: 'In desfasurare', c: 'active', dot: true };
+      if (a.state === 'completed') return { t: 'De revendicat', c: 'claimable', dot: true };
+      if (a.state === 'cooldown') return { t: 'Cooldown ' + mmss(a.cooldownLeft), c: 'cool', dot: false };
+      return { t: 'Disponibil', c: 'comp', dot: true };
+    }
+    function renderActivities() {
+      const total = activities.length;
+      let avail = 0, claimable = 0;
+      activities.forEach(a => { if (activeActivityId !== a.id && a.state === 'available') avail++; if (a.state === 'completed') claimable++; });
+
+      document.getElementById('chip-lbl').textContent = 'Disponibile';
+      document.getElementById('chip-val').textContent = avail + ' / ' + total;
+      document.getElementById('lvl-rank').textContent = 'Activitati';
+      document.getElementById('ov-done').textContent = claimable;
+      document.getElementById('ov-total').textContent = total;
+      document.getElementById('ov-unit').textContent = 'de revendicat';
+      const ovPct = total ? Math.round((claimable / total) * 100) : 0;
+      document.getElementById('ov-bar').style.width = ovPct + '%';
+      document.getElementById('lvl-ring').innerHTML = ringSvg(ovPct, 'var(--accent)', 46, 3.5) + '<span class="lv">' + claimable + '</span><span class="lv-lbl">$$$</span>';
+      document.getElementById('f-done').textContent = avail;
+      document.getElementById('f-total').textContent = total;
+
+      const fa = document.getElementById('f-action');
+      if (claimable > 0) {
+        fa.innerHTML = '<button class="btn btn-claimall" id="claim-all-act">' + icon('coins', 15) + ' Revendica tot (' + claimable + ')</button>';
+        fa.querySelector('#claim-all-act').addEventListener('click', () => {
+          activities.forEach(a => { if (a.state === 'completed') fetch('https://blacksilva-missions/claimActivity', { method: 'POST', body: JSON.stringify({ id: a.id }) }); });
+        });
+      } else {
+        fa.innerHTML = '<span class="dt-foot-txt">Incepe o activitate</span>';
+      }
+
+      const list = document.getElementById('list');
+      list.innerHTML = '';
+      activities.forEach(a => {
+        const st = actStatus(a);
+        const isActive = activeActivityId === a.id;
+        const claimableC = a.state === 'completed';
+        const isOpen = (openAct === a.id) || isActive;
+        const cls = ['dt-card', isOpen && 'open', claimableC && 'claimable', a.state === 'cooldown' && 'claimed'].filter(Boolean).join(' ');
+
+        let ringInner;
+        if (claimableC) ringInner = ringSvg(100, '#34d27b') + '<span class="frac" style="color:#34d27b">' + icon('check', 16) + '</span>';
+        else if (a.state === 'cooldown') ringInner = '<span class="frac" style="color:rgba(255,255,255,.4)">' + icon('clock', 16) + '</span>';
+        else ringInner = '<span class="frac" style="color:var(--accent)">' + icon('bolt', 16) + '</span>';
+
+        const rewXp = claimableC ? fmt(a.amount) : fmt(a.rewardMax);
+        const rewLbl = claimableC ? 'recompensa' : 'pana la';
+
+        let exp;
+        if (isActive) exp = '<button class="btn btn-cancel" data-cancel="' + a.id + '">' + icon('flag', 15) + ' Renunta la activitate</button>';
+        else if (claimableC) exp = '<button class="btn btn-claim" data-claimact="' + a.id + '">' + icon('coins', 15) + ' Revendica ' + fmt(a.amount) + ' · +' + (a.level || 1) + ' nivel</button>';
+        else if (a.state === 'cooldown') exp = '<span class="btn btn-cool">' + icon('clock', 15) + ' Disponibil in ' + mmss(a.cooldownLeft) + '</span>';
+        else exp = '<button class="btn btn-start" data-start="' + a.id + '">' + icon('bolt', 15) + ' Incepe activitatea</button>';
+
+        const card = document.createElement('div');
+        card.className = cls;
+        card.innerHTML =
+          '<div class="dt-row" data-act="' + a.id + '">' +
+            '<div class="dt-ico">' + icon(a.icon) + '</div>' +
+            '<div class="dt-info">' +
+              '<div class="dt-name">' + a.title + ' <span class="dt-diff diff-' + a.difficulty + '">' + a.difficulty + '</span></div>' +
+              '<div class="dt-meta"><span class="dt-status ' + st.c + '">' + (st.dot ? '<span class="dt-dot"></span>' : '') + st.t + '</span>' +
+              '<span class="dt-status" style="color:rgba(255,255,255,.38)">· ' + a.steps + ' pasi</span></div>' +
+            '</div>' +
+            '<div class="dt-right"><div class="dt-ring">' + ringInner + '</div>' +
+              '<div class="dt-reward"><div class="xp">' + rewXp + '</div><div class="xp-lbl">' + rewLbl + '</div></div></div>' +
+          '</div>' +
+          '<div class="dt-exp"><div class="dt-exp-in"><div class="dt-exp-pad"><div class="dt-desc">' + (a.description || '') + '</div>' +
+            '<div class="dt-foot-row" style="margin-bottom:12px"><span class="dt-tag">' + icon('coins', 14) + ' <b>' + fmt(a.rewardMin) + ' - ' + fmt(a.rewardMax) + '</b></span><span class="dt-tag">' + icon('trophy', 14) + ' <b>+' + (a.level || 1) + '</b> nivel</span></div>' +
+            exp +
           '</div></div></div>';
         list.appendChild(card);
       });
 
-      // expand pe click (doar misiuni deblocate)
-      list.querySelectorAll('.dt-row').forEach(row => {
-        row.addEventListener('click', () => {
-          const id = parseInt(row.getAttribute('data-id'), 10);
-          const m = missions.find(x => x.id === id);
-          if (!m || m.locked) return;
-          openId = (openId === id) ? null : id;
-          render();
-        });
-      });
-
-      // butoane de revendicare per card
-      list.querySelectorAll('[data-claim]').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const id = parseInt(btn.getAttribute('data-claim'), 10);
-          fetch('https://blacksilva-missions/claim', { method: 'POST', body: JSON.stringify({ id: id }) });
-        });
-      });
+      list.querySelectorAll('.dt-row').forEach(row => row.addEventListener('click', () => {
+        const id = parseInt(row.getAttribute('data-act'), 10);
+        openAct = (openAct === id) ? null : id;
+        renderActivities();
+      }));
+      list.querySelectorAll('[data-start]').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); fetch('https://blacksilva-missions/startActivity', { method: 'POST', body: JSON.stringify({ id: parseInt(b.getAttribute('data-start'), 10) }) }); }));
+      list.querySelectorAll('[data-cancel]').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); fetch('https://blacksilva-missions/cancelActivity', { method: 'POST', body: '{}' }); }));
+      list.querySelectorAll('[data-claimact]').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); fetch('https://blacksilva-missions/claimActivity', { method: 'POST', body: JSON.stringify({ id: parseInt(b.getAttribute('data-claimact'), 10) }) }); }));
     }
+
+    /* ---------- Tabs + cooldown timer ---------- */
+    document.getElementById('tab-missions').addEventListener('click', () => { activeTab = 'missions'; render(); });
+    document.getElementById('tab-activities').addEventListener('click', () => { activeTab = 'activities'; render(); });
+
+    function startCdTimer() {
+      if (cdTimer) clearInterval(cdTimer);
+      cdTimer = setInterval(() => {
+        let any = false;
+        activities.forEach(a => { if (a.state === 'cooldown' && a.cooldownLeft > 0) { a.cooldownLeft--; if (a.cooldownLeft <= 0) a.state = 'available'; any = true; } });
+        if (any && activeTab === 'activities') renderActivities();
+      }, 1000);
+    }
+    function stopCdTimer() { if (cdTimer) { clearInterval(cdTimer); cdTimer = null; } }
 
     /* ---------- Toasts (revendicare) ---------- */
     function toast(tag, body) {
@@ -443,6 +555,7 @@
       }, 80);
     }
     function closeUI() {
+      stopCdTimer();
       document.getElementById('lb-top').classList.remove('active');
       document.getElementById('lb-bottom').classList.remove('active');
       document.getElementById('vignette').style.display = 'none';
@@ -453,14 +566,22 @@
       const d = e.data;
       if (d.type === 'openUI') {
         missions = d.missions || [];
-        openId = null;
+        activities = d.activities || [];
+        activeActivityId = d.activeActivity || null;
+        openId = null; openAct = null; activeTab = 'missions';
         render();
         openUI(d.accent, d.panelRight);
-      } else if (d.type === 'updateMissions') {
+        startCdTimer();
+      } else if (d.type === 'update') {
         missions = d.missions || [];
+        activities = d.activities || [];
+        if (d.activeActivity !== undefined) activeActivityId = d.activeActivity;
         const cur = missions.find(x => x.id === openId);
         if (!cur || cur.locked) openId = null;
         render();
+      } else if (d.type === 'setActive') {
+        activeActivityId = d.id || null;
+        if (activeTab === 'activities') renderActivities();
       } else if (d.type === 'claimed') {
         let body = '';
         if (d.money) body += fmt(d.money);

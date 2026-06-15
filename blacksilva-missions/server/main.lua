@@ -107,8 +107,64 @@ local function buildPayload(data)
     return missions
 end
 
+-- =====================================================================
+--  ACTIVITATI: helpers + payload
+-- =====================================================================
+local function getActivity(id)
+    for _, a in ipairs(Config.Activities or {}) do
+        if a.id == id then return a end
+    end
+    return nil
+end
+
+local function activityStepCount(a)
+    if a.type == 'delivery' then return 1 + #(a.dropoffs or {}) end
+    return #(a.points or {})
+end
+
+local function activityCooldown(a)
+    return a.cooldown or Config.ActivityCooldownDefault or 0
+end
+
+local function buildActivities(data)
+    local list = {}
+    local now = os.time()
+    for _, a in ipairs(Config.Activities or {}) do
+        local key  = 'a' .. a.id
+        local prog = data[key] or {}
+        local pay  = (Config.ActivityPayments or {})[a.difficulty] or { 0, 0 }
+        local cd   = activityCooldown(a)
+        local state, cdLeft = 'available', 0
+        if prog.completed then
+            state = 'completed'
+        elseif prog.claimedAt and cd > 0 and (now - prog.claimedAt) < cd then
+            state  = 'cooldown'
+            cdLeft = cd - (now - prog.claimedAt)
+        end
+        list[#list + 1] = {
+            id          = a.id,
+            title       = a.title,
+            description = a.description,
+            icon        = a.icon or 'box',
+            difficulty  = a.difficulty,
+            type        = a.type,
+            steps       = activityStepCount(a),
+            rewardMin   = pay[1],
+            rewardMax   = pay[2],
+            amount      = prog.amount or 0,
+            level       = (Config.ActivityLevel or {})[a.difficulty] or 1,
+            state       = state,
+            cooldownLeft = cdLeft,
+        }
+    end
+    return list
+end
+
 local function pushData(src, data)
-    TriggerClientEvent('blacksilva-missions:receiveData', src, buildPayload(data))
+    TriggerClientEvent('blacksilva-missions:receiveData', src, {
+        missions   = buildPayload(data),
+        activities = buildActivities(data),
+    })
 end
 
 RegisterNetEvent('blacksilva-missions:requestData')
@@ -193,6 +249,96 @@ AddEventHandler('blacksilva-missions:claimAll', function()
             pushData(src, data)
             TriggerClientEvent('blacksilva-missions:claimed', src, totalMoney, totalLvl, count .. ' misiuni')
         end
+    end)
+end)
+
+-- =====================================================================
+--  ACTIVITATI: pornire / finalizare / revendicare (din meniul F5)
+-- =====================================================================
+CreateThread(function() math.randomseed(os.time() + GetGameTimer()) end)
+
+local function payPlayer(src, xPlayer, amount, lvl)
+    if amount and amount > 0 then
+        if Config.RewardAccount == 'bank' then
+            xPlayer.addAccountMoney('bank', amount)
+        else
+            xPlayer.addMoney(amount)
+        end
+    end
+    if lvl and lvl > 0 and Config.ExpCommand and Config.ExpCommand ~= '' then
+        ExecuteCommand(('%s %d %d'):format(Config.ExpCommand, src, lvl))
+    end
+end
+
+-- transient: marcheaza ca jucatorul a pornit o activitate (anti-abuz minim)
+local activeStart = {}
+
+RegisterNetEvent('blacksilva-missions:activityStart')
+AddEventHandler('blacksilva-missions:activityStart', function(actId)
+    local src = source
+    local xPlayer = ESX.GetPlayerFromId(src)
+    if not xPlayer then return end
+    local a = getActivity(actId)
+    if not a then return end
+
+    loadProgress(xPlayer.getIdentifier(), function(data)
+        local prog = data['a' .. actId]
+        local now, cd = os.time(), activityCooldown(a)
+        if prog and prog.completed then return end                                  -- deja de revendicat
+        if prog and prog.claimedAt and cd > 0 and (now - prog.claimedAt) < cd then return end -- in cooldown
+        activeStart[src] = { id = actId, t = now }
+    end)
+end)
+
+RegisterNetEvent('blacksilva-missions:activityComplete')
+AddEventHandler('blacksilva-missions:activityComplete', function(actId)
+    local src = source
+    local xPlayer = ESX.GetPlayerFromId(src)
+    if not xPlayer then return end
+    local a = getActivity(actId)
+    if not a then return end
+
+    local st = activeStart[src]
+    if not st or st.id ~= actId then return end       -- nu a pornit-o
+    if (os.time() - st.t) < 5 then return end          -- prea rapid -> ignora
+    activeStart[src] = nil
+
+    loadProgress(xPlayer.getIdentifier(), function(data)
+        local key = 'a' .. actId
+        if not data[key] then data[key] = {} end
+        if data[key].completed then return end
+        local now, cd = os.time(), activityCooldown(a)
+        if data[key].claimedAt and cd > 0 and (now - data[key].claimedAt) < cd then return end
+
+        local pay = (Config.ActivityPayments or {})[a.difficulty] or { 0, 0 }
+        data[key].completed = true
+        data[key].amount    = math.random(pay[1], pay[2])
+        saveProgress(xPlayer.getIdentifier())
+        pushData(src, data)
+    end)
+end)
+
+RegisterNetEvent('blacksilva-missions:activityClaim')
+AddEventHandler('blacksilva-missions:activityClaim', function(actId)
+    local src = source
+    local xPlayer = ESX.GetPlayerFromId(src)
+    if not xPlayer then return end
+    local a = getActivity(actId)
+    if not a then return end
+
+    loadProgress(xPlayer.getIdentifier(), function(data)
+        local prog = data['a' .. actId]
+        if not prog or not prog.completed then return end
+        local amount = prog.amount or 0
+        local lvl    = (Config.ActivityLevel or {})[a.difficulty] or 1
+        payPlayer(src, xPlayer, amount, lvl)
+        -- reset pentru repetare + pornire cooldown
+        prog.completed = false
+        prog.amount    = 0
+        prog.claimedAt = os.time()
+        saveProgress(xPlayer.getIdentifier())
+        pushData(src, data)
+        TriggerClientEvent('blacksilva-missions:claimed', src, amount, lvl, a.title)
     end)
 end)
 
@@ -308,6 +454,7 @@ end, false)
 -- elibereaza din cache la deconectare
 AddEventHandler('playerDropped', function()
     local src = source
+    activeStart[src] = nil
     local xPlayer = ESX.GetPlayerFromId(src)
     if xPlayer then
         local id = xPlayer.getIdentifier()

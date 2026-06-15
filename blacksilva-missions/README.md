@@ -10,6 +10,28 @@ recompensa si detalii la click).
 > misiune este **blocata** pana cand cea dinaintea ei este completata. Blocarea
 > este verificata si pe server, deci nu poate fi ocolita.
 
+## Doua sectiuni in meniul F5
+Meniul are doua tab-uri:
+- **Misiuni** — cele 10 misiuni "story", secventiale (de la inceput).
+- **Activitati** — **50 de activitati** repetabile (livrari, colectare, animatii,
+  fotografie) pe care le **pornesti direct din meniu**, fara NPC. Apesi pe o
+  activitate → **Incepe**, urmaresti GPS-ul/markerele, apesi **E** la fiecare
+  punct, iar la final deschizi F5 → **Revendica** recompensa.
+
+### Activitatile (continut original)
+- Se pornesc 100% din F5 (buton **Incepe**), fara NPC de la care iei quest-ul.
+- Tipuri: `delivery` (ridici de la un punct si livrezi la altele), `collect`
+  (aduni de la mai multe puncte), `animation` (faci o actiune la fiecare punct),
+  `photo` (fotografiezi la fiecare punct).
+- **Recompensa pe dificultate** (`Config.ActivityPayments`):
+  EASY, MEDIUM, HARD, ILLEGAL — fiecare cu un interval de bani (random) + nivel.
+- **Repetabile** cu **cooldown** (`cooldown` pe fiecare activitate, sau
+  `Config.ActivityCooldownDefault`).
+- Le editezi/adaugi usor in `Config.Activities` din `config.lua` (titlu,
+  descriere, dificultate, coordonate, animatii/props).
+- Recompensa se ia tot din meniu (buton **Revendica** / **Revendica tot**),
+  fara notificare in joc.
+
 ## Instalare
 
 1. Pune folderul `blacksilva-missions` in `resources`.

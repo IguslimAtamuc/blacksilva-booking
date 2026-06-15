@@ -1,8 +1,14 @@
 # BlackSilva Missions (ESX)
 
 Sistem de misiuni pentru FiveM (ESX) cu UI cinematic: la deschidere camera se
-apropie de personaj, care sta cu **clipboard in mana pe stanga ecranului**, iar
-pe **dreapta apare panoul cu misiunile** disponibile si progresul lor.
+apropie de personaj (pozitionat pe **treimea din stanga** a ecranului, dupa
+regula treimilor) care sta cu **clipboard in mana**, iar pe **dreapta apare un
+panou de misiuni** in stilul din design (carduri cu inel de progres, status,
+recompensa si detalii la click).
+
+> **Ordine obligatorie:** misiunile se fac **pe rand** (1 → 2 → 3 → ...). O
+> misiune este **blocata** pana cand cea dinaintea ei este completata. Blocarea
+> este verificata si pe server, deci nu poate fi ocolita.
 
 ## Instalare
 
@@ -44,6 +50,15 @@ Ca sa adaugi o misiune noua copiezi un bloc existent si ii schimbi `id`-ul.
 - **Rosu** — sub 50%
 - **Galben** — peste 50%
 - **Verde** — 100% / completat
+
+Culoarea de accent a meniului (portocaliu implicit) se schimba din
+`Config.Accent`.
+
+## Ordinea misiunilor
+Misiunile trebuie facute in ordinea din `Config.Missions` (1, 2, 3, ...). Cardul
+unei misiuni blocate apare gri, cu lacat, si nu primeste progres pana cand
+misiunea anterioara nu e completata. Ordinea = ordinea elementelor din lista, nu
+neaparat `id`-ul (poti rearanja blocurile ca sa schimbi ordinea).
 
 ## Recompense
 La fiecare misiune completata:

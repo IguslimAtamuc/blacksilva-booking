@@ -10,7 +10,7 @@ local function getMission(id)
     return nil
 end
 
--- target real (gunshop-urile/locatiile isi calculeaza target din lista)
+-- target real (vizitarea locatiilor isi calculeaza target din lista)
 local function getTarget(mission)
     if mission.type == 'visit_locations' and mission.locations then
         return #mission.locations
@@ -61,28 +61,53 @@ local function saveProgress(identifier)
 end
 
 -- =====================================================================
---  Trimite starea misiunilor catre client (pentru UI)
+--  Blocare secventiala: o misiune e deblocata doar daca TOATE misiunile
+--  dinaintea ei (in ordinea din Config.Missions) sunt completate.
+-- =====================================================================
+local function isUnlocked(data, missionId)
+    for _, m in ipairs(Config.Missions) do
+        if m.id == missionId then
+            return true
+        end
+        local prog = data[tostring(m.id)]
+        if not (prog and prog.completed) then
+            return false
+        end
+    end
+    return true
+end
+
+-- =====================================================================
+--  Construieste payload-ul pentru UI (cu starea de blocare)
 -- =====================================================================
 local function buildPayload(data)
     local missions = {}
+    local prevCompleted = true
     for _, m in ipairs(Config.Missions) do
         local key  = tostring(m.id)
         local prog = data[key] or { current = 0, completed = false }
         local target = getTarget(m)
+        local completed = prog.completed or false
         missions[#missions + 1] = {
             id          = m.id,
             title       = m.title,
             description = m.description,
             reward      = m.reward,
             level       = m.level or 1,
-            icon        = m.icon or '★',
+            icon        = m.icon or 'target',
             type        = m.type,
             current     = math.min(prog.current or 0, target),
             target      = target,
-            completed   = prog.completed or false,
+            completed   = completed,
+            locked      = not prevCompleted,
         }
+        if not completed then prevCompleted = false end
     end
     return missions
+end
+
+local function pushData(src, data)
+    TriggerClientEvent('blacksilva-missions:receiveData', src, buildPayload(data))
 end
 
 RegisterNetEvent('blacksilva-missions:requestData')
@@ -91,7 +116,7 @@ AddEventHandler('blacksilva-missions:requestData', function()
     local xPlayer = ESX.GetPlayerFromId(src)
     if not xPlayer then return end
     loadProgress(xPlayer.getIdentifier(), function(data)
-        TriggerClientEvent('blacksilva-missions:receiveData', src, buildPayload(data))
+        pushData(src, data)
     end)
 end)
 
@@ -99,7 +124,6 @@ end)
 --  Acordare recompensa + experienta
 -- =====================================================================
 local function giveReward(src, xPlayer, mission)
-    -- bani
     if mission.reward and mission.reward > 0 then
         if Config.RewardAccount == 'bank' then
             xPlayer.addAccountMoney('bank', mission.reward)
@@ -108,7 +132,6 @@ local function giveReward(src, xPlayer, mission)
         end
     end
 
-    -- experienta / nivel prin comanda configurata (ex: /addlevel <id> <level>)
     local lvl = mission.level or 1
     if lvl > 0 and Config.ExpCommand and Config.ExpCommand ~= '' then
         ExecuteCommand(('%s %d %d'):format(Config.ExpCommand, src, lvl))
@@ -119,8 +142,6 @@ end
 
 -- =====================================================================
 --  Actualizare progres (apelat din client)
---    mode = 'set' -> seteaza valoarea direct
---    mode = 'add' -> aduna la valoarea curenta
 -- =====================================================================
 RegisterNetEvent('blacksilva-missions:updateProgress')
 AddEventHandler('blacksilva-missions:updateProgress', function(missionId, value, mode)
@@ -133,10 +154,11 @@ AddEventHandler('blacksilva-missions:updateProgress', function(missionId, value,
 
     local identifier = xPlayer.getIdentifier()
     loadProgress(identifier, function(data)
+        -- respecta ordinea: misiunea trebuie sa fie deblocata
+        if not isUnlocked(data, missionId) then return end
+
         local key = tostring(missionId)
         if not data[key] then data[key] = { current = 0, completed = false } end
-
-        -- deja completata -> nu mai facem nimic
         if data[key].completed then return end
 
         local target = getTarget(mission)
@@ -147,7 +169,6 @@ AddEventHandler('blacksilva-missions:updateProgress', function(missionId, value,
         else
             data[key].current = math.max(data[key].current or 0, value)
         end
-
         if data[key].current > target then data[key].current = target end
 
         local justCompleted = false
@@ -158,9 +179,7 @@ AddEventHandler('blacksilva-missions:updateProgress', function(missionId, value,
         end
 
         saveProgress(identifier)
-
-        -- sincronizeaza cardul in UI
-        TriggerClientEvent('blacksilva-missions:syncMission', src, missionId, data[key].current, target, data[key].completed)
+        pushData(src, data) -- payload complet -> actualizeaza si blocarile
 
         if justCompleted then
             giveReward(src, xPlayer, mission)
@@ -169,7 +188,8 @@ AddEventHandler('blacksilva-missions:updateProgress', function(missionId, value,
 end)
 
 -- =====================================================================
---  Kill de jucator: incrementeaza TOATE misiunile de tip kill_players
+--  Kill de jucator: conteaza pentru PRIMA misiune kill_players activa
+--  (deblocata si necompletata) - asa se respecta ordinea 9 -> 10.
 -- =====================================================================
 RegisterNetEvent('blacksilva-missions:playerKill')
 AddEventHandler('blacksilva-missions:playerKill', function()
@@ -183,7 +203,7 @@ AddEventHandler('blacksilva-missions:playerKill', function()
             if mission.type == 'kill_players' then
                 local key = tostring(mission.id)
                 if not data[key] then data[key] = { current = 0, completed = false } end
-                if not data[key].completed then
+                if not data[key].completed and isUnlocked(data, mission.id) then
                     local target = getTarget(mission)
                     data[key].current = math.min((data[key].current or 0) + 1, target)
                     local justCompleted = false
@@ -191,14 +211,15 @@ AddEventHandler('blacksilva-missions:playerKill', function()
                         data[key].completed = true
                         justCompleted = true
                     end
-                    TriggerClientEvent('blacksilva-missions:syncMission', src, mission.id, data[key].current, target, data[key].completed)
+                    saveProgress(identifier)
+                    pushData(src, data)
                     if justCompleted then
                         giveReward(src, xPlayer, mission)
                     end
+                    return -- un kill = un singur progres
                 end
             end
         end
-        saveProgress(identifier)
     end)
 end)
 
@@ -232,7 +253,7 @@ RegisterCommand('resetmisiuni', function(source, args)
     MySQL.Async.execute('UPDATE blacksilva_missions SET progress = @data WHERE identifier = @id', {
         ['@data'] = '{}', ['@id'] = identifier
     }, function()
-        TriggerClientEvent('blacksilva-missions:receiveData', targetId, buildPayload({}))
+        pushData(targetId, {})
         if src ~= 0 then TriggerClientEvent('esx:showNotification', src, '~g~Misiuni resetate!') end
         TriggerClientEvent('esx:showNotification', targetId, '~y~Misiunile tale au fost resetate de un admin!')
     end)

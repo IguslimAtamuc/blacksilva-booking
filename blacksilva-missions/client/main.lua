@@ -24,11 +24,22 @@ local function isCompleted(id)
     return s and s.completed
 end
 
--- trimite progres la server
+-- o misiune e deblocata doar daca toate misiunile dinaintea ei sunt completate
+local function isMissionUnlocked(id)
+    for _, m in ipairs(Config.Missions) do
+        if m.id == id then return true end
+        if not isCompleted(m.id) then return false end
+    end
+    return true
+end
+
+-- trimite progres la server (doar daca misiunea e deblocata)
 local function setProgress(id, value)
+    if not isMissionUnlocked(id) then return end
     TriggerServerEvent('blacksilva-missions:updateProgress', id, value, 'set')
 end
 local function addProgress(id, value)
+    if not isMissionUnlocked(id) then return end
     TriggerServerEvent('blacksilva-missions:updateProgress', id, value, 'add')
 end
 
@@ -83,21 +94,9 @@ end
 RegisterNetEvent('blacksilva-missions:receiveData')
 AddEventHandler('blacksilva-missions:receiveData', function(data)
     missions = data or {}
+    refreshBlips()
     if isUIOpen then
         SendNUIMessage({ type = 'updateMissions', missions = missions })
-    end
-end)
-
-RegisterNetEvent('blacksilva-missions:syncMission')
-AddEventHandler('blacksilva-missions:syncMission', function(id, current, target, completed)
-    local s = getMissionState(id)
-    if s then
-        s.current   = current
-        s.target    = target
-        s.completed = completed
-    end
-    if isUIOpen then
-        SendNUIMessage({ type = 'syncMission', id = id, current = current, target = target, completed = completed })
     end
 end)
 
@@ -212,7 +211,7 @@ function OpenMissionsMenu()
     -- cere date proaspete
     TriggerServerEvent('blacksilva-missions:requestData')
 
-    SendNUIMessage({ type = 'openUI', missions = missions })
+    SendNUIMessage({ type = 'openUI', missions = missions, accent = Config.Accent })
 end
 
 function CloseMissionsMenu()
@@ -408,35 +407,38 @@ CreateThread(function()
 end)
 
 -- ---------- MISIUNEA 3/6/7: locatii + markere + blip-uri ------------
--- creeaza blip-urile
-CreateThread(function()
-    Wait(2000)
+-- blip-urile se afiseaza DOAR pentru misiunea deblocata si necompletata
+local activeBlips = {}
+function refreshBlips()
+    for _, b in ipairs(activeBlips) do
+        if DoesBlipExist(b) then RemoveBlip(b) end
+    end
+    activeBlips = {}
+
+    local function addBlip(loc, blip, title)
+        local b = AddBlipForCoord(loc.x, loc.y, loc.z)
+        SetBlipSprite(b, blip.sprite or 1)
+        SetBlipColour(b, blip.color or 0)
+        SetBlipScale(b, 0.8)
+        SetBlipAsShortRange(b, true)
+        BeginTextCommandSetBlipName("STRING")
+        AddTextComponentSubstringPlayerName(blip.label or title)
+        EndTextCommandSetBlipName(b)
+        activeBlips[#activeBlips + 1] = b
+    end
+
     for _, m in ipairs(Config.Missions) do
-        if m.blip then
+        if m.blip and not isCompleted(m.id) and isMissionUnlocked(m.id) then
             if m.location then
-                local b = AddBlipForCoord(m.location.x, m.location.y, m.location.z)
-                SetBlipSprite(b, m.blip.sprite or 1)
-                SetBlipColour(b, m.blip.color or 0)
-                SetBlipScale(b, 0.8)
-                SetBlipAsShortRange(b, true)
-                BeginTextCommandSetBlipName("STRING")
-                AddTextComponentSubstringPlayerName(m.blip.label or m.title)
-                EndTextCommandSetBlipName(b)
+                addBlip(m.location, m.blip, m.title)
             elseif m.locations then
                 for _, loc in ipairs(m.locations) do
-                    local b = AddBlipForCoord(loc.x, loc.y, loc.z)
-                    SetBlipSprite(b, m.blip.sprite or 1)
-                    SetBlipColour(b, m.blip.color or 0)
-                    SetBlipScale(b, 0.7)
-                    SetBlipAsShortRange(b, true)
-                    BeginTextCommandSetBlipName("STRING")
-                    AddTextComponentSubstringPlayerName(m.blip.label or m.title)
-                    EndTextCommandSetBlipName(b)
+                    addBlip(loc, m.blip, m.title)
                 end
             end
         end
     end
-end)
+end
 
 -- marker + detectie locatie (reach_location, visit_locations, obtain_weapon)
 local visited = {} -- [missionId] = { [index] = true }
@@ -449,7 +451,7 @@ CreateThread(function()
             local mk = Config.Marker
 
             for _, m in ipairs(Config.Missions) do
-                if not isCompleted(m.id) then
+                if not isCompleted(m.id) and isMissionUnlocked(m.id) then
                     -- reach_location (job center) si obtain_weapon (atelier): markere
                     local single = m.location
                     if (m.type == 'reach_location' or m.type == 'obtain_weapon') and single then

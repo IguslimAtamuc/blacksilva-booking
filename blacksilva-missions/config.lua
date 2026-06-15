@@ -32,15 +32,20 @@ Config.Emote = {
     propModel    = 'p_amb_clipboard_01',
 }
 
--- Pozitionarea camerei. Caracterul apare pe STANGA, panoul cu misiuni pe DREAPTA.
--- Daca ti se pare ca personajul nu e bine asezat, modifica valorile de mai jos.
+-- Culoarea principala a meniului (accent)
+Config.Accent = '#E8930C' -- portocaliu (ca in design)
+
+-- Pozitionarea camerei (regula treimilor).
+-- Personajul trebuie sa apara pe TREIMEA din STANGA, panoul pe dreapta.
+-- 'sideAim' NEGATIV = personajul se muta spre STANGA ecranului.
+-- Mareste valoarea (ex: -0.7) ca sa-l muti mai spre stanga, micsoreaz-o spre centru.
 Config.Camera = {
-    forward   = 1.9,   -- cat de in fata e camera fata de personaj
-    height    = 0.55,  -- inaltimea camerei
-    sideAim   = 0.85,  -- cat de mult e mutat personajul spre stanga ecranului
-    pointZ    = 0.55,  -- inaltimea punctului catre care priveste camera
+    forward   = 2.1,    -- cat de in fata e camera fata de personaj
+    height    = 0.55,   -- inaltimea camerei
+    sideAim   = -0.55,  -- decalaj lateral (negativ = personaj spre stanga)
+    pointZ    = 0.55,   -- inaltimea punctului catre care priveste camera
     fov       = 38.0,
-    interp    = 1200,  -- durata tranzitiei (ms)
+    interp    = 1200,   -- durata tranzitiei (ms)
 }
 
 -- Markerul folosit pentru misiunile cu locatie (job center, gunshop-uri etc.)
@@ -74,7 +79,7 @@ Config.Missions = {
         description = 'Deschide inventarul (I / F2 / Tab) si foloseste bauturile energizante pentru a primi experienta.',
         reward      = 10000,
         level       = 1,
-        icon        = '⚡',
+        icon        = 'bottle',
         type        = 'use_item',
         items       = { 'exp', 'exp2', 'exp3' }, -- itemele de monitorizat
         target      = 3,                          -- cate iteme trebuie folosite (cate una din fiecare)
@@ -88,7 +93,7 @@ Config.Missions = {
         description = 'Deschide meniul K si spawneaza un scooter (faggio, faggio2 sau faggio3).',
         reward      = 20000,
         level       = 1,
-        icon        = '🛵',
+        icon        = 'car',
         type        = 'spawn_vehicle',
         models      = { 'faggio', 'faggio2', 'faggio3' },
         target      = 1,
@@ -101,7 +106,7 @@ Config.Missions = {
         description = 'Deschide meniul K, ia un vehicul si mergi la Job Center. Intra in marker pentru a finaliza.',
         reward      = 30000,
         level       = 1,
-        icon        = '🏢',
+        icon        = 'map',
         type        = 'reach_location',
         location    = vector3(-535.2607, -212.9792, 37.6498),
         blip        = { sprite = 351, color = 2, label = 'Misiune: Job Center' },
@@ -115,7 +120,7 @@ Config.Missions = {
         description = 'Cumpara sau fura o masina si treci printr-un radar cu 200 km/h sau mai mult.',
         reward      = 40000,
         level       = 1,
-        icon        = '📸',
+        icon        = 'camera',
         type        = 'speed_radar',
         minSpeed    = 200, -- km/h
         radars      = {
@@ -136,7 +141,7 @@ Config.Missions = {
         description = 'Completeaza 2 stunt-uri cu un vehicul (sari si aterizeaza pe roti).',
         reward      = 50000,
         level       = 1,
-        icon        = '🏍️',
+        icon        = 'car',
         type        = 'stunts',
         target      = 2,
         minAirTime  = 800, -- ms in aer pentru a conta ca stunt
@@ -149,7 +154,7 @@ Config.Missions = {
         description = 'Mergi la toate gunshop-urile din oras pentru a cumpara diferite licente pentru arme.',
         reward      = 60000,
         level       = 1,
-        icon        = '🔫',
+        icon        = 'gun',
         type        = 'visit_locations',
         locations   = {
             vector3(-662.1,   -935.3,  21.8),
@@ -174,7 +179,7 @@ Config.Missions = {
         description = 'Mergi la atelier si construieste prima ta arma. Misiunea se finalizeaza cand arma apare in inventar.',
         reward      = 70000,
         level       = 1,
-        icon        = '🛠️',
+        icon        = 'wrench',
         type        = 'obtain_weapon',
         location    = vector3(-1171.3990, 4926.5522, 224.2403),
         blip        = { sprite = 110, color = 5, label = 'Misiune: Atelier Arme' },
@@ -189,7 +194,7 @@ Config.Missions = {
         description = 'Foloseste comanda /liber.',
         reward      = 80000,
         level       = 1,
-        icon        = '💬',
+        icon        = 'flag',
         type        = 'command',
         command     = 'liber',
         target      = 1,
@@ -205,7 +210,7 @@ Config.Missions = {
         description = 'Omoara 50 de jucatori.',
         reward      = 90000,
         level       = 1,
-        icon        = '💀',
+        icon        = 'skull',
         type        = 'kill_players',
         target      = 50,
     },
@@ -217,7 +222,7 @@ Config.Missions = {
         description = 'Omoara 100 de jucatori.',
         reward      = 100000,
         level       = 1,
-        icon        = '☠️',
+        icon        = 'skull',
         type        = 'kill_players',
         target      = 100,
     },

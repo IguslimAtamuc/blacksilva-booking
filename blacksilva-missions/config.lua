@@ -268,7 +268,7 @@ Config.Missions = {
         icon        = 'map',
         type        = 'reach_location',
         location    = vector3(195.17, -934.21, 30.69),
-        blip        = { sprite = 1, color = 5, label = 'Sosire: Piata Legion' },
+        blip        = { sprite = 351, color = 5, label = 'Sosire: Piata Legion' },
         target      = 1,
     },
 
@@ -282,7 +282,7 @@ Config.Missions = {
         icon        = 'building',
         type        = 'reach_location',
         location    = vector3(324.9, -204.2, 54.1),
-        blip        = { sprite = 1, color = 3, label = 'Motel' },
+        blip        = { sprite = 40, color = 3, label = 'Motel' },
         target      = 1,
     },
 
@@ -315,7 +315,7 @@ Config.Missions = {
             vector3(1135.0, -982.0, 46.2),
             vector3(-1820.0, 792.0, 138.0),
         },
-        blip        = { sprite = 1, color = 5, label = 'Livrare' },
+        blip        = { sprite = 501, color = 5, label = 'Livrare' },
     },
 
     -- 15
@@ -328,7 +328,7 @@ Config.Missions = {
         icon        = 'eye',
         type        = 'reach_location',
         location    = vector3(-1175.0, -888.0, 13.9),
-        blip        = { sprite = 1, color = 5, label = 'Intalnire' },
+        blip        = { sprite = 280, color = 5, label = 'Intalnire' },
         target      = 1,
     },
 
@@ -356,7 +356,7 @@ Config.Missions = {
         icon        = 'bag',
         type        = 'reach_location',
         location    = vector3(108.0, -1937.0, 21.2),
-        blip        = { sprite = 1, color = 5, label = 'Ridica marfa' },
+        blip        = { sprite = 306, color = 5, label = 'Ridica marfa' },
         target      = 1,
     },
 
@@ -383,7 +383,7 @@ Config.Missions = {
         icon        = 'map',
         type        = 'reach_location',
         location    = vector3(1148.0, -645.0, 56.0),
-        blip        = { sprite = 1, color = 2, label = 'Livrare' },
+        blip        = { sprite = 501, color = 2, label = 'Livrare' },
         target      = 1,
     },
 
@@ -428,7 +428,7 @@ Config.Missions = {
         icon        = 'building',
         type        = 'reach_location',
         location    = vector3(-47.0, -1757.0, 29.4),
-        blip        = { sprite = 1, color = 1, label = 'Datornic' },
+        blip        = { sprite = 351, color = 1, label = 'Datornic' },
         target      = 1,
     },
 
@@ -506,7 +506,7 @@ Config.Missions = {
             vector3(123.0, -1853.0, 24.5),
             vector3(-12.0, -1973.0, 22.0),
         },
-        blip        = { sprite = 1, color = 2, label = 'Teritoriu' },
+        blip        = { sprite = 351, color = 2, label = 'Teritoriu' },
     },
 
     -- 28
@@ -519,7 +519,7 @@ Config.Missions = {
         icon        = 'mask',
         type        = 'reach_location',
         location    = vector3(25.7, -1347.3, 29.5),
-        blip        = { sprite = 1, color = 1, label = 'Magazin 24/7' },
+        blip        = { sprite = 925, color = 1, label = 'Magazin 24/7' },
         target      = 1,
     },
 
@@ -552,7 +552,7 @@ Config.Missions = {
         icon        = 'star',
         type        = 'reach_location',
         location    = vector3(717.0, -962.0, 24.9),
-        blip        = { sprite = 1, color = 5, label = 'Cartierul general' },
+        blip        = { sprite = 40, color = 5, label = 'Cartierul general' },
         target      = 1,
     },
 
@@ -570,7 +570,7 @@ Config.Missions = {
         icon        = 'flask',
         type        = 'reach_location',
         location    = vector3(1391.0, 3605.0, 38.9),
-        blip        = { sprite = 1, color = 2, label = 'Laborator' },
+        blip        = { sprite = 499, color = 2, label = 'Laborator' },
         target      = 1,
     },
 
@@ -603,7 +603,7 @@ Config.Missions = {
             vector3(2470.0, 4970.0, 45.5),
             vector3(1697.0, 3759.0, 34.7),
         },
-        blip        = { sprite = 1, color = 5, label = 'Punct de contrabanda' },
+        blip        = { sprite = 514, color = 5, label = 'Punct de contrabanda' },
     },
 
     -- 34
@@ -642,7 +642,7 @@ Config.Missions = {
         icon        = 'building',
         type        = 'reach_location',
         location    = vector3(149.4, -1042.0, 29.4),
-        blip        = { sprite = 1, color = 3, label = 'Banca Fleeca' },
+        blip        = { sprite = 107, color = 3, label = 'Banca Fleeca' },
         target      = 1,
     },
 
@@ -669,7 +669,7 @@ Config.Missions = {
         icon        = 'bag',
         type        = 'reach_location',
         location    = vector3(311.0, -284.0, 54.2),
-        blip        = { sprite = 351, color = 5, label = 'Lovitura: Banca' },
+        blip        = { sprite = 107, color = 5, label = 'Lovitura: Banca' },
         target      = 1,
     },
 
@@ -707,7 +707,7 @@ Config.Missions = {
             vector3(-565.2, 276.6, 83.1),
             vector3(925.0, 46.0, 81.1),
         },
-        blip        = { sprite = 1, color = 2, label = 'Afacere de fatada' },
+        blip        = { sprite = 121, color = 2, label = 'Afacere de fatada' },
     },
 
     ----------------------------------------------------------------------
@@ -724,7 +724,7 @@ Config.Missions = {
         icon        = 'mask',
         type        = 'reach_location',
         location    = vector3(720.0, 1198.0, 348.0),
-        blip        = { sprite = 1, color = 1, label = 'Intalnire suspecta' },
+        blip        = { sprite = 280, color = 1, label = 'Intalnire suspecta' },
         target      = 1,
     },
 
@@ -759,7 +759,7 @@ Config.Missions = {
             vector3(-1175.0, -888.0, 13.9),
             vector3(2470.0, 4970.0, 45.5),
         },
-        blip        = { sprite = 1, color = 5, label = 'Recrut' },
+        blip        = { sprite = 280, color = 5, label = 'Recrut' },
     },
 
     -- 44
@@ -784,7 +784,7 @@ Config.Missions = {
         icon        = 'fire',
         type        = 'reach_location',
         location    = vector3(-174.0, 502.0, 137.0),
-        blip        = { sprite = 1, color = 1, label = 'Vila lui Marco' },
+        blip        = { sprite = 833, color = 1, label = 'Vila lui Marco' },
         target      = 1,
     },
 
@@ -829,7 +829,7 @@ Config.Missions = {
         icon        = 'building',
         type        = 'reach_location',
         location    = vector3(717.0, -962.0, 24.9),
-        blip        = { sprite = 351, color = 5, label = 'Cartierul general' },
+        blip        = { sprite = 40, color = 5, label = 'Cartierul general' },
         target      = 1,
     },
 
@@ -880,7 +880,7 @@ Config.Missions = {
             vector3(-109.0, 6464.0, 31.6),
             vector3(-337.0, -2559.0, 6.0),
         },
-        blip        = { sprite = 1, color = 5, label = 'Teritoriu nou' },
+        blip        = { sprite = 439, color = 5, label = 'Teritoriu nou' },
     },
 
     -- 52
@@ -906,7 +906,7 @@ Config.Missions = {
         icon        = 'diamond',
         type        = 'reach_location',
         location    = vector3(925.0, 46.0, 81.1),
-        blip        = { sprite = 351, color = 5, label = 'Cazinoul Diamond' },
+        blip        = { sprite = 679, color = 5, label = 'Cazinoul Diamond' },
         target      = 1,
     },
 
@@ -939,7 +939,7 @@ Config.Missions = {
         icon        = 'plane',
         type        = 'reach_location',
         location    = vector3(-1267.0, -3013.0, 13.9),
-        blip        = { sprite = 1, color = 3, label = 'Hangar LSIA' },
+        blip        = { sprite = 138, color = 3, label = 'Hangar LSIA' },
         target      = 1,
     },
 
@@ -978,7 +978,7 @@ Config.Missions = {
         icon        = 'fire',
         type        = 'reach_location',
         location    = vector3(1391.0, 3605.0, 38.9),
-        blip        = { sprite = 1, color = 1, label = 'Distruge probele' },
+        blip        = { sprite = 321, color = 1, label = 'Distruge probele' },
         target      = 1,
     },
 
@@ -999,7 +999,7 @@ Config.Missions = {
             vector3(149.4, -1042.0, 29.4),
             vector3(720.0, 1198.0, 348.0),
         },
-        blip        = { sprite = 1, color = 5, label = 'Mostenire' },
+        blip        = { sprite = 439, color = 5, label = 'Mostenire' },
     },
 
     -- 60

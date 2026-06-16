@@ -423,6 +423,8 @@
           const id = parseInt(row.getAttribute('data-id'), 10);
           const m = missions.find(x => x.id === id);
           if (!m || m.locked) return;
+          // seteaza GPS-ul direct catre locatia misiunii la fiecare click
+          fetch('https://blacksilva-missions/setWaypoint', { method: 'POST', body: JSON.stringify({ id: id }) });
           openId = (openId === id) ? null : id;
           render();
         });

@@ -267,6 +267,40 @@ RegisterNUICallback('claimAll', function(_, cb)
     cb('ok')
 end)
 
+-- =====================================================================
+--  GPS: la click pe o misiune se seteaza waypoint catre coordonatele ei
+-- =====================================================================
+-- alege coordonata relevanta a misiunii: locatie unica, cea mai apropiata
+-- dintr-o lista (visit_locations) sau cel mai apropiat radar (speed_radar)
+local function getMissionWaypoint(m)
+    if not m then return nil end
+    if m.location then return m.location end
+    local list = m.locations or m.radars
+    if list and #list > 0 then
+        local coords = GetEntityCoords(PlayerPedId())
+        local best, bestDist
+        for _, loc in ipairs(list) do
+            local d = #(coords - loc)
+            if not bestDist or d < bestDist then bestDist = d; best = loc end
+        end
+        return best
+    end
+    return nil
+end
+
+RegisterNUICallback('setWaypoint', function(data, cb)
+    local id = data and tonumber(data.id)
+    local m  = id and missionCfg[id]
+    local loc = getMissionWaypoint(m)
+    if loc then
+        SetNewWaypoint(loc.x + 0.0, loc.y + 0.0)
+        notify(('~y~GPS setat:~s~ %s'):format(m.title or ('#' .. tostring(id))))
+    else
+        notify('~o~Aceasta misiune nu are o locatie pe harta.')
+    end
+    cb('ok')
+end)
+
 -- tasta F5 (configurabila din setarile FiveM) + comanda /misiuni
 RegisterCommand('blacksilva_missions_open', function()
     if isUIOpen then CloseMissionsMenu() else OpenMissionsMenu() end

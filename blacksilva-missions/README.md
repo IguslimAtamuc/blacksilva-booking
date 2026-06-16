@@ -1,132 +1,108 @@
-# BlackSilva Missions (ESX)
+# BlackSilva — Story Mode Quest Engine (ESX) — v2.0
 
-Sistem de misiuni pentru FiveM (ESX) cu UI cinematic: la deschidere camera se
-apropie de personaj (pozitionat pe **treimea din stanga** a ecranului, dupa
-regula treimilor) care sta cu **clipboard in mana**, iar pe **dreapta apare un
-panou de misiuni** in stilul din design (carduri cu inel de progres, status,
-recompensa si detalii la click).
+Sistem de misiuni **interactive, story mode** pentru FiveM (ESX). Nu mai sunt
+simple checkpoint-uri: fiecare quest are **NPC-uri reale**, **dialoguri chat**,
+**props pentru livrari**, **urmariri reale cu NPC-uri si politie**, pasi
+multipli, progres salvat in baza de date si cleanup complet.
 
-> **Ordine obligatorie:** misiunile se fac **pe rand** (1 → 2 → 3 → ...). O
-> misiune este **blocata** pana cand cea dinaintea ei este completata. Blocarea
-> este verificata si pe server, deci nu poate fi ocolita.
+## Dependinte
+- `es_extended` (ESX)
+- `mysql-async` (tabela `blacksilva_quests` se creeaza singura la pornire)
+- `ox_inventory` — optional, doar pentru `reward.items` (vezi `Config.Inventory`)
 
 ## Instalare
-
 1. Pune folderul `blacksilva-missions` in `resources`.
-2. Adauga in `server.cfg`:
-   ```
-   ensure blacksilva-missions
-   ```
-3. Tabela `blacksilva_missions` se creeaza singura la pornire (necesita `mysql-async`).
+2. In `server.cfg`: `ensure blacksilva-missions`.
+3. Apasa **F5** in joc pentru jurnalul de misiuni. Misiunea curenta porneste automat.
 
-### Dependinte
-- `es_extended` (ESX)
-- `mysql-async`
-- `ox_inventory` (sau inventarul default ESX — vezi `Config.Inventory`)
+## Cum functioneaza
+- Progresul fiecarui jucator = `currentQuest`, `currentStep`, `completed{}`,
+  salvat in `blacksilva_quests`. La (re)conectare misiunea continua de unde a ramas.
+- Un quest = o lista de **pasi** (`steps`) care se ruleaza pe rand. Cand un pas e
+  gata, clientul anunta serverul, serverul valideaza si trece la pasul urmator.
+- La ultimul pas se acorda recompensa si se trece la `nextQuest`.
+- Daca mori, pasul curent se reia in siguranta (fara NPC/props duplicate).
 
-## Cum se foloseste
-- Apasa **F5** (sau `/misiuni`) ca sa deschizi meniul.
-- **ESC** inchide meniul.
+## Tipuri de pasi (`step.type`)
+| type | ce face | campuri |
+|------|---------|---------|
+| `dialogue` | spawn NPC + dialog chat interactiv (cu optiuni) | `npc`, `dialogue` |
+| `goto` | mergi la coordonate (marker+blip); optional in vehicul | `coords`, `radius`, `inVehicle`, `blip` |
+| `giveProp` | primesti un prop atasat in mana (livrari) | `prop` |
+| `deliverProp` | predai prop-ul (apesi **E**) la coords / NPC | `coords` sau `npc`, `radius` |
+| `getVehicle` | spawn vehicul de furat — gata cand intri in el | `model`, `coords`, `blip` |
+| `chase` | NPC-uri te urmaresc real cu masini — scapi / ii elimini | `chasers`, `escapeDistance`, `escapeTime` |
+| `policeChase` | politisti NPC te urmaresc real — scapa de ei | `units`, `wanted`, `escapeDistance`, `escapeTime` |
+| `killTargets` | elimina X NPC-uri ostile | `count`, `spawn`, `spread`, `model`, `weapon` |
+| `hideVehicle` | du vehiculul la o ascunzatoare si abandoneaza-l | `coords`, `radius`, `blip` |
+| `scene` | moment narativ (banner cinematic), auto-advance | `title`, `text`, `duration` |
 
-## Cum editezi / adaugi misiuni
-Totul se face in **`config.lua`**. Fiecare misiune are: `title`, `description`,
-`reward` (bani), `level` (experienta), `icon`, `type` si parametrii specifici.
-Ca sa adaugi o misiune noua copiezi un bloc existent si ii schimbi `id`-ul.
+Orice pas are `objective = 'text afisat in HUD'`.
 
-### Tipuri de misiuni disponibile
-| type | descriere | parametri |
-|------|-----------|-----------|
-| `use_item` | foloseste anumite iteme | `items`, `target`, `distinct` |
-| `spawn_vehicle` | intra intr-un vehicul anume | `models`, `target` |
-| `reach_location` | ajunge la o locatie (marker) | `location`, `blip`, `target` |
-| `speed_radar` | treci prin radar cu viteza | `radars`, `minSpeed`, `radarRadius`, `target` |
-| `stunts` | fa stunt-uri cu vehiculul | `target`, `minAirTime` |
-| `visit_locations` | viziteaza toate locatiile | `locations`, `blip` |
-| `obtain_weapon` | obtine o arma langa o locatie | `location`, `radius`, `target` |
-| `command` | foloseste o comanda | `command`, `registerCommand`, `target` |
-| `kill_players` | omoara X jucatori | `target` |
+## Dialoguri (chat)
+```lua
+dialogue = {
+  npcName = 'Marco',
+  lines = {
+    { who = 'npc',    text = 'Ai intarziat...' },
+    { who = 'player', text = 'Ce trebuie sa fac?' },
+    { who = 'choice', options = {
+        { text = 'Si daca ma urmareste cineva?', reply = { who='npc', text='Atunci nu te opri.' } },
+        { text = 'Ma descurc.',                  reply = { who='npc', text='Asa sper.' } },
+    }},
+  },
+}
+```
+Liniile apar treptat (typing), cu buton **Continua / Enter**. Optiunile se aleg
+cu mouse-ul sau tastele **1–4**.
 
-## Progress bar (culori)
-- **Rosu** — sub 50%
-- **Galben** — peste 50%
-- **Verde** — 100% / completat
+## Comanda `/quest set <numar>` (admin)
+- `/quest set 15` → muta jucatorul direct la questul 15 (questurile 1–14 devin
+  *completate*, 15+ devin *nefacute*).
+- `/quest set 2` → reseteaza inapoi la questul 2 (questurile 3+ devin *nefacute*
+  si pot fi refacute).
+- `/quest set 15 12` → aplica pe jucatorul cu serverId `12`.
+- Inainte de schimbare se face **cleanup complet** (NPC, props, blip, chase).
+- Doar grupul `Config.AdminGroup` (default `admin`). Daca numarul nu exista → eroare.
+- `/quest` (fara argumente) deschide jurnalul.
 
-Culoarea de accent a meniului (portocaliu implicit) se schimba din
-`Config.Accent`.
+## Cum adaug o misiune noua
+In `config.lua`, in `Config.Quests`, adaugi o intrare noua cu **id consecutiv**
+si o legi de lant cu `nextQuest`:
+```lua
+[6] = {
+    id = 6,
+    title = 'Titlul Misiunii',
+    intro = 'Subtitlu cinematic',
+    description = 'Ce trebuie sa faca jucatorul.',
+    reward = { money = 25000, bank = 0, xp = 3, items = { { name = 'water', count = 1 } } },
+    nextQuest = 7, -- sau nil daca e ultima
+    steps = {
+        { type='dialogue', objective='Vorbeste cu X',
+          npc = { model='s_m_y_dealer_01', coords=vec4(0.0,0.0,70.0,90.0),
+                  scenario='WORLD_HUMAN_STAND_IMPATIENT', blip={sprite=280,color=5,label='X'} },
+          dialogue = { npcName='X', lines = { { who='npc', text='Salut.' } } } },
+        { type='giveProp',   objective='Ia pachetul', prop={ model='prop_cs_package_01', label='Pachet', bone=28422 } },
+        { type='goto',       objective='Mergi la livrare', coords=vec3(100.0,200.0,30.0), inVehicle=true,
+          blip={sprite=1,color=5,label='Livrare'} },
+        { type='chase',      objective='Scapa de urmaritori!',
+          chasers={ { model='g_m_y_mexgang_01', vehicle='sultan', weapon='WEAPON_PISTOL' } } },
+        { type='deliverProp',objective='Livreaza pachetul', coords=vec3(100.0,205.0,30.0) },
+    },
+},
+```
+Atat — nu trebuie sa modifici `client/main.lua` sau `server/main.lua`. Toata
+logica de gameplay e generica si citeste din config.
 
-## Ordinea misiunilor
-Misiunile trebuie facute in ordinea din `Config.Missions` (1, 2, 3, ...). Cardul
-unei misiuni blocate apare gri, cu lacat, si nu primeste progres pana cand
-misiunea anterioara nu e completata. Ordinea = ordinea elementelor din lista, nu
-neaparat `id`-ul (poti rearanja blocurile ca sa schimbi ordinea).
+## Note de integrare
+- **Coordonatele / modelele de NPC / vehicule / props** sunt repere standard
+  GTA V; ajusteaza-le la harta/serverul tau daca e cazul.
+- `policeChase` foloseste **politisti NPC scriptati** (stabil pe orice server)
+  si optional seteaza `wanted` pentru ambianta.
+- Recompensele: `money`/`bank` prin ESX, `items` prin `ox_inventory` sau ESX
+  (vezi `Config.Inventory`), `xp` prin `Config.ExpCommand`.
 
-## Recompense
-La fiecare misiune completata:
-- primesti banii din `reward` (cont configurat in `Config.RewardAccount`);
-- primesti experienta prin comanda din `Config.ExpCommand` rulata pe server ca
-  `addlevel <serverId> <level>` (configurabil).
-
-## Misiunile incluse (cerute)
-1. Foloseste bauturile energizante `exp`, `exp2`, `exp3` — 10.000$
-2. Spawneaza un scooter (`faggio`, `faggio2`, `faggio3`) din meniul K — 20.000$
-3. Mergi la Job Center — 30.000$
-4. Treci printr-un radar cu 200+ km/h — 40.000$
-5. Fa 2 stunt-uri — 50.000$
-6. Viziteaza toate gunshop-urile — 60.000$
-7. Construieste prima arma la atelier — 70.000$
-8. Foloseste comanda `/liber` — 80.000$
-9. Omoara 50 de jucatori — 90.000$
-10. Omoara 100 de jucatori — 100.000$
-
-## Campania "Imperiul BlackSilva" (misiunile 11–60)
-Pe langa cele 10 misiuni de mai sus, exista acum o **poveste continua de 50 de
-misiuni** (id 11 → 60), tot in meniul de **F5**. E un singur fir narativ: pleci
-ca un nou-venit fara un ban si ajungi cel mai temut nume din Los Santos.
-Misiunile raman **secventiale** (se deblocheaza pe rand) si recompensele cresc
-treptat (de la 120.000$ pana la 10.000.000$ la final). Povestea e impartita in
-5 acte:
-
-- **Act I — Sosirea (11–20):** ajungi in oras, gasesti un motel, faci primele
-  livrari, intalnesti un contact si esti recrutat de reteaua lui Marco.
-- **Act II — Strada (21–30):** masina potrivita, recuperari de datorii, primele
-  confruntari, curse, prima arma, teritoriu si promovarea la locotenent.
-- **Act III — Crima organizata (31–40):** laborator, transport, ruta de
-  contrabanda, prima banca (jaf + evadare) si spalare de bani.
-- **Act IV — Razboiul (41–50):** tradarea lui Marco, razboi de banda, asediul
-  vilei lui si preluarea oraselui — devii **Regele orasului**.
-- **Act V — Imperiul (51–60):** extinderea imperiului, cazinoul, afaceri
-  internationale si misiunea finala — **Legenda BlackSilva**.
-
-Toate misiunile noi folosesc **doar tipurile deja existente** (vezi tabelul de
-mai sus), deci functioneaza fara cod nou. Le poti edita/rearanja oricand din
-`config.lua` — ordinea din lista = ordinea de joc.
-
-> **De ajustat la serverul tau:**
-> - **Coordonatele** misiunilor cu locatie/marker sunt repere din Los Santos;
->   muta-le daca harta ta difera.
-> - **Misiunea 35 (`Spargere`)** foloseste itemul `lockpick` — schimba numele
->   in `config.lua` daca pe serverul tau se numeste altfel.
-> - **Comenzile** noi de poveste (`/raspund`, `/alaturare`, `/incoronare`,
->   `/legenda`) se inregistreaza singure. Daca vreuna exista deja in alt script,
->   pune `registerCommand = false` pe misiune si apeleaz-o cu
->   `TriggerEvent('blacksilva-missions:commandUsed', '<comanda>')`.
-> - **Modelele de vehicule** (duba, supercar, barca etc.) sunt modele standard
->   GTA V; inlocuieste-le daca folosesti altele.
-
-## Note importante de integrare
-- **Numele itemelor** (`exp`, `exp2`, `exp3`) si **modelele scooterelor** trebuie
-  sa fie exact cele de pe serverul tau. Editeaza-le in `config.lua` daca difera.
-- **Misiunea 7** se completeaza cand apare o arma noua (item `WEAPON_*`) in
-  inventar in timp ce esti langa atelier. Functioneaza cu `ox_inventory`.
-- **Misiunea 8 (`/liber`)**: daca aceasta comanda exista deja in alt script,
-  pune `registerCommand = false` pe misiune si apeleaza din scriptul tau:
-  ```lua
-  TriggerEvent('blacksilva-missions:commandUsed', 'liber')
-  ```
-- **Camera/personaj**: daca personajul nu e bine pozitionat pe stanga, ajusteaza
-  `Config.Camera` (in special `sideAim` si `forward`).
-- **Emote clipboard**: implicit scriptul joaca singur animatia. Daca vrei sa
-  folosesti `rpemotes` (`/e clipboard`), pune `Config.Emote.useRpEmotes = true`.
-
-## Admin
-- `/resetmisiuni [ID]` — reseteaza progresul unui jucator (doar grup `admin`).
+## Cleanup
+La schimbarea questului, `/quest set`, moarte, deconectare sau oprirea resursei
+se sterg: NPC-urile, vehiculele si props-urile spawnate, blip-urile, se opresc
+urmaririle si thread-urile pasului si se reseteaza nivelul de cautare setat de quest.

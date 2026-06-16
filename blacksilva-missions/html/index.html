@@ -1,503 +1,271 @@
 <!DOCTYPE html>
 <html lang="ro">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BlackSilva Missions</title>
+  <title>BlackSilva Quests</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Chakra+Petch:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <style>
-    *, *::before, *::after { box-sizing: border-box; }
-    html, body { height: 100%; margin: 0; }
-    :root { --panel-right: 9vw; }
-    body {
-      background: transparent;
-      color: #f2f2f4;
-      font-family: 'Oswald', sans-serif;
-      -webkit-font-smoothing: antialiased;
-      overflow: hidden;
-      display: none;
-      user-select: none;
-    }
+    *,*::before,*::after{box-sizing:border-box}
+    html,body{margin:0;height:100%;overflow:hidden}
+    body{font-family:'Oswald',sans-serif;color:#f2f2f4;background:transparent;user-select:none;-webkit-font-smoothing:antialiased}
+    :root{--accent:#E8930C;--green:#34d27b;--red:#ef4444;--blue:#48b0ff}
 
-    /* vignette usor, fara dreptunghi negru (fundalul e blurat din joc prin DOF) */
-    .vignette {
-      position: fixed; inset: 0; z-index: 1; pointer-events: none;
-      background: radial-gradient(130% 100% at 32% 50%, transparent 0%, transparent 52%, rgba(0,0,0,.32) 82%, rgba(0,0,0,.5) 100%);
-      animation: fade .8s ease forwards;
-    }
-    @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+    /* ============ OBIECTIV HUD (stanga sus) ============ */
+    #hud{position:fixed;top:22%;left:28px;width:300px;display:none;animation:slideL .35s ease}
+    @keyframes slideL{from{opacity:0;transform:translateX(-18px)}to{opacity:1;transform:none}}
+    #hud .qtitle{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+    #hud .qtitle::before{content:"";width:10px;height:10px;background:var(--accent);transform:rotate(45deg);box-shadow:0 0 12px var(--accent)}
+    #hud .obj{display:flex;gap:10px;align-items:flex-start}
+    #hud .obj .dot{margin-top:5px;width:9px;height:9px;border:2px solid var(--accent);border-radius:50%;flex:none;box-shadow:0 0 8px var(--accent)}
+    #hud .obj .txt{font-size:16px;font-weight:500;line-height:1.3;text-shadow:0 2px 6px rgba(0,0,0,.9)}
+    #hud .steps{margin-top:8px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.55)}
+    #hud .bar{margin-top:6px;height:4px;width:100%;background:rgba(255,255,255,.12);border-radius:9px;overflow:hidden}
+    #hud .bar>i{display:block;height:100%;background:var(--accent);box-shadow:0 0 10px var(--accent);transition:width .4s}
 
-    .letterbox-top, .letterbox-bottom {
-      position: fixed; left: 0; right: 0; height: 0; background: #000; z-index: 2;
-      pointer-events: none; transition: height 1s cubic-bezier(.4,0,.2,1);
-    }
-    .letterbox-top { top: 0; }
-    .letterbox-bottom { bottom: 0; }
-    .letterbox-top.active, .letterbox-bottom.active { height: 50px; }
+    /* ============ BANNER CINEMATIC (centru) ============ */
+    #banner{position:fixed;top:34%;left:0;right:0;text-align:center;display:none;pointer-events:none}
+    #banner .bt{font-size:46px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;text-shadow:0 4px 24px rgba(0,0,0,.9)}
+    #banner .bs{margin-top:6px;font-size:18px;letter-spacing:.22em;text-transform:uppercase;color:var(--accent)}
+    #banner.show{display:block;animation:bIn .5s ease, bOut .6s ease 3.4s forwards}
+    @keyframes bIn{from{opacity:0;transform:translateY(16px) scale(.98)}to{opacity:1;transform:none}}
+    @keyframes bOut{to{opacity:0;transform:translateY(-10px)}}
 
-    /* ancora panoului - pozitionabila din Config.PanelRight */
-    .panel-anchor {
-      position: fixed; top: 50%; right: var(--panel-right, 9vw); transform: translateY(-50%);
-      z-index: 10; width: min(440px, 40vw);
-    }
+    /* ============ FLASH (toast mic) ============ */
+    #flash{position:fixed;top:16%;left:50%;transform:translateX(-50%);display:none;background:rgba(15,15,18,.95);
+      border:.5px solid var(--green);color:var(--green);padding:9px 18px;border-radius:9px;font-weight:600;
+      letter-spacing:.06em;text-transform:uppercase;font-size:14px;box-shadow:0 14px 36px -12px rgba(0,0,0,.8)}
+    #flash.show{display:block;animation:fIn .3s ease, fOut .4s ease 2s forwards}
+    @keyframes fIn{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1}}
+    @keyframes fOut{to{opacity:0;transform:translateX(-50%) translateY(-8px)}}
 
-    /* ====================== DESIGN PANOU ====================== */
-    .dt-wrap {
-      --accent: #E8930C;
-      --line: rgba(255,255,255,.07);
-      --muted: rgba(255,255,255,.42);
-      --text: #f3f3f5;
-      --card: rgba(255,255,255,.03);
-      --accent-soft: color-mix(in srgb, var(--accent) 16%, transparent);
-      --accent-line: color-mix(in srgb, var(--accent) 38%, transparent);
-      --accent-glow: color-mix(in srgb, var(--accent) 45%, transparent);
-      --green: #34d27b;
-      --pad: 20px; --gap: 10px; --cardpad: 14px;
-      width: 100%;
-      color: var(--text);
-      /* fundal translucid (FARA backdrop-filter ca sa nu apara box negru in CEF) */
-      background: linear-gradient(168deg, rgba(19,19,24,.80), rgba(10,10,13,.86));
-      border: .5px solid rgba(255,255,255,.10);
-      border-radius: 16px;
-      box-shadow: 0 24px 60px -30px rgba(0,0,0,.75);
-      overflow: hidden; position: relative;
-      animation: panelIn .45s cubic-bezier(.16,1,.3,1);
-    }
-    @keyframes panelIn { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: none; } }
-    .dt-wrap::before {
-      content: ""; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-      background: linear-gradient(90deg, transparent, var(--accent), transparent); opacity: .7;
-    }
+    /* ============ DIALOG CHAT (jos centru) ============ */
+    #dlg{position:fixed;left:50%;bottom:6%;transform:translateX(-50%);width:min(720px,72vw);display:none;z-index:40}
+    #dlg.show{display:block;animation:dIn .3s cubic-bezier(.16,1,.3,1)}
+    @keyframes dIn{from{opacity:0;transform:translateX(-50%) translateY(20px)}to{opacity:1;transform:translateX(-50%)}}
+    #dlg .head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+    #dlg .head .av{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;background:rgba(232,147,12,.16);
+      border:.5px solid rgba(232,147,12,.4);color:var(--accent);font-weight:700}
+    #dlg .head .nm{font-size:14px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:600}
+    #dlg .stream{display:flex;flex-direction:column;gap:8px;max-height:38vh;overflow:hidden;padding:4px 2px}
+    .bub{max-width:78%;padding:11px 15px;border-radius:14px;font-size:16px;line-height:1.4;letter-spacing:.01em;
+      box-shadow:0 10px 28px -16px rgba(0,0,0,.8);animation:bub .25s ease}
+    @keyframes bub{from{opacity:0;transform:translateY(8px)}to{opacity:1}}
+    .bub.npc{align-self:flex-start;background:linear-gradient(160deg,rgba(28,28,34,.96),rgba(16,16,20,.96));
+      border:.5px solid rgba(255,255,255,.12);border-bottom-left-radius:4px}
+    .bub.player{align-self:flex-end;background:linear-gradient(160deg,rgba(232,147,12,.95),rgba(190,118,8,.95));
+      color:#1a1205;font-weight:500;border-bottom-right-radius:4px}
+    .bub .who{display:block;font-size:10px;letter-spacing:.14em;text-transform:uppercase;opacity:.7;margin-bottom:3px}
+    #dlg .foot{margin-top:12px;display:flex;flex-direction:column;gap:8px}
+    .choice{text-align:left;background:rgba(20,20,26,.92);border:.5px solid rgba(255,255,255,.14);color:#f2f2f4;
+      padding:11px 15px;border-radius:11px;font-family:inherit;font-size:15px;cursor:pointer;transition:.15s;display:flex;gap:10px;align-items:center}
+    .choice:hover{border-color:var(--accent);background:rgba(232,147,12,.14);transform:translateX(3px)}
+    .choice .n{width:22px;height:22px;flex:none;display:grid;place-items:center;border-radius:6px;background:var(--accent);color:#1a1205;font-weight:700;font-size:12px}
+    #dlg .cont{align-self:flex-end;background:var(--accent);color:#1a1205;border:0;padding:9px 18px;border-radius:9px;
+      font-family:inherit;font-weight:600;letter-spacing:.08em;text-transform:uppercase;font-size:12px;cursor:pointer;display:none}
+    #dlg .cont.show{display:inline-flex;animation:bub .2s ease}
+    .typing::after{content:"▌";color:var(--accent);animation:blink 1s steps(1) infinite}
+    @keyframes blink{50%{opacity:0}}
 
-    /* Header */
-    .dt-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: var(--pad) var(--pad) 14px; }
-    .dt-head-l { display: flex; align-items: center; gap: 12px; }
-    .dt-badge { width: 40px; height: 40px; flex: none; display: grid; place-items: center; border-radius: 10px;
-      color: var(--accent); background: var(--accent-soft); border: .5px solid var(--accent-line);
-      box-shadow: 0 0 24px -8px var(--accent-glow) inset; }
-    .dt-title { font-weight: 600; font-size: 21px; letter-spacing: .04em; text-transform: uppercase; line-height: 1; }
-    .dt-sub { font-weight: 400; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-top: 5px; white-space: nowrap; }
-    .dt-chip { display: flex; align-items: center; gap: 7px; flex: none; padding: 7px 11px; border-radius: 9px; background: rgba(0,0,0,.30); border: .5px solid var(--line); }
-    .dt-chip svg { color: var(--accent); }
-    .dt-chip-lbl { font-size: 9.5px; letter-spacing: .12em; color: var(--muted); text-transform: uppercase; line-height: 1; white-space: nowrap; }
-    .dt-chip-val { font-size: 15px; font-weight: 600; letter-spacing: .05em; font-variant-numeric: tabular-nums; line-height: 1; margin-top: 3px; }
-
-    /* Strip progres total */
-    .dt-level { display: flex; align-items: center; gap: 13px; margin: 0 var(--pad); padding: 13px 15px; border-radius: 12px; background: rgba(0,0,0,.24); border: .5px solid var(--line); }
-    .dt-lvl-num { position: relative; width: 46px; height: 46px; flex: none; display: grid; place-items: center; }
-    .dt-lvl-num .lv { font-size: 17px; font-weight: 700; line-height: 1; }
-    .dt-lvl-num .lv-lbl { position: absolute; bottom: -2px; font-size: 7px; letter-spacing: .14em; color: var(--muted); text-transform: uppercase; }
-    .dt-lvl-num svg { position: absolute; inset: 0; transform: rotate(-90deg); }
-    .dt-lvl-mid { flex: 1; min-width: 0; }
-    .dt-lvl-rank { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 7px; }
-    .dt-lvl-rank b { font-size: 14px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; white-space: nowrap; }
-    .dt-lvl-xp { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; letter-spacing: .03em; white-space: nowrap; }
-    .dt-lvl-xp .cur { color: var(--accent); font-weight: 600; }
-    .dt-bar { height: 7px; border-radius: 99px; background: rgba(255,255,255,.07); overflow: hidden; }
-    .dt-bar > i { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, color-mix(in srgb,var(--accent) 70%,#fff), var(--accent));
-      box-shadow: 0 0 12px -2px var(--accent-glow); transition: width .7s cubic-bezier(.2,.8,.25,1); }
-
-    /* Lista */
-    .dt-list { display: flex; flex-direction: column; gap: var(--gap); padding: 16px var(--pad); max-height: 52vh; overflow-y: auto; overflow-x: hidden;
-      scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.14) transparent; }
-    .dt-list::-webkit-scrollbar { width: 8px; }
-    .dt-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,.14); border-radius: 4px; border: 2px solid transparent; background-clip: content-box; }
-
-    /* Card */
-    /* flex: 0 0 auto = cardurile isi pastreaza inaltimea naturala (nu se mai
-       comprima cand sunt multe misiuni); lista capata scroll vertical. */
-    .dt-card { flex: 0 0 auto; position: relative; border-radius: 12px; background: var(--card); border: .5px solid var(--line); overflow: hidden; transition: border-color .2s, background .2s; }
-    .dt-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--accent); opacity: 0; transition: opacity .2s; }
-    .dt-card:hover { background: rgba(255,255,255,.05); border-color: rgba(255,255,255,.13); }
-    .dt-card:hover::before { opacity: .55; }
-    .dt-card.open { border-color: var(--accent-line); background: rgba(255,255,255,.045); }
-    .dt-card.open::before { opacity: 1; }
-    .dt-card.claimed { opacity: .6; }
-    .dt-card.locked { opacity: .5; }
-    .dt-card.locked .dt-row { cursor: default; }
-    .dt-card.claimable { border-color: var(--accent-line); box-shadow: 0 0 0 1px var(--accent-soft), 0 0 30px -14px var(--accent-glow); }
-
-    .dt-row { display: flex; align-items: center; gap: 13px; padding: var(--cardpad); cursor: pointer; user-select: none; }
-    .dt-ico { width: 42px; height: 42px; flex: none; display: grid; place-items: center; border-radius: 10px;
-      background: rgba(255,255,255,.05); border: .5px solid var(--line); color: rgba(255,255,255,.85); transition: .2s; }
-    .dt-card:hover .dt-ico, .dt-card.open .dt-ico { color: var(--accent); border-color: var(--accent-line); background: var(--accent-soft); }
-    .dt-card.locked .dt-ico { color: rgba(255,255,255,.4); }
-    .dt-card.claimed .dt-ico { color: var(--green); border-color: rgba(52,210,123,.3); background: rgba(52,210,123,.1); }
-
-    .dt-info { flex: 1; min-width: 0; }
-    .dt-name { font-size: 15px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; line-height: 1.15; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
-    .dt-num { font-size: 10px; font-weight: 700; color: var(--muted); background: rgba(255,255,255,.06); border-radius: 6px; padding: 2px 6px; letter-spacing: .04em; }
-    .dt-meta { display: flex; align-items: center; gap: 9px; }
-    .dt-status { display: flex; align-items: center; gap: 6px; font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
-    .dt-dot { width: 6px; height: 6px; border-radius: 99px; background: currentColor; }
-    .dt-status.low { color: #ef4444; }
-    .dt-status.mid { color: #eab308; }
-    .dt-status.claimable { color: var(--accent); }
-    .dt-status.comp { color: var(--green); }
-    .dt-status.locked { color: rgba(255,255,255,.4); }
-    .dt-minibar { flex: 1; max-width: 120px; height: 4px; border-radius: 99px; background: rgba(255,255,255,.08); overflow: hidden; }
-    .dt-minibar > i { display: block; height: 100%; border-radius: 99px; transition: width .5s cubic-bezier(.2,.8,.25,1), background .3s; }
-
-    /* Cluster dreapta */
-    .dt-right { display: flex; align-items: center; gap: 13px; flex: none; }
-    .dt-ring { position: relative; width: 44px; height: 44px; flex: none; display: grid; place-items: center; }
-    .dt-ring svg { position: absolute; inset: 0; transform: rotate(-90deg); }
-    .dt-ring .frac { font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: .02em; }
-    .dt-reward { text-align: right; min-width: 64px; white-space: nowrap; }
-    .dt-reward .xp { font-size: 15px; font-weight: 700; color: var(--accent); line-height: 1; letter-spacing: .02em; font-variant-numeric: tabular-nums; }
-    .dt-reward .xp-lbl { font-size: 9px; letter-spacing: .16em; color: var(--muted); text-transform: uppercase; margin-top: 3px; }
-    .dt-card.claimed .dt-reward .xp { color: var(--green); }
-    /* puls pe cardurile de revendicat */
-    @keyframes dt-pulse { 0%,100% { box-shadow: 0 0 0 0 var(--accent-glow); } 50% { box-shadow: 0 0 0 6px transparent; } }
-    .dt-card.claimable .dt-ring::after { content: ""; position: absolute; inset: -3px; border-radius: 99px; animation: dt-pulse 1.8s ease-in-out infinite; }
-
-    /* Expand */
-    .dt-exp { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .32s cubic-bezier(.3,.8,.3,1); }
-    .dt-card.open .dt-exp { grid-template-rows: 1fr; }
-    .dt-exp-in { overflow: hidden; }
-    .dt-exp-pad { padding: 0 var(--cardpad) var(--cardpad); border-top: .5px solid var(--line); margin-top: 2px; padding-top: 13px; }
-    .dt-desc { font-size: 13px; line-height: 1.5; color: rgba(255,255,255,.62); letter-spacing: .01em; font-weight: 400; margin-bottom: 13px; }
-    .dt-foot-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-    .dt-tag { display: inline-flex; align-items: center; gap: 7px; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
-    .dt-tag b { color: var(--accent); font-weight: 700; }
-    .dt-locknote { display: flex; align-items: center; gap: 8px; font-size: 12px; color: rgba(255,255,255,.5); letter-spacing: .03em; }
-    .dt-locknote svg { color: var(--muted); }
-
-    /* Butoane */
-    .btn { appearance: none; font-family: inherit; cursor: pointer; border: 0; border-radius: 9px; font-weight: 600; letter-spacing: .08em;
-      text-transform: uppercase; transition: .16s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
-    .btn-claim { width: 100%; padding: 11px 14px; font-size: 12px; background: var(--accent); color: #1a1205; box-shadow: 0 8px 22px -10px var(--accent-glow); }
-    .btn-claim:hover { filter: brightness(1.08); }
-    .btn-claimed { width: 100%; padding: 11px 14px; font-size: 12px; background: rgba(52,210,123,.12); color: var(--green); border: .5px solid rgba(52,210,123,.3); cursor: default; }
-
-    /* Footer */
-    .dt-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px var(--pad) var(--pad); border-top: .5px solid var(--line); background: rgba(0,0,0,.20); }
-    .dt-foot-l { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
-    .dt-foot-l b { color: var(--text); font-weight: 600; }
-    .dt-foot-txt { font-size: 13px; font-weight: 700; color: var(--accent); letter-spacing: .03em; font-variant-numeric: tabular-nums; }
-    .btn-claimall { padding: 10px 16px; font-size: 12px; background: var(--accent); color: #1a1205; box-shadow: 0 10px 26px -12px var(--accent-glow); white-space: nowrap; }
-    .btn-claimall:hover { filter: brightness(1.08); }
-
-    /* Hint */
-    .hint { position: fixed; bottom: 16px; right: var(--panel-right, 9vw); font-size: 11px; color: rgba(255,255,255,.35); letter-spacing: .5px; z-index: 11; }
-    .hint kbd { background: rgba(255,255,255,.08); border: .5px solid rgba(255,255,255,.14); border-radius: 5px; padding: 3px 7px; font-family: 'Oswald', sans-serif; font-size: 10px; }
-
-    /* Toast (doar in meniu, la revendicare) */
-    .toasts { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); display: flex; flex-direction: column; gap: 8px; z-index: 50; pointer-events: none; align-items: center; }
-    .toast { display: flex; align-items: center; gap: 10px; padding: 12px 18px; border-radius: 11px; background: rgba(15,15,18,.95); border: .5px solid rgba(52,210,123,.4);
-      box-shadow: 0 16px 40px -12px rgba(0,0,0,.7); font-size: 13px; letter-spacing: .04em; text-transform: uppercase; font-weight: 600; animation: toastIn .35s cubic-bezier(.2,.9,.3,1); }
-    .toast .tag { color: var(--green); font-weight: 700; }
-    @keyframes toastIn { from { opacity: 0; transform: translateY(14px) scale(.96); } to { opacity: 1; transform: none; } }
-    .toast.out { animation: toastOut .3s ease forwards; }
-    @keyframes toastOut { to { opacity: 0; transform: translateY(-8px); } }
+    /* ============ JURNAL (F5) ============ */
+    #journal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);z-index:60}
+    #journal.show{display:flex;animation:bIn .25s ease}
+    .jwrap{width:min(560px,90vw);background:linear-gradient(168deg,rgba(19,19,24,.97),rgba(10,10,13,.98));
+      border:.5px solid rgba(255,255,255,.12);border-radius:16px;overflow:hidden;box-shadow:0 30px 70px -30px #000}
+    .jwrap::before{content:"";display:block;height:3px;background:linear-gradient(90deg,transparent,var(--accent),transparent)}
+    .jhead{padding:18px 22px 12px;display:flex;justify-content:space-between;align-items:flex-start}
+    .jhead h1{margin:0;font-size:22px;letter-spacing:.06em;text-transform:uppercase}
+    .jhead .x{font-size:11px;letter-spacing:.14em;color:rgba(255,255,255,.4);text-transform:uppercase}
+    .jcur{margin:0 22px 14px;padding:14px 16px;border-radius:12px;background:rgba(232,147,12,.08);border:.5px solid rgba(232,147,12,.28)}
+    .jcur .t{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);font-weight:600}
+    .jcur .d{font-size:14px;color:rgba(255,255,255,.7);margin:6px 0 10px;line-height:1.4}
+    .jcur .o{font-size:15px;font-weight:500;display:flex;gap:8px;align-items:center}
+    .jcur .o .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent)}
+    .jcur .track{margin-top:12px;background:var(--accent);color:#1a1205;border:0;padding:9px 16px;border-radius:9px;
+      font-family:inherit;font-weight:600;letter-spacing:.08em;text-transform:uppercase;font-size:12px;cursor:pointer}
+    .jlist{padding:4px 22px 18px;max-height:40vh;overflow-y:auto;display:flex;flex-direction:column;gap:6px}
+    .jlist::-webkit-scrollbar{width:7px}.jlist::-webkit-scrollbar-thumb{background:rgba(255,255,255,.14);border-radius:4px}
+    .jrow{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.03);border:.5px solid rgba(255,255,255,.06)}
+    .jrow.cur{border-color:rgba(232,147,12,.45);background:rgba(232,147,12,.07)}
+    .jrow .ic{width:24px;height:24px;flex:none;border-radius:6px;display:grid;place-items:center;font-size:13px;font-weight:700;
+      background:rgba(255,255,255,.06);color:rgba(255,255,255,.6)}
+    .jrow.done .ic{background:rgba(52,210,123,.16);color:var(--green)}
+    .jrow.cur .ic{background:rgba(232,147,12,.18);color:var(--accent)}
+    .jrow .nm{flex:1;font-size:15px;letter-spacing:.02em}
+    .jrow .st{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.4)}
+    .jrow.done .st{color:var(--green)}.jrow.cur .st{color:var(--accent)}
+    .jfoot{padding:12px 22px;border-top:.5px solid rgba(255,255,255,.08);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.4);text-align:right}
   </style>
 </head>
-
 <body>
-  <div class="letterbox-top" id="lb-top"></div>
-  <div class="letterbox-bottom" id="lb-bottom"></div>
-  <div class="vignette" id="vignette"></div>
+  <!-- Obiectiv HUD -->
+  <div id="hud">
+    <div class="qtitle" id="hud-title">Misiune</div>
+    <div class="obj"><span class="dot"></span><span class="txt" id="hud-obj"></span></div>
+    <div class="steps" id="hud-steps"></div>
+    <div class="bar"><i id="hud-bar" style="width:0%"></i></div>
+  </div>
 
-  <div class="panel-anchor">
-    <div class="dt-wrap" id="wrap">
-      <div class="dt-head">
-        <div class="dt-head-l">
-          <div class="dt-badge" id="badge"></div>
-          <div>
-            <div class="dt-title">Misiuni</div>
-            <div class="dt-sub">Completeaza pe rand · bani &amp; experienta</div>
-          </div>
-        </div>
-        <div class="dt-chip">
-          <span id="chip-ico"></span>
-          <div>
-            <div class="dt-chip-lbl">Completate</div>
-            <div class="dt-chip-val" id="chip-val">0 / 0</div>
-          </div>
-        </div>
-      </div>
+  <!-- Banner cinematic -->
+  <div id="banner"><div class="bt" id="ban-t"></div><div class="bs" id="ban-s"></div></div>
 
-      <div class="dt-level">
-        <div class="dt-lvl-num" id="lvl-ring"></div>
-        <div class="dt-lvl-mid">
-          <div class="dt-lvl-rank">
-            <b>Progres Total</b>
-            <span class="dt-lvl-xp"><span class="cur" id="ov-done">0</span> / <span id="ov-total">0</span> misiuni</span>
-          </div>
-          <div class="dt-bar"><i id="ov-bar" style="width:0%"></i></div>
-        </div>
-      </div>
+  <!-- Flash -->
+  <div id="flash"></div>
 
-      <div class="dt-list" id="list"></div>
-
-      <div class="dt-foot">
-        <div class="dt-foot-l"><b id="f-done">0</b> / <span id="f-total">0</span> completate</div>
-        <div id="f-action"></div>
-      </div>
+  <!-- Dialog -->
+  <div id="dlg">
+    <div class="head"><div class="av" id="dlg-av">M</div><div class="nm" id="dlg-nm">NPC</div></div>
+    <div class="stream" id="dlg-stream"></div>
+    <div class="foot" id="dlg-foot">
+      <button class="cont" id="dlg-cont">Continua (Enter) ▶</button>
     </div>
   </div>
 
-  <div class="hint"><kbd>ESC</kbd> pentru a inchide</div>
-  <div class="toasts" id="toasts"></div>
+  <!-- Jurnal -->
+  <div id="journal">
+    <div class="jwrap">
+      <div class="jhead"><h1>Jurnal Misiuni</h1><div class="x">ESC pentru a inchide</div></div>
+      <div class="jcur" id="j-cur"></div>
+      <div class="jlist" id="j-list"></div>
+      <div class="jfoot" id="j-foot"></div>
+    </div>
+  </div>
 
   <script>
-    /* ---------- Icoane (line SVG) ---------- */
-    function svg(inner, size) {
-      size = size || 20;
-      return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">' + inner + '</svg>';
-    }
-    const ICONS = {
-      grid:   '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
-      bottle: '<path d="M10 2h4"/><path d="M10 2v3l-1.5 2.5A4 4 0 0 0 8 9.5V20a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V9.5a4 4 0 0 0-.5-2L14 5V2"/><path d="M8 13h8"/>',
-      car:    '<path d="M3 13l2-5h14l2 5"/><path d="M2 13h20v4H2z"/><circle cx="7" cy="17" r="1.6"/><circle cx="17" cy="17" r="1.6"/>',
-      map:    '<path d="M9 3 3 5v16l6-2 6 2 6-2V3l-6 2-6-2z"/><path d="M9 3v16M15 5v16"/>',
-      camera: '<path d="M3 8h3l2-2h8l2 2h3v11H3z"/><circle cx="12" cy="13" r="3.5"/>',
-      gun:    '<path d="M3 7h13l2 3h3v2h-3l-2 2v3h-4v-3H8l-1 2H4v-3l-1-1V7z"/><path d="M8 7V5"/>',
-      wrench: '<path d="M14.5 6.5a4 4 0 0 0-5 5L3 18l3 3 6.5-6.5a4 4 0 0 0 5-5l-2.5 2.5-2.5-.5-.5-2.5 2.5-2.5z"/>',
-      flag:   '<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>',
-      skull:  '<path d="M12 2a8 8 0 0 0-5 14v3h10v-3a8 8 0 0 0-5-14z"/><circle cx="9" cy="11" r="1.4"/><circle cx="15" cy="11" r="1.4"/><path d="M11 17h2"/>',
-      target: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.5"/><path d="M12 1v3M12 20v3M1 12h3M20 12h3"/>',
-      box:    '<path d="M21 8 12 3 3 8l9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8M12 13v8"/>',
-      bolt:   '<path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z"/>',
-      check:  '<path d="M4 12.5 9 17.5 20 6.5"/>',
-      lock:   '<rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>',
-      coins:  '<ellipse cx="9" cy="6" rx="6" ry="2.6"/><path d="M3 6v5c0 1.4 2.7 2.6 6 2.6s6-1.2 6-2.6V6"/><path d="M9 13.6v4c0 1.4 2.7 2.6 6 2.6s6-1.2 6-2.6v-6"/><ellipse cx="15" cy="11.6" rx="6" ry="2.6"/>',
-      trophy: '<path d="M7 4h10v4a5 5 0 0 1-10 0V4z"/><path d="M7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3"/><path d="M9 17h6M10 21h4M12 13v4"/>',
-      // --- icoane pentru campania "Imperiul BlackSilva" ---
-      building: '<path d="M4 21V4a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v17"/><path d="M15 9h4a1 1 0 0 1 1 1v11"/><path d="M2 21h20"/><path d="M7 7h1M11 7h1M7 11h1M11 11h1M7 15h1M11 15h1"/>',
-      truck:    '<path d="M3 6h10v9H3z"/><path d="M13 9h4l3 3v3h-7z"/><circle cx="7" cy="18" r="1.6"/><circle cx="17" cy="18" r="1.6"/>',
-      eye:      '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
-      phone:    '<rect x="6.5" y="2" width="11" height="20" rx="2.5"/><path d="M10.5 18h3"/>',
-      bag:      '<path d="M5 8h14l-1.2 12.5a1 1 0 0 1-1 .9H7.2a1 1 0 0 1-1-.9L5 8z"/><path d="M8.5 8V6a3.5 3.5 0 0 1 7 0v2"/>',
-      mask:     '<path d="M3 8c0-1 .8-1.7 2-1.7h14c1.2 0 2 .7 2 1.7v3c0 3.2-2.7 4.7-5.5 4.7-1.3 0-2.3-1-4.5-1s-3.2 1-4.5 1C3.7 15.7 3 14.2 3 11V8z"/><circle cx="8.5" cy="10.2" r="1.3"/><circle cx="15.5" cy="10.2" r="1.3"/>',
-      star:     '<path d="M12 2.5l2.9 6 6.6.8-4.9 4.5 1.3 6.5-5.9-3.3-5.9 3.3 1.3-6.5L2.5 9.3l6.6-.8z"/>',
-      flask:    '<path d="M9 2h6M10 2v6.5L4.8 17a2 2 0 0 0 1.8 3h10.8a2 2 0 0 0 1.8-3L14 8.5V2"/><path d="M7.5 14.5h9"/>',
-      route:    '<circle cx="6" cy="19" r="2.2"/><circle cx="18" cy="5" r="2.2"/><path d="M8.2 19H14a3 3 0 0 0 0-6h-4a3 3 0 0 1 0-6h5.8"/>',
-      key:      '<circle cx="7.5" cy="8" r="4.5"/><path d="M10.8 11.3 20 20.5M17 18.5l2-2M14.7 20.8l2-2"/>',
-      fire:     '<path d="M12 2.5s5.5 4.2 5.5 9.5a5.5 5.5 0 0 1-11 0c0-2.2 1.1-3.5 2.2-4.6.2 1.3 1.2 2.3 2.3 2.3 0-2.4-1.3-4.8 1-7.2z"/>',
-      crown:    '<path d="M3 7l4.2 3.8L12 4l4.8 6.8L21 7l-1.8 12.5H4.8L3 7z"/><path d="M4.8 19.5h14.4"/>',
-      diamond:  '<path d="M6 3h12l3.2 6L12 21 2.8 9 6 3z"/><path d="M2.8 9h18.4M9.2 3 6.4 9 12 21l5.6-12L14.8 3"/>',
-      plane:    '<path d="M21.5 3.5 2.5 11l6.5 2.8L11.8 21 21.5 3.5z"/><path d="M9 13.8 21.5 3.5"/>',
-      boat:     '<path d="M3 15h18l-2.2 4.5a1 1 0 0 1-.9.5H6.1a1 1 0 0 1-.9-.5L3 15z"/><path d="M5.5 15V9.5L15 12l4 3"/><path d="M5.5 9.5 13 7"/>',
-    };
-    function icon(name, size) { return svg(ICONS[name] || ICONS.target, size); }
+    const RES = 'blacksilva-missions';
+    const post = (n, b) => fetch(`https://${RES}/${n}`, { method:'POST', body: JSON.stringify(b||{}) }).catch(()=>{});
+    const $ = id => document.getElementById(id);
 
-    /* ---------- Stare ---------- */
-    let missions = [];
-    let openId = null;
-
-    const fmt = (n) => '$' + (n || 0).toLocaleString('en-US');
-
-    /* culorile cerute: rosu < 50%, galben >= 50%, verde = 100%/completat */
-    function colorFor(pct, completed) {
-      if (completed || pct >= 100) return '#34d27b';
-      if (pct >= 50) return '#eab308';
-      return '#ef4444';
-    }
-    function statusFor(m, pct) {
-      if (m.locked) return { t: 'Blocat', c: 'locked', dot: false };
-      if (m.completed && !m.claimed) return { t: 'De revendicat', c: 'claimable', dot: true };
-      if (m.claimed) return { t: 'Revendicat', c: 'comp', dot: true };
-      if (pct >= 50) return { t: 'In progres', c: 'mid', dot: true };
-      return { t: 'Inceput', c: 'low', dot: true };
+    /* -------- HUD -------- */
+    function hud(d){
+      const el = $('hud');
+      if(!d.show){ el.style.display='none'; return; }
+      el.style.display='block';
+      $('hud-title').textContent = d.title || 'Misiune';
+      $('hud-obj').textContent = d.objective || '';
+      $('hud-steps').textContent = d.total ? `Pas ${d.step} / ${d.total}` : '';
+      $('hud-bar').style.width = d.total ? Math.round((d.step-1)/d.total*100)+'%' : '0%';
     }
 
-    function ringSvg(pct, color, size, stroke) {
-      size = size || 44; stroke = stroke || 4;
-      const r = (size - stroke) / 2;
-      const c = 2 * Math.PI * r;
-      const off = c * (1 - Math.min(1, pct / 100));
-      return '<svg width="' + size + '" height="' + size + '">' +
-        '<circle cx="' + size/2 + '" cy="' + size/2 + '" r="' + r + '" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="' + stroke + '"/>' +
-        '<circle cx="' + size/2 + '" cy="' + size/2 + '" r="' + r + '" fill="none" stroke="' + color + '" stroke-width="' + stroke + '" stroke-linecap="round" stroke-dasharray="' + c + '" stroke-dashoffset="' + off + '" style="transition:stroke-dashoffset .6s cubic-bezier(.2,.8,.25,1)"/>' +
-        '</svg>';
+    /* -------- Banner -------- */
+    function banner(d){
+      const el = $('banner');
+      $('ban-t').textContent = d.title||''; $('ban-s').textContent = d.sub||'';
+      el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
     }
 
-    function render() {
-      document.getElementById('badge').innerHTML = icon('grid', 20);
-      document.getElementById('chip-ico').innerHTML = icon('trophy', 16);
+    /* -------- Flash -------- */
+    function flash(d){
+      const el = $('flash'); el.textContent = d.text||'';
+      el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
+    }
 
-      const total = missions.length;
-      let done = 0, claimableSum = 0, claimableN = 0;
-      missions.forEach(m => {
-        if (m.completed) done++;
-        if (m.completed && !m.claimed) { claimableSum += (m.reward || 0); claimableN++; }
+    /* -------- Dialog -------- */
+    let typing = null, canContinue = false, curSpan = null;
+    function dlgOpen(npc){
+      $('dlg-stream').innerHTML=''; $('dlg-foot').querySelectorAll('.choice').forEach(c=>c.remove());
+      $('dlg-cont').classList.remove('show');
+      $('dlg-nm').textContent = npc||'NPC';
+      $('dlg-av').textContent = (npc||'N').charAt(0).toUpperCase();
+      $('dlg').classList.add('show');
+    }
+    function dlgClose(){ $('dlg').classList.remove('show'); if(typing){clearInterval(typing);typing=null;} curSpan=null; }
+    function showContinue(){ canContinue=true; $('dlg-cont').classList.add('show'); }
+    function dlgSay(d){
+      $('dlg-cont').classList.remove('show'); canContinue=false;
+      $('dlg-foot').querySelectorAll('.choice').forEach(c=>c.remove());
+      const stream = $('dlg-stream');
+      const b = document.createElement('div');
+      b.className = 'bub ' + (d.who==='player'?'player':'npc');
+      const who = document.createElement('span'); who.className='who'; who.textContent = d.name||'';
+      const sp = document.createElement('span'); sp.className='typing';
+      b.appendChild(who); b.appendChild(sp); stream.appendChild(b);
+      while(stream.children.length>4) stream.removeChild(stream.firstChild); // pastreaza ultimele 4 bule
+      const full = d.text||''; sp.dataset.full = full; curSpan = sp;
+      let i=0;
+      if(typing) clearInterval(typing);
+      typing = setInterval(()=>{
+        sp.textContent = full.slice(0, ++i);
+        if(i>=full.length){ clearInterval(typing); typing=null; sp.classList.remove('typing'); showContinue(); }
+      }, 18);
+    }
+    function dlgChoices(opts){
+      $('dlg-cont').classList.remove('show');
+      const foot = $('dlg-foot');
+      (opts||[]).forEach((t,idx)=>{
+        const btn = document.createElement('button');
+        btn.className='choice';
+        btn.innerHTML = `<span class="n">${idx+1}</span><span>${t}</span>`;
+        btn.onclick = ()=>{ foot.querySelectorAll('.choice').forEach(c=>c.remove()); post('dlg_choice',{index:idx+1}); };
+        foot.appendChild(btn);
       });
-
-      document.getElementById('chip-val').textContent = done + ' / ' + total;
-      document.getElementById('ov-done').textContent = done;
-      document.getElementById('ov-total').textContent = total;
-      document.getElementById('f-done').textContent = done;
-      document.getElementById('f-total').textContent = total;
-
-      const ovPct = total ? Math.round((done / total) * 100) : 0;
-      document.getElementById('ov-bar').style.width = ovPct + '%';
-      const allDone = total && done === total;
-      document.getElementById('lvl-ring').innerHTML =
-        ringSvg(ovPct, allDone ? '#34d27b' : 'var(--accent)', 46, 3.5) +
-        '<span class="lv">' + done + '</span><span class="lv-lbl">DONE</span>';
-
-      // footer: buton "Revendica tot" daca exista de revendicat
-      const fa = document.getElementById('f-action');
-      if (claimableN > 0) {
-        fa.innerHTML = '<button class="btn btn-claimall" id="claim-all">' + icon('coins', 15) + ' Revendica tot · ' + fmt(claimableSum) + '</button>';
-        fa.querySelector('#claim-all').addEventListener('click', () => {
-          fetch('https://blacksilva-missions/claimAll', { method: 'POST', body: '{}' });
-        });
-      } else {
-        fa.innerHTML = '<span class="dt-foot-txt">Nimic de revendicat</span>';
+    }
+    function advanceDialogue(){
+      if(typing){ // primul Enter/click = afiseaza instant tot textul
+        clearInterval(typing); typing=null;
+        if(curSpan){ curSpan.textContent = curSpan.dataset.full||''; curSpan.classList.remove('typing'); }
+        showContinue(); return;
       }
+      if(canContinue){ canContinue=false; $('dlg-cont').classList.remove('show'); post('dlg_next'); }
+    }
+    $('dlg-cont').onclick = advanceDialogue;
 
-      const list = document.getElementById('list');
-      list.innerHTML = '';
-      missions.forEach(m => {
-        const target = m.target || 1;
-        const current = Math.min(m.current || 0, target);
-        const pct = m.completed ? 100 : Math.round((current / target) * 100);
-        const col = colorFor(pct, m.completed);
-        const st = statusFor(m, pct);
-        const claimable = m.completed && !m.claimed && !m.locked;
-        const isOpen = openId === m.id && !m.locked;
-
-        const cls = ['dt-card', isOpen && 'open', claimable && 'claimable', m.claimed && 'claimed', m.locked && 'locked'].filter(Boolean).join(' ');
-
-        // inel dreapta
-        let ringInner;
-        if (m.locked) {
-          ringInner = '<span class="frac" style="color:rgba(255,255,255,.4)">' + icon('lock', 16) + '</span>';
-        } else if (m.completed) {
-          ringInner = ringSvg(100, '#34d27b') + '<span class="frac" style="color:#34d27b">' + icon('check', 16) + '</span>';
-        } else {
-          const fracTxt = target > 50 ? pct + '%' : current + '/' + target;
-          ringInner = ringSvg(pct, col) + '<span class="frac">' + fracTxt + '</span>';
-        }
-
-        // continut expand
-        let expContent;
-        if (m.locked) {
-          const prev = missions.find(x => x.id === m.id - 1);
-          expContent = '<div class="dt-locknote">' + icon('lock', 14) +
-            ' Completeaza intai misiunea #' + (m.id - 1) + (prev ? ' (' + prev.title + ')' : '') + '</div>';
-        } else if (claimable) {
-          expContent = '<button class="btn btn-claim" data-claim="' + m.id + '">' + icon('coins', 15) +
-            ' Revendica ' + fmt(m.reward) + ' · +' + (m.level || 1) + ' nivel</button>';
-        } else if (m.claimed) {
-          expContent = '<span class="btn btn-claimed">' + icon('check', 15) + ' Recompensa revendicata</span>';
-        } else {
-          expContent = '<div class="dt-foot-row">' +
-            '<span class="dt-tag">' + icon('coins', 14) + ' Recompensa <b>' + fmt(m.reward) + '</b></span>' +
-            '<span class="dt-tag">' + icon('trophy', 14) + ' <b>+' + (m.level || 1) + '</b> nivel</span>' +
-          '</div>';
-        }
-
-        const card = document.createElement('div');
-        card.className = cls;
-        card.innerHTML =
-          '<div class="dt-row" data-id="' + m.id + '">' +
-            '<div class="dt-ico">' + (m.locked ? icon('lock') : icon(m.icon)) + '</div>' +
-            '<div class="dt-info">' +
-              '<div class="dt-name"><span class="dt-num">#' + m.id + '</span>' + m.title + '</div>' +
-              '<div class="dt-meta">' +
-                '<span class="dt-status ' + st.c + '">' + (st.dot ? '<span class="dt-dot"></span>' : '') + st.t + '</span>' +
-                '<span class="dt-minibar"><i style="width:' + pct + '%;background:' + col + '"></i></span>' +
-              '</div>' +
-            '</div>' +
-            '<div class="dt-right">' +
-              '<div class="dt-ring">' + ringInner + '</div>' +
-              '<div class="dt-reward"><div class="xp">' + fmt(m.reward) + '</div><div class="xp-lbl">recompensa</div></div>' +
-            '</div>' +
-          '</div>' +
-          '<div class="dt-exp"><div class="dt-exp-in"><div class="dt-exp-pad">' +
-            '<div class="dt-desc">' + (m.description || '') + '</div>' +
-            expContent +
-          '</div></div></div>';
-        list.appendChild(card);
+    /* -------- Jurnal -------- */
+    function journal(d){
+      const el = $('journal');
+      if(!d.show){ el.classList.remove('show'); return; }
+      const cur = $('j-cur');
+      if(d.quest){
+        cur.style.display='block';
+        cur.innerHTML = `<div class="t">Misiunea curenta · #${d.quest.id} ${d.quest.title}</div>
+          <div class="d">${d.quest.desc||''}</div>
+          <div class="o"><span class="dot"></span>${d.quest.objective||''}</div>
+          <button class="track" id="j-track">Seteaza GPS catre obiectiv</button>`;
+        cur.querySelector('#j-track').onclick = ()=>post('journal_track');
+      } else { cur.style.display='none'; cur.innerHTML=''; }
+      const list = $('j-list'); list.innerHTML='';
+      let done=0;
+      (d.list||[]).forEach(q=>{
+        if(q.done) done++;
+        const row = document.createElement('div');
+        row.className='jrow ' + (q.current?'cur':'') + (q.done?' done':'');
+        const st = q.current?'In desfasurare':(q.done?'Completat':'Blocat');
+        const ic = q.done?'✓':(q.current?'▶':q.id);
+        row.innerHTML = `<div class="ic">${ic}</div><div class="nm">${q.title}</div><div class="st">${st}</div>`;
+        list.appendChild(row);
       });
-
-      // expand pe click (doar misiuni deblocate)
-      list.querySelectorAll('.dt-row').forEach(row => {
-        row.addEventListener('click', () => {
-          const id = parseInt(row.getAttribute('data-id'), 10);
-          const m = missions.find(x => x.id === id);
-          if (!m || m.locked) return;
-          // seteaza GPS-ul direct catre locatia misiunii la fiecare click
-          fetch('https://blacksilva-missions/setWaypoint', { method: 'POST', body: JSON.stringify({ id: id }) });
-          openId = (openId === id) ? null : id;
-          render();
-        });
-      });
-
-      // butoane de revendicare per card
-      list.querySelectorAll('[data-claim]').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const id = parseInt(btn.getAttribute('data-claim'), 10);
-          fetch('https://blacksilva-missions/claim', { method: 'POST', body: JSON.stringify({ id: id }) });
-        });
-      });
+      $('j-foot').textContent = `${done} / ${(d.list||[]).length} misiuni completate`;
+      el.classList.add('show');
     }
 
-    /* ---------- Toasts (revendicare) ---------- */
-    function toast(tag, body) {
-      const wrap = document.getElementById('toasts');
-      const el = document.createElement('div');
-      el.className = 'toast';
-      el.innerHTML = '<span class="tag">' + tag + '</span>' + body;
-      wrap.appendChild(el);
-      setTimeout(() => el.classList.add('out'), 3200);
-      setTimeout(() => el.remove(), 3600);
-    }
-
-    /* ---------- Deschidere/inchidere ---------- */
-    function openUI(accent, panelRight) {
-      if (accent) document.getElementById('wrap').style.setProperty('--accent', accent);
-      if (panelRight != null) document.documentElement.style.setProperty('--panel-right', panelRight + 'vw');
-      document.body.style.display = 'block';
-      document.getElementById('vignette').style.display = 'block';
-      setTimeout(() => {
-        document.getElementById('lb-top').classList.add('active');
-        document.getElementById('lb-bottom').classList.add('active');
-      }, 80);
-    }
-    function closeUI() {
-      document.getElementById('lb-top').classList.remove('active');
-      document.getElementById('lb-bottom').classList.remove('active');
-      document.getElementById('vignette').style.display = 'none';
-      document.body.style.display = 'none';
-    }
-
-    window.addEventListener('message', function (e) {
-      const d = e.data;
-      if (d.type === 'openUI') {
-        missions = d.missions || [];
-        openId = null;
-        render();
-        openUI(d.accent, d.panelRight);
-      } else if (d.type === 'updateMissions') {
-        missions = d.missions || [];
-        const cur = missions.find(x => x.id === openId);
-        if (!cur || cur.locked) openId = null;
-        render();
-      } else if (d.type === 'claimed') {
-        let body = '';
-        if (d.money) body += fmt(d.money);
-        if (d.level) body += (body ? '  ·  ' : '') + '+' + d.level + ' nivel';
-        toast('Revendicat', body || (d.label || ''));
-      } else if (d.type === 'closeUI') {
-        closeUI();
+    /* -------- Router -------- */
+    window.addEventListener('message', e=>{
+      const d = e.data || {};
+      switch(d.action){
+        case 'hud': hud(d); break;
+        case 'banner': banner(d); break;
+        case 'flash': flash(d); break;
+        case 'dlg_open': dlgOpen(d.npc); break;
+        case 'dlg_say': dlgSay(d); break;
+        case 'dlg_choices': dlgChoices(d.options); break;
+        case 'dlg_close': dlgClose(); break;
+        case 'journal': journal(d); break;
       }
     });
 
-    window.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') {
-        closeUI();
-        fetch('https://blacksilva-missions/close', { method: 'POST', body: '{}' });
+    window.addEventListener('keydown', e=>{
+      if($('dlg').classList.contains('show')){
+        if(e.key==='Enter'||e.key===' '){ e.preventDefault(); advanceDialogue(); }
+        if(['1','2','3','4'].includes(e.key)){
+          const btns = $('dlg-foot').querySelectorAll('.choice');
+          const idx = parseInt(e.key,10)-1;
+          if(btns[idx]) btns[idx].click();
+        }
+      } else if($('journal').classList.contains('show')){
+        if(e.key==='Escape') post('journal_close');
       }
     });
   </script>
 </body>
-
 </html>

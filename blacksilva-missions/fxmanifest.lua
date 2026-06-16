@@ -1,8 +1,8 @@
 fx_version 'cerulean'
 game 'gta5'
 
-description 'BlackSilva Missions System (ESX)'
-version '1.0.0'
+description 'BlackSilva Story Mode Quest Engine (ESX)'
+version '2.0.0'
 author 'BlackSilva'
 
 lua54 'yes'

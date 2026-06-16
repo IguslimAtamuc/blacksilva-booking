@@ -1,21 +1,20 @@
 local ESX = exports['es_extended']:getSharedObject()
 
 -- =====================================================================
---  Helper: gaseste o misiune dupa id din config
+--  BLACKSILVA - STORY MODE QUEST ENGINE (server)
+--  Persistenta progresului (currentQuest, currentStep, completedQuests),
+--  validare avans pas, recompense la final de quest si comanda admin
+--  /quest set <nr> [serverId].
 -- =====================================================================
-local function getMission(id)
-    for _, m in ipairs(Config.Missions) do
-        if m.id == id then return m end
-    end
-    return nil
-end
 
--- target real (vizitarea locatiilor isi calculeaza target din lista)
-local function getTarget(mission)
-    if mission.type == 'visit_locations' and mission.locations then
-        return #mission.locations
-    end
-    return mission.target or 1
+-- helper: gaseste un quest dupa id
+local function getQuest(id) return Config.Quests[id] end
+
+-- numarul total de questuri configurate (id-uri 1..N consecutive)
+local function questCount()
+    local n = 0
+    while Config.Quests[n + 1] do n = n + 1 end
+    return n
 end
 
 -- =====================================================================
@@ -23,363 +22,214 @@ end
 -- =====================================================================
 CreateThread(function()
     MySQL.Async.execute([[
-        CREATE TABLE IF NOT EXISTS `blacksilva_missions` (
+        CREATE TABLE IF NOT EXISTS `blacksilva_quests` (
             `identifier` VARCHAR(60) NOT NULL,
-            `progress`   LONGTEXT DEFAULT '{}',
+            `data`       LONGTEXT DEFAULT '{}',
             PRIMARY KEY (`identifier`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     ]], {})
 end)
 
--- progres in memorie: [identifier] = { ["1"] = { current = 0, completed = false }, ... }
-local cache = {}
+local cache = {} -- [identifier] = { currentQuest, currentStep, completed = {} }
 
-local function loadProgress(identifier, cb)
+local function defaultState()
+    return { currentQuest = Config.StartQuest or 1, currentStep = 1, completed = {} }
+end
+
+local function loadState(identifier, cb)
     if cache[identifier] then return cb(cache[identifier]) end
-    MySQL.Async.fetchAll('SELECT progress FROM blacksilva_missions WHERE identifier = @id', {
+    MySQL.Async.fetchAll('SELECT data FROM blacksilva_quests WHERE identifier = @id', {
         ['@id'] = identifier
     }, function(result)
-        local data = {}
-        if result and result[1] then
-            data = json.decode(result[1].progress) or {}
+        local state
+        if result and result[1] and result[1].data then
+            state = json.decode(result[1].data) or defaultState()
         else
-            MySQL.Async.execute('INSERT INTO blacksilva_missions (identifier, progress) VALUES (@id, @data)', {
-                ['@id'] = identifier, ['@data'] = '{}'
+            state = defaultState()
+            MySQL.Async.execute('INSERT INTO blacksilva_quests (identifier, data) VALUES (@id, @data)', {
+                ['@id'] = identifier, ['@data'] = json.encode(state)
             })
         end
-        cache[identifier] = data
-        cb(data)
+        state.completed = state.completed or {}
+        if not state.currentQuest then state.currentQuest = Config.StartQuest or 1 end
+        if not state.currentStep then state.currentStep = 1 end
+        cache[identifier] = state
+        cb(state)
     end)
 end
 
-local function saveProgress(identifier)
+local function saveState(identifier)
     if not cache[identifier] then return end
-    MySQL.Async.execute('UPDATE blacksilva_missions SET progress = @data WHERE identifier = @id', {
+    MySQL.Async.execute('UPDATE blacksilva_quests SET data = @data WHERE identifier = @id', {
         ['@data'] = json.encode(cache[identifier]),
         ['@id']   = identifier
     })
 end
 
 -- =====================================================================
---  Blocare secventiala: o misiune e deblocata doar daca TOATE misiunile
---  dinaintea ei (in ordinea din Config.Missions) sunt completate.
+--  Sync catre client
 -- =====================================================================
-local function isUnlocked(data, missionId)
-    for _, m in ipairs(Config.Missions) do
-        if m.id == missionId then
-            return true
-        end
-        local prog = data[tostring(m.id)]
-        if not (prog and prog.completed) then
-            return false
-        end
-    end
-    return true
+local function pushState(src, state)
+    TriggerClientEvent('blacksilva-quests:state', src, {
+        quest     = state.currentQuest,
+        step      = state.currentStep,
+        completed = state.completed,
+    })
 end
 
--- =====================================================================
---  Construieste payload-ul pentru UI (cu starea de blocare)
--- =====================================================================
-local function buildPayload(data)
-    local missions = {}
-    local prevCompleted = true
-    for _, m in ipairs(Config.Missions) do
-        local key  = tostring(m.id)
-        local prog = data[key] or { current = 0, completed = false, claimed = false }
-        local target = getTarget(m)
-        local completed = prog.completed or false
-        missions[#missions + 1] = {
-            id          = m.id,
-            title       = m.title,
-            description = m.description,
-            reward      = m.reward,
-            level       = m.level or 1,
-            icon        = m.icon or 'target',
-            type        = m.type,
-            current     = math.min(prog.current or 0, target),
-            target      = target,
-            completed   = completed,
-            claimed     = prog.claimed or false,
-            locked      = not prevCompleted,
-        }
-        if not completed then prevCompleted = false end
-    end
-    return missions
-end
-
-local function pushData(src, data)
-    TriggerClientEvent('blacksilva-missions:receiveData', src, buildPayload(data))
-end
-
-RegisterNetEvent('blacksilva-missions:requestData')
-AddEventHandler('blacksilva-missions:requestData', function()
+RegisterNetEvent('blacksilva-quests:request', function()
     local src = source
     local xPlayer = ESX.GetPlayerFromId(src)
     if not xPlayer then return end
-    loadProgress(xPlayer.getIdentifier(), function(data)
-        pushData(src, data)
-    end)
+    loadState(xPlayer.getIdentifier(), function(state) pushState(src, state) end)
 end)
 
 -- =====================================================================
---  Revendicare recompensa (banii + experienta) - manual, din meniu
---  La finalizarea unei misiuni NU se da nimic automat si NU apare nicio
---  notificare; jucatorul apasa "Revendica" in meniu.
+--  Recompense la final de quest
 -- =====================================================================
-local function grantReward(src, xPlayer, mission)
-    if mission.reward and mission.reward > 0 then
-        if Config.RewardAccount == 'bank' then
-            xPlayer.addAccountMoney('bank', mission.reward)
-        else
-            xPlayer.addMoney(mission.reward)
-        end
+local function giveItem(src, xPlayer, name, count)
+    if Config.Inventory == 'ox' then
+        pcall(function() exports.ox_inventory:AddItem(src, name, count) end)
+    else
+        pcall(function() xPlayer.addInventoryItem(name, count) end)
     end
-    local lvl = mission.level or 1
-    if lvl > 0 and Config.ExpCommand and Config.ExpCommand ~= '' then
-        ExecuteCommand(('%s %d %d'):format(Config.ExpCommand, src, lvl))
-    end
-    return mission.reward or 0, lvl
 end
 
--- revendica o singura misiune (returneaza bani, niveluri revendicate)
-local function claimOne(src, xPlayer, data, mission)
-    if not mission then return 0, 0 end
-    local key = tostring(mission.id)
-    local prog = data[key]
-    if not prog or not prog.completed or prog.claimed then return 0, 0 end
-    if not isUnlocked(data, mission.id) then return 0, 0 end
-    prog.claimed = true
-    return grantReward(src, xPlayer, mission)
+local function grantReward(src, xPlayer, q)
+    local r = q.reward or {}
+    if r.money and r.money > 0 then
+        if Config.RewardAccount == 'bank' then xPlayer.addAccountMoney('bank', r.money)
+        else xPlayer.addMoney(r.money) end
+    end
+    if r.bank and r.bank > 0 then xPlayer.addAccountMoney('bank', r.bank) end
+    if r.items then
+        for _, it in ipairs(r.items) do giveItem(src, xPlayer, it.name, it.count or 1) end
+    end
+    if r.xp and r.xp > 0 and Config.ExpCommand and Config.ExpCommand ~= '' then
+        ExecuteCommand(('%s %d %d'):format(Config.ExpCommand, src, r.xp))
+    end
 end
 
-RegisterNetEvent('blacksilva-missions:claim')
-AddEventHandler('blacksilva-missions:claim', function(missionId)
-    local src = source
-    local xPlayer = ESX.GetPlayerFromId(src)
-    if not xPlayer then return end
-    local mission = getMission(missionId)
-    if not mission then return end
-
-    local identifier = xPlayer.getIdentifier()
-    loadProgress(identifier, function(data)
-        local money, lvl = claimOne(src, xPlayer, data, mission)
-        if money > 0 or lvl > 0 then
-            saveProgress(identifier)
-            pushData(src, data)
-            TriggerClientEvent('blacksilva-missions:claimed', src, money, lvl, mission.title)
-        end
-    end)
-end)
-
-RegisterNetEvent('blacksilva-missions:claimAll')
-AddEventHandler('blacksilva-missions:claimAll', function()
-    local src = source
-    local xPlayer = ESX.GetPlayerFromId(src)
-    if not xPlayer then return end
-
-    local identifier = xPlayer.getIdentifier()
-    loadProgress(identifier, function(data)
-        local totalMoney, totalLvl, count = 0, 0, 0
-        for _, mission in ipairs(Config.Missions) do
-            local money, lvl = claimOne(src, xPlayer, data, mission)
-            if money > 0 or lvl > 0 then
-                totalMoney = totalMoney + money
-                totalLvl   = totalLvl + lvl
-                count = count + 1
-            end
-        end
-        if count > 0 then
-            saveProgress(identifier)
-            pushData(src, data)
-            TriggerClientEvent('blacksilva-missions:claimed', src, totalMoney, totalLvl, count .. ' misiuni')
-        end
-    end)
-end)
-
 -- =====================================================================
---  Actualizare progres (apelat din client)
+--  Avans pas (apelat din client cand pasul curent e complet)
 -- =====================================================================
-RegisterNetEvent('blacksilva-missions:updateProgress')
-AddEventHandler('blacksilva-missions:updateProgress', function(missionId, value, mode)
-    local src = source
-    local xPlayer = ESX.GetPlayerFromId(src)
-    if not xPlayer then return end
-
-    local mission = getMission(missionId)
-    if not mission then return end
-
-    local identifier = xPlayer.getIdentifier()
-    loadProgress(identifier, function(data)
-        -- respecta ordinea: misiunea trebuie sa fie deblocata
-        if not isUnlocked(data, missionId) then return end
-
-        local key = tostring(missionId)
-        if not data[key] then data[key] = { current = 0, completed = false, claimed = false } end
-        if data[key].completed then return end
-
-        local target = getTarget(mission)
-        value = tonumber(value) or 0
-
-        if mode == 'add' then
-            data[key].current = (data[key].current or 0) + value
-        else
-            data[key].current = math.max(data[key].current or 0, value)
-        end
-        if data[key].current > target then data[key].current = target end
-
-        -- la finalizare doar marcam misiunea (recompensa se revendica din meniu)
-        if data[key].current >= target and not data[key].completed then
-            data[key].completed = true
-            data[key].current = target
-        end
-
-        saveProgress(identifier)
-        pushData(src, data) -- payload complet -> actualizeaza si blocarile
-    end)
-end)
-
--- =====================================================================
---  Kill de jucator: conteaza pentru PRIMA misiune kill_players activa
---  (deblocata si necompletata) - asa se respecta ordinea 9 -> 10.
--- =====================================================================
-RegisterNetEvent('blacksilva-missions:playerKill')
-AddEventHandler('blacksilva-missions:playerKill', function()
+RegisterNetEvent('blacksilva-quests:advance', function(quest, step)
     local src = source
     local xPlayer = ESX.GetPlayerFromId(src)
     if not xPlayer then return end
     local identifier = xPlayer.getIdentifier()
 
-    loadProgress(identifier, function(data)
-        for _, mission in ipairs(Config.Missions) do
-            if mission.type == 'kill_players' then
-                local key = tostring(mission.id)
-                if not data[key] then data[key] = { current = 0, completed = false, claimed = false } end
-                if not data[key].completed and isUnlocked(data, mission.id) then
-                    local target = getTarget(mission)
-                    data[key].current = math.min((data[key].current or 0) + 1, target)
-                    if data[key].current >= target then
-                        data[key].completed = true
-                    end
-                    saveProgress(identifier)
-                    pushData(src, data)
-                    return -- un kill = un singur progres
-                end
-            end
-        end
-    end)
-end)
-
--- =====================================================================
---  Admin: /resetmisiuni [id]
--- =====================================================================
-RegisterCommand('resetmisiuni', function(source, args)
-    local src = source
-    if src ~= 0 then
-        local caller = ESX.GetPlayerFromId(src)
-        if not caller or caller.getGroup() ~= 'admin' then
-            TriggerClientEvent('esx:showNotification', src, '~r~Nu ai permisiunea!')
+    loadState(identifier, function(state)
+        -- valideaza: clientul trebuie sa fie chiar pe pasul pe care il avanseaza
+        if quest ~= state.currentQuest or step ~= state.currentStep then
+            pushState(src, state) -- resync (anti-desync)
             return
         end
-    end
+        local q = getQuest(state.currentQuest)
+        if not q then return end
 
-    local targetId = tonumber(args[1])
-    if not targetId then
-        if src ~= 0 then TriggerClientEvent('esx:showNotification', src, '~r~Foloseste: /resetmisiuni [ID]') end
-        return
-    end
+        local nextStep = step + 1
+        if nextStep > #q.steps then
+            -- quest complet
+            state.completed[tostring(state.currentQuest)] = true
+            grantReward(src, xPlayer, q)
+            TriggerClientEvent('blacksilva-quests:reward', src,
+                (q.reward and q.reward.money) or 0,
+                (q.reward and q.reward.xp) or 0, q.title)
+            if q.nextQuest and getQuest(q.nextQuest) then
+                state.currentQuest = q.nextQuest
+                state.currentStep  = 1
+            else
+                state.currentStep = nextStep -- dincolo de final -> client afiseaza "terminat"
+            end
+        else
+            state.currentStep = nextStep
+        end
 
+        saveState(identifier)
+        pushState(src, state)
+    end)
+end)
+
+-- =====================================================================
+--  Comanda /quest  si  /quest set <nr> [serverId]
+-- =====================================================================
+local function doQuestSet(src, targetId, questNr)
     local target = ESX.GetPlayerFromId(targetId)
     if not target then
         if src ~= 0 then TriggerClientEvent('esx:showNotification', src, '~r~Jucatorul nu este online!') end
         return
     end
+    if not getQuest(questNr) then
+        if src ~= 0 then TriggerClientEvent('esx:showNotification', src, ('~r~Questul #%s nu exista!'):format(tostring(questNr))) end
+        return
+    end
 
     local identifier = target.getIdentifier()
-    cache[identifier] = {}
-    MySQL.Async.execute('UPDATE blacksilva_missions SET progress = @data WHERE identifier = @id', {
-        ['@data'] = '{}', ['@id'] = identifier
-    }, function()
-        pushData(targetId, {})
-        if src ~= 0 then TriggerClientEvent('esx:showNotification', src, '~g~Misiuni resetate!') end
-        TriggerClientEvent('esx:showNotification', targetId, '~y~Misiunile tale au fost resetate de un admin!')
+    loadState(identifier, function(state)
+        state.currentQuest = questNr
+        state.currentStep  = 1
+        -- questurile inainte de N = facute; de la N in sus = nefacute (refacute)
+        state.completed = {}
+        for id = 1, questCount() do
+            if id < questNr then state.completed[tostring(id)] = true end
+        end
+        saveState(identifier)
+        -- curatare la client (NPC/props/blip/chase) inainte sa porneasca noul quest
+        TriggerClientEvent('blacksilva-quests:forceCleanup', targetId)
+        pushState(targetId, state)
+
+        TriggerClientEvent('esx:showNotification', targetId, ('~y~Ai fost mutat la questul #%d.'):format(questNr))
+        if src ~= 0 and src ~= targetId then
+            TriggerClientEvent('esx:showNotification', src, ('~g~Jucatorul a fost setat la questul #%d.'):format(questNr))
+        end
     end)
-end, false)
+end
 
--- =====================================================================
---  Admin: /skip [numar misiune] [serverId?]
---  Marcheaza misiunile ca fiind COMPLETATE pana la (si inclusiv) numarul
---  dat. Completam tot lantul pana acolo ca sa respectam blocarea
---  secventiala (altfel o misiune din mijloc ar aparea "completata" dar
---  blocata). Recompensa NU se da automat - se revendica din meniu.
---    /skip 30        -> sare misiunile 1..30 pentru tine
---    /skip 30 12     -> sare misiunile 1..30 pentru jucatorul cu id 12
---  Ca sa-l faci disponibil pentru TOTI jucatorii, sterge blocul de mai jos
---  cu verificarea "caller.getGroup() ~= 'admin'".
--- =====================================================================
-RegisterCommand('skip', function(source, args)
+RegisterCommand(Config.Command, function(source, args)
     local src = source
-    if src ~= 0 then
-        local caller = ESX.GetPlayerFromId(src)
-        if not caller or caller.getGroup() ~= 'admin' then
-            TriggerClientEvent('esx:showNotification', src, '~r~Nu ai permisiunea!')
-            return
-        end
-    end
 
-    local missionId = tonumber(args[1])
-    if not missionId then
-        if src ~= 0 then TriggerClientEvent('esx:showNotification', src, '~r~Foloseste: /skip [numar misiune]') end
-        return
-    end
-    if not getMission(missionId) then
-        if src ~= 0 then TriggerClientEvent('esx:showNotification', src, '~r~Misiunea #' .. missionId .. ' nu exista!') end
+    -- /quest  (fara argumente) -> deschide jurnalul pentru jucator
+    if not args[1] then
+        if src ~= 0 then TriggerClientEvent('blacksilva-quests:openJournal', src) end
         return
     end
 
-    -- jucatorul tinta: implicit cel care a dat comanda; admin poate da un al 2-lea arg
-    local targetId = tonumber(args[2]) or src
-    if targetId == 0 then
-        TriggerClientEvent('esx:showNotification', src, '~r~Ruleaza /skip din joc sau da un serverId: /skip [id] [serverId]')
-        return
-    end
-    local target = ESX.GetPlayerFromId(targetId)
-    if not target then
-        if src ~= 0 then TriggerClientEvent('esx:showNotification', src, '~r~Jucatorul nu este online!') end
-        return
-    end
-
-    local identifier = target.getIdentifier()
-    loadProgress(identifier, function(data)
-        local count = 0
-        -- iteram in ORDINEA din Config.Missions si ne oprim dupa misiunea ceruta
-        for _, m in ipairs(Config.Missions) do
-            local key = tostring(m.id)
-            if not data[key] then data[key] = { current = 0, completed = false, claimed = false } end
-            if not data[key].completed then
-                data[key].completed = true
-                data[key].current   = getTarget(m)
-                count = count + 1
-            end
-            if m.id == missionId then break end
-        end
-        saveProgress(identifier)
-        pushData(targetId, data)
+    -- /quest set <nr> [serverId]  -> doar admin
+    if args[1] == 'set' then
         if src ~= 0 then
-            TriggerClientEvent('esx:showNotification', src, ('~g~Gata pana la misiunea #%d (%d marcate). Revendica din meniu.'):format(missionId, count))
+            local caller = ESX.GetPlayerFromId(src)
+            if not caller or caller.getGroup() ~= Config.AdminGroup then
+                TriggerClientEvent('esx:showNotification', src, '~r~Nu ai permisiunea!')
+                return
+            end
         end
-        if targetId ~= src then
-            TriggerClientEvent('esx:showNotification', targetId, ('~y~Un admin ti-a deblocat misiunile pana la #%d!'):format(missionId))
+        local questNr = tonumber(args[2])
+        if not questNr then
+            if src ~= 0 then TriggerClientEvent('esx:showNotification', src, '~r~Foloseste: /quest set <numar> [serverId]') end
+            return
         end
-    end)
+        local targetId = tonumber(args[3]) or src
+        if targetId == 0 then
+            TriggerClientEvent('esx:showNotification', src, '~r~Da un serverId: /quest set <nr> <serverId>')
+            return
+        end
+        doQuestSet(src, targetId, questNr)
+        return
+    end
+
+    if src ~= 0 then TriggerClientEvent('esx:showNotification', src, '~r~Foloseste: /quest  sau  /quest set <numar>') end
 end, false)
 
--- elibereaza din cache la deconectare
+-- =====================================================================
+--  Salveaza la deconectare
+-- =====================================================================
 AddEventHandler('playerDropped', function()
     local src = source
     local xPlayer = ESX.GetPlayerFromId(src)
     if xPlayer then
         local id = xPlayer.getIdentifier()
-        saveProgress(id)
+        saveState(id)
         cache[id] = nil
     end
 end)

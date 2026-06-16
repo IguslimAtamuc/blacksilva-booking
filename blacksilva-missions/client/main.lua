@@ -1,652 +1,701 @@
 local ESX = exports['es_extended']:getSharedObject()
 
-local isUIOpen   = false
-local missions   = {}            -- starea misiunilor (din server)
-local missionCfg = {}            -- index pe id catre config
-for _, m in ipairs(Config.Missions) do missionCfg[m.id] = m end
+-- =====================================================================
+--  BLACKSILVA - STORY MODE QUEST ENGINE (client)
+--  Ruleaza pas cu pas misiunea curenta primita de la server: spawneaza
+--  NPC-uri/vehicule/props reale, ruleaza dialoguri chat, urmariri reale
+--  (NPC + politie) si curata totul cand se schimba quest-ul / mori / iesi.
+-- =====================================================================
+
+-- starea autoritativa primita de la server
+local State = { quest = 0, step = 0 }
+local completedMap = {}
+
+-- starea activa locala (ce e spawnat acum)
+local A = {
+    quest = 0, step = 0, token = 0,
+    advancing = false,
+    peds = {}, vehs = {}, blips = {},
+    setWanted = false,
+}
+local heldProps = {}            -- props atasate care persista intre pasi (livrari)
+local hostileGroup = nil
 
 -- =====================================================================
---  Helpers
+--  Helperi
 -- =====================================================================
 local function notify(msg)
     TriggerEvent('esx:showNotification', msg)
 end
 
-local function getMissionState(id)
-    for _, m in ipairs(missions) do
-        if m.id == id then return m end
-    end
-    return nil
+local function helpText(msg)
+    BeginTextCommandDisplayHelp('STRING')
+    AddTextComponentSubstringPlayerName(msg)
+    EndTextCommandDisplayHelp(0, false, true, -1)
 end
 
-local function isCompleted(id)
-    local s = getMissionState(id)
-    return s and s.completed
+local function dist3(a, b) return #(vector3(a.x, a.y, a.z) - vector3(b.x, b.y, b.z)) end
+
+local function loadModel(model)
+    local hash = (type(model) == 'number') and model or GetHashKey(model)
+    if not IsModelInCdimage(hash) then return false end
+    RequestModel(hash)
+    local t = 0
+    while not HasModelLoaded(hash) and t < 200 do Wait(10); t = t + 1 end
+    return HasModelLoaded(hash)
 end
 
--- o misiune e deblocata doar daca toate misiunile dinaintea ei sunt completate
-local function isMissionUnlocked(id)
-    for _, m in ipairs(Config.Missions) do
-        if m.id == id then return true end
-        if not isCompleted(m.id) then return false end
-    end
-    return true
+local function ensureHostileGroup()
+    if hostileGroup then return end
+    local grp = AddRelationshipGroup('BS_HOSTILE')
+    if type(grp) ~= 'number' then grp = GetHashKey('BS_HOSTILE') end
+    hostileGroup = grp
+    SetRelationshipBetweenGroups(5, hostileGroup, GetHashKey('PLAYER')) -- 5 = hate
+    SetRelationshipBetweenGroups(5, GetHashKey('PLAYER'), hostileGroup)
 end
 
--- trimite progres la server (doar daca misiunea e deblocata)
-local function setProgress(id, value)
-    if not isMissionUnlocked(id) then return end
-    TriggerServerEvent('blacksilva-missions:updateProgress', id, value, 'set')
+-- NUI senders
+local function nui(t) SendNUIMessage(t) end
+local function hudUpdate(title, objective, idx, total)
+    nui({ action = 'hud', show = true, title = title, objective = objective, step = idx, total = total })
 end
-local function addProgress(id, value)
-    if not isMissionUnlocked(id) then return end
-    TriggerServerEvent('blacksilva-missions:updateProgress', id, value, 'add')
+local function hudHide() nui({ action = 'hud', show = false }) end
+local function banner(title, sub) nui({ action = 'banner', title = title or '', sub = sub or '' }) end
+
+-- =====================================================================
+--  Spawn helpers
+-- =====================================================================
+local function makeBlip(coords, b)
+    if not b then return nil end
+    local blip = AddBlipForCoord(coords.x, coords.y, coords.z)
+    SetBlipSprite(blip, b.sprite or 1)
+    SetBlipColour(blip, b.color or 0)
+    SetBlipScale(blip, 0.9)
+    SetBlipAsShortRange(blip, false)
+    if b.route then SetBlipRoute(blip, true); SetBlipRouteColour(blip, b.color or 5) end
+    BeginTextCommandSetBlipName('STRING')
+    AddTextComponentSubstringPlayerName(b.label or 'Misiune')
+    EndTextCommandSetBlipName(blip)
+    A.blips[#A.blips + 1] = blip
+    return blip
 end
 
--- numara itemele dintr-un inventar (ox sau esx)
-local function getItemCount(name)
-    if Config.Inventory == 'ox' then
-        local ok, count = pcall(function()
-            return exports.ox_inventory:Search('count', name)
-        end)
-        if ok and count then return count end
-        return 0
-    else
-        local count = 0
-        local data = ESX.GetPlayerData()
-        if data and data.inventory then
-            for _, item in ipairs(data.inventory) do
-                if item.name == name then count = count + (item.count or 0) end
-            end
-        end
-        return count
-    end
+local function makeEntityBlip(ent, b)
+    if not b then return nil end
+    local blip = AddBlipForEntity(ent)
+    SetBlipSprite(blip, b.sprite or 1)
+    SetBlipColour(blip, b.color or 0)
+    SetBlipScale(blip, 0.85)
+    BeginTextCommandSetBlipName('STRING')
+    AddTextComponentSubstringPlayerName(b.label or 'NPC')
+    EndTextCommandSetBlipName(blip)
+    A.blips[#A.blips + 1] = blip
+    return blip
 end
 
--- numara cate iteme de tip arma (WEAPON_*) sunt in inventar
-local function getWeaponItemCount()
-    local total = 0
-    if Config.Inventory == 'ox' then
-        local ok, items = pcall(function() return exports.ox_inventory:GetPlayerItems() end)
-        if ok and items then
-            for _, item in pairs(items) do
-                if item.name and string.upper(item.name):find('^WEAPON_') then
-                    total = total + (item.count or 1)
-                end
-            end
-        end
-    else
-        local data = ESX.GetPlayerData()
-        if data and data.inventory then
-            for _, item in ipairs(data.inventory) do
-                if item.name and string.upper(item.name):find('^WEAPON_') then
-                    total = total + (item.count or 0)
-                end
-            end
-        end
-    end
-    return total
+local function drawMarker(coords)
+    local m = Config.Marker
+    DrawMarker(m.type, coords.x, coords.y, coords.z - 0.95, 0,0,0, 0,0,0,
+        m.size.x, m.size.y, m.size.z, m.color.r, m.color.g, m.color.b, m.color.a,
+        false, true, 2, false, nil, nil, false)
+end
+
+local function spawnNpc(d)
+    if not loadModel(d.model) then return nil end
+    local c = d.coords
+    local ped = CreatePed(4, GetHashKey(d.model), c.x, c.y, c.z - 1.0, c.w or 0.0, false, false)
+    SetEntityAsMissionEntity(ped, true, true)
+    FreezeEntityPosition(ped, true)
+    SetEntityInvincible(ped, true)
+    SetBlockingOfNonTemporaryEvents(ped, true)
+    if d.scenario then TaskStartScenarioInPlace(ped, d.scenario, 0, true) end
+    SetModelAsNoLongerNeeded(GetHashKey(d.model))
+    A.peds[#A.peds + 1] = ped
+    if d.blip then makeEntityBlip(ped, d.blip) end
+    return ped
+end
+
+local function spawnHostilePed(model, c, weapon)
+    if not loadModel(model) then return nil end
+    local ped = CreatePed(4, GetHashKey(model), c.x, c.y, c.z - 1.0, math.random(0, 359) + 0.0, false, false)
+    SetEntityAsMissionEntity(ped, true, true)
+    ensureHostileGroup()
+    SetPedRelationshipGroupHash(ped, hostileGroup)
+    SetPedCombatAttributes(ped, 46, true)
+    SetPedFleeAttributes(ped, 0, false)
+    SetPedCombatMovement(ped, 2)
+    SetPedCombatRange(ped, 2)
+    SetPedAccuracy(ped, 25)
+    if weapon then GiveWeaponToPed(ped, GetHashKey(weapon), 250, false, true) end
+    SetModelAsNoLongerNeeded(GetHashKey(model))
+    A.peds[#A.peds + 1] = ped
+    TaskCombatPed(ped, PlayerPedId(), 0, 16)
+    SetPedKeepTask(ped, true)
+    return ped
+end
+
+-- spawn un urmaritor (vehicul + sofer ostil) in spatele jucatorului
+local function spawnVehChaser(d)
+    local pp = PlayerPedId()
+    local off = GetOffsetFromEntityInWorldCoords(pp, (math.random(-4, 4)) + 0.0,
+        -(Config.Chase.spawnSpread + math.random(0, 18)) + 0.0, 0.0)
+    if not loadModel(d.vehicle) then return nil end
+    local veh = CreateVehicle(GetHashKey(d.vehicle), off.x, off.y, off.z, GetEntityHeading(pp), false, false)
+    SetEntityAsMissionEntity(veh, true, true)
+    SetVehicleOnGroundProperly(veh)
+    SetVehicleEngineOn(veh, true, true, false)
+    SetVehicleDoorsLocked(veh, 2)
+    A.vehs[#A.vehs + 1] = veh
+    SetModelAsNoLongerNeeded(GetHashKey(d.vehicle))
+
+    if not loadModel(d.model) then return veh, nil end
+    local ped = CreatePed(4, GetHashKey(d.model), off.x, off.y, off.z, 0.0, false, false)
+    SetPedIntoVehicle(ped, veh, -1)
+    SetEntityAsMissionEntity(ped, true, true)
+    ensureHostileGroup()
+    SetPedRelationshipGroupHash(ped, hostileGroup)
+    SetPedCombatAttributes(ped, 46, true)
+    SetPedFleeAttributes(ped, 0, false)
+    SetPedAccuracy(ped, 30)
+    if d.weapon then GiveWeaponToPed(ped, GetHashKey(d.weapon), 250, false, true) end
+    SetModelAsNoLongerNeeded(GetHashKey(d.model))
+    A.peds[#A.peds + 1] = ped
+    TaskVehicleChase(ped, pp)
+    SetTaskVehicleChaseBehaviorFlag(ped, 1, true)
+    SetDriveTaskDrivingStyle(ped, 786468) -- agresiv
+    SetPedKeepTask(ped, true)
+    return veh, ped
 end
 
 -- =====================================================================
---  Sincronizare date din server
+--  Props (livrari)
 -- =====================================================================
-RegisterNetEvent('blacksilva-missions:receiveData')
-AddEventHandler('blacksilva-missions:receiveData', function(data)
-    missions = data or {}
-    refreshBlips()
-    if isUIOpen then
-        SendNUIMessage({ type = 'updateMissions', missions = missions })
-    end
-end)
-
--- recompensa revendicata din meniu (fara notificare de joc)
-RegisterNetEvent('blacksilva-missions:claimed')
-AddEventHandler('blacksilva-missions:claimed', function(money, level, label)
-    if isUIOpen then
-        PlaySoundFrontend(-1, "PURCHASE", "HUD_LIQUOR_STORE_SOUNDSET", true)
-        SendNUIMessage({ type = 'claimed', money = money, level = level, label = label })
-    end
-end)
-
-RegisterNetEvent('esx:playerLoaded')
-AddEventHandler('esx:playerLoaded', function()
-    TriggerServerEvent('blacksilva-missions:requestData')
-end)
-
-CreateThread(function()
-    Wait(2000)
-    if ESX.IsPlayerLoaded() then
-        TriggerServerEvent('blacksilva-missions:requestData')
-    end
-end)
-
--- =====================================================================
---  CAMERA + EMOTE CLIPBOARD (Pasul 2)
--- =====================================================================
-local missionCam = nil
-local camTransitioning = false
-local clipboardProp = nil
-
-local function startClipboardEmote()
-    local ped = PlayerPedId()
-    if Config.Emote.useRpEmotes then
-        ExecuteCommand('e ' .. Config.Emote.rpEmoteName)
+local function attachProp(prop)
+    if not prop or not loadModel(prop.model) then
+        if prop then notify('~o~(prop indisponibil: ' .. tostring(prop.model) .. ')') end
         return
     end
-
-    RequestAnimDict(Config.Emote.animDict)
-    local t = 0
-    while not HasAnimDictLoaded(Config.Emote.animDict) and t < 100 do Wait(10); t = t + 1 end
-    TaskPlayAnim(ped, Config.Emote.animDict, Config.Emote.animName, 2.0, -2.0, -1, 49, 0, false, false, false)
-
-    -- atasam prop-ul de clipboard in mana
-    local model = GetHashKey(Config.Emote.propModel)
-    RequestModel(model)
-    t = 0
-    while not HasModelLoaded(model) and t < 100 do Wait(10); t = t + 1 end
-    local coords = GetEntityCoords(ped)
-    clipboardProp = CreateObject(model, coords.x, coords.y, coords.z + 0.2, true, true, true)
-    local bone = GetPedBoneIndex(ped, 18905) -- mana stanga
-    AttachEntityToEntity(clipboardProp, ped, bone, 0.16, 0.08, 0.02, -130.0, -50.0, 0.0, true, true, false, true, 1, true)
-end
-
-local function stopClipboardEmote()
     local ped = PlayerPedId()
-    if Config.Emote.useRpEmotes then
-        ExecuteCommand('e c')
-    else
-        ClearPedTasks(ped)
-    end
-    if clipboardProp and DoesEntityExist(clipboardProp) then
-        DeleteEntity(clipboardProp)
-        clipboardProp = nil
-    end
+    local c = GetEntityCoords(ped)
+    local obj = CreateObject(GetHashKey(prop.model), c.x, c.y, c.z + 0.2, true, true, true)
+    local bone = GetPedBoneIndex(ped, prop.bone or 28422)
+    local p, r = prop.pos or vec3(0.12, 0.0, -0.02), prop.rot or vec3(0.0, 0.0, 0.0)
+    AttachEntityToEntity(obj, ped, bone, p.x, p.y, p.z, r.x, r.y, r.z, true, true, false, true, 1, true)
+    SetModelAsNoLongerNeeded(GetHashKey(prop.model))
+    heldProps[#heldProps + 1] = obj
 end
 
--- thread care mentine blur-ul de fundal (DOF) cat timp meniul e deschis
-local dofThreadRunning = false
-local function startDofThread()
-    if dofThreadRunning then return end
-    dofThreadRunning = true
-    CreateThread(function()
-        while isUIOpen and missionCam do
-            SetUseHiDof()
-            Wait(0)
-        end
-        dofThreadRunning = false
-    end)
-end
-
-local function createMissionCamera()
-    local ped = PlayerPedId()
-    local c   = Config.Camera
-    local camCoords = GetOffsetFromEntityInWorldCoords(ped, 0.0, c.forward, c.height)
-    -- punctul tinta e mutat lateral ca personajul sa apara pe STANGA ecranului
-    local aim = GetOffsetFromEntityInWorldCoords(ped, c.sideAim, 0.0, c.pointZ)
-
-    missionCam = CreateCam("DEFAULT_SCRIPTED_CAMERA", true)
-    SetCamCoord(missionCam, camCoords.x, camCoords.y, camCoords.z)
-    PointCamAtCoord(missionCam, aim.x, aim.y, aim.z)
-    SetCamFov(missionCam, c.fov)
-
-    -- Depth of Field: personajul ramane clar, fundalul devine blurat
-    if c.dof then
-        SetCamUseShallowDofMode(missionCam, true)
-        SetCamNearDof(missionCam, c.dofNear or 0.6)
-        SetCamFarDof(missionCam, c.dofFar or 3.2)
-        SetCamDofStrength(missionCam, c.dofStrength or 1.0)
-        startDofThread()
+local function clearHeldProps()
+    for _, obj in ipairs(heldProps) do
+        if DoesEntityExist(obj) then DetachEntity(obj, true, true); DeleteEntity(obj) end
     end
-
-    SetCamActiveWithInterp(missionCam, GetRenderingCam(), c.interp, true, true)
-    RenderScriptCams(true, true, c.interp, true, false)
-
-    camTransitioning = true
-    SetTimeout(c.interp, function() camTransitioning = false end)
-end
-
-local function destroyMissionCamera()
-    if missionCam then
-        RenderScriptCams(false, true, 800, true, false)
-        SetTimeout(800, function()
-            if missionCam then
-                DestroyCam(missionCam, false)
-                missionCam = nil
-            end
-        end)
-    end
+    heldProps = {}
 end
 
 -- =====================================================================
---  Deschidere / inchidere meniu (Pasul 1)
+--  Cleanup
 -- =====================================================================
-function OpenMissionsMenu()
-    if isUIOpen then return end
-    isUIOpen = true
-    SetNuiFocus(true, true)
-
-    local ped = PlayerPedId()
-    FreezeEntityPosition(ped, true)
-
-    startClipboardEmote()
-    createMissionCamera()
-
-    -- cere date proaspete
-    TriggerServerEvent('blacksilva-missions:requestData')
-
-    SendNUIMessage({ type = 'openUI', missions = missions, accent = Config.Accent, panelRight = Config.PanelRight })
+local function clearWanted()
+    if A.setWanted then
+        SetPlayerWantedLevel(PlayerId(), 0, false)
+        SetPlayerWantedLevelNow(PlayerId(), false)
+        A.setWanted = false
+    end
 end
 
-function CloseMissionsMenu()
-    if not isUIOpen then return end
-    isUIOpen = false
-    SetNuiFocus(false, false)
-    SendNUIMessage({ type = 'closeUI' })
-
-    local ped = PlayerPedId()
-    FreezeEntityPosition(ped, false)
-    stopClipboardEmote()
-    destroyMissionCamera()
-end
-
-RegisterNUICallback('close', function(_, cb)
-    CloseMissionsMenu()
-    cb('ok')
-end)
-
-RegisterNUICallback('claim', function(data, cb)
-    if data and data.id then
-        TriggerServerEvent('blacksilva-missions:claim', data.id)
+local function cleanupStepEntities()
+    A.token = A.token + 1 -- invalideaza thread-urile pasului curent
+    for _, e in ipairs(A.peds) do
+        if DoesEntityExist(e) then SetEntityAsMissionEntity(e, true, true); DeleteEntity(e) end
     end
-    cb('ok')
-end)
-
-RegisterNUICallback('claimAll', function(_, cb)
-    TriggerServerEvent('blacksilva-missions:claimAll')
-    cb('ok')
-end)
-
--- =====================================================================
---  GPS: la click pe o misiune se seteaza waypoint catre coordonatele ei
--- =====================================================================
--- alege coordonata relevanta a misiunii: locatie unica, cea mai apropiata
--- dintr-o lista (visit_locations) sau cel mai apropiat radar (speed_radar)
-local function getMissionWaypoint(m)
-    if not m then return nil end
-    if m.location then return m.location end
-    local list = m.locations or m.radars
-    if list and #list > 0 then
-        local coords = GetEntityCoords(PlayerPedId())
-        local best, bestDist
-        for _, loc in ipairs(list) do
-            local d = #(coords - loc)
-            if not bestDist or d < bestDist then bestDist = d; best = loc end
-        end
-        return best
+    for _, e in ipairs(A.vehs) do
+        if DoesEntityExist(e) then SetEntityAsMissionEntity(e, true, true); DeleteEntity(e) end
     end
-    return nil
-end
-
-RegisterNUICallback('setWaypoint', function(data, cb)
-    local id = data and tonumber(data.id)
-    local m  = id and missionCfg[id]
-    local loc = getMissionWaypoint(m)
-    if loc then
-        SetNewWaypoint(loc.x + 0.0, loc.y + 0.0)
-        notify(('~y~GPS setat:~s~ %s'):format(m.title or ('#' .. tostring(id))))
-    else
-        notify('~o~Aceasta misiune nu are o locatie pe harta.')
-    end
-    cb('ok')
-end)
-
--- tasta F5 (configurabila din setarile FiveM) + comanda /misiuni
-RegisterCommand('blacksilva_missions_open', function()
-    if isUIOpen then CloseMissionsMenu() else OpenMissionsMenu() end
-end, false)
-RegisterKeyMapping('blacksilva_missions_open', 'Deschide Misiuni', 'keyboard', Config.OpenKey)
-
-RegisterCommand(Config.Command, function()
-    if isUIOpen then CloseMissionsMenu() else OpenMissionsMenu() end
-end, false)
-
--- =====================================================================
---  DETECTAREA MISIUNILOR
--- =====================================================================
-
--- ---------- MISIUNEA 1: use_item (poll pe contoare inventar) ----------
--- ---------- MISIUNEA 7: obtain_weapon (poll pe contor arme) -----------
-CreateThread(function()
-    Wait(3000)
-    -- snapshot initial pentru fiecare item monitorizat
-    local lastItemCount = {}
-    local usedDistinct  = {}
-    for _, m in ipairs(Config.Missions) do
-        if m.type == 'use_item' and m.items then
-            usedDistinct[m.id] = {}
-            for _, it in ipairs(m.items) do
-                lastItemCount[it] = getItemCount(it)
-            end
-        end
-    end
-    local lastWeaponCount = getWeaponItemCount()
-
-    while true do
-        Wait(1500)
-        if ESX.IsPlayerLoaded() then
-            -- use_item
-            for _, m in ipairs(Config.Missions) do
-                if m.type == 'use_item' and m.items and not isCompleted(m.id) then
-                    for _, it in ipairs(m.items) do
-                        local now = getItemCount(it)
-                        local prev = lastItemCount[it] or 0
-                        if now < prev then
-                            -- s-a folosit un item
-                            if m.distinct then
-                                usedDistinct[m.id][it] = true
-                                local count = 0
-                                for _ in pairs(usedDistinct[m.id]) do count = count + 1 end
-                                setProgress(m.id, count)
-                            else
-                                addProgress(m.id, prev - now)
-                            end
-                        end
-                        lastItemCount[it] = now
-                    end
-                end
-            end
-
-            -- obtain_weapon (misiunea 7): arma noua aparuta langa locatie
-            local nowWeapons = getWeaponItemCount()
-            if nowWeapons > lastWeaponCount then
-                local gained = nowWeapons - lastWeaponCount
-                local pedCoords = GetEntityCoords(PlayerPedId())
-                for _, m in ipairs(Config.Missions) do
-                    if m.type == 'obtain_weapon' and not isCompleted(m.id) then
-                        local dist = #(pedCoords - m.location)
-                        if dist <= (m.radius or 30.0) then
-                            addProgress(m.id, gained)
-                        end
-                    end
-                end
-            end
-            lastWeaponCount = nowWeapons
-        end
-    end
-end)
-
--- ---------- MISIUNEA 2: spawn_vehicle (scooter) ----------------------
-CreateThread(function()
-    Wait(3000)
-    while true do
-        Wait(1000)
-        if ESX.IsPlayerLoaded() then
-            local ped = PlayerPedId()
-            if IsPedInAnyVehicle(ped, false) then
-                local veh = GetVehiclePedIsIn(ped, false)
-                local model = GetEntityModel(veh)
-                for _, m in ipairs(Config.Missions) do
-                    if m.type == 'spawn_vehicle' and m.models and not isCompleted(m.id) then
-                        for _, name in ipairs(m.models) do
-                            if model == GetHashKey(name) then
-                                setProgress(m.id, m.target or 1)
-                            end
-                        end
-                    end
-                end
-            end
-        end
-    end
-end)
-
--- ---------- MISIUNEA 4: speed_radar --------------------------------
-CreateThread(function()
-    Wait(3000)
-    local radarCooldown = {} -- evita dublarea cand stai langa radar
-    while true do
-        Wait(200)
-        local handled = false
-        if ESX.IsPlayerLoaded() then
-            local ped = PlayerPedId()
-            if IsPedInAnyVehicle(ped, false) then
-                local veh = GetVehiclePedIsIn(ped, false)
-                local speed = GetEntitySpeed(veh) * 3.6 -- km/h
-                local coords = GetEntityCoords(ped)
-                for _, m in ipairs(Config.Missions) do
-                    if m.type == 'speed_radar' and not isCompleted(m.id) and speed >= (m.minSpeed or 200) then
-                        for i, rcoord in ipairs(m.radars) do
-                            local dist = #(coords - rcoord)
-                            local key = m.id .. '_' .. i
-                            if dist <= (m.radarRadius or 25.0) then
-                                if not radarCooldown[key] or (GetGameTimer() - radarCooldown[key]) > 5000 then
-                                    radarCooldown[key] = GetGameTimer()
-                                    addProgress(m.id, 1)
-                                    notify(('~g~Radar trecut cu %d km/h!'):format(math.floor(speed)))
-                                end
-                            end
-                        end
-                        handled = true
-                    end
-                end
-            end
-        end
-        if not handled then Wait(300) end
-    end
-end)
-
--- ---------- MISIUNEA 5: stunts -------------------------------------
-CreateThread(function()
-    Wait(3000)
-    local airborneSince = nil
-    while true do
-        Wait(250)
-        if ESX.IsPlayerLoaded() then
-            local ped = PlayerPedId()
-            local hasStuntMission = false
-            for _, m in ipairs(Config.Missions) do
-                if m.type == 'stunts' and not isCompleted(m.id) then hasStuntMission = true end
-            end
-
-            if hasStuntMission and IsPedInAnyVehicle(ped, false) then
-                local veh = GetVehiclePedIsIn(ped, false)
-                if IsEntityInAir(veh) then
-                    if not airborneSince then airborneSince = GetGameTimer() end
-                else
-                    if airborneSince then
-                        local airTime = GetGameTimer() - airborneSince
-                        airborneSince = nil
-                        -- aterizat pe roti, viu si a stat suficient in aer = stunt
-                        if not IsEntityDead(veh) and not IsEntityDead(ped)
-                           and IsVehicleOnAllWheels(veh) then
-                            for _, m in ipairs(Config.Missions) do
-                                if m.type == 'stunts' and not isCompleted(m.id)
-                                   and airTime >= (m.minAirTime or 800) then
-                                    addProgress(m.id, 1)
-                                    notify('~g~Stunt reusit!')
-                                end
-                            end
-                        end
-                    end
-                end
-            else
-                airborneSince = nil
-            end
-        end
-    end
-end)
-
--- ---------- MISIUNEA 3/6/7: locatii + markere + blip-uri ------------
--- blip-urile se afiseaza DOAR pentru misiunea deblocata si necompletata
-local activeBlips = {}
-function refreshBlips()
-    for _, b in ipairs(activeBlips) do
+    for _, b in ipairs(A.blips) do
         if DoesBlipExist(b) then RemoveBlip(b) end
     end
-    activeBlips = {}
+    A.peds, A.vehs, A.blips = {}, {}, {}
+    clearWanted()
+end
 
-    local function addBlip(loc, blip, title)
-        local b = AddBlipForCoord(loc.x, loc.y, loc.z)
-        SetBlipSprite(b, blip.sprite or 1)
-        SetBlipColour(b, blip.color or 0)
-        SetBlipScale(b, 0.8)
-        SetBlipAsShortRange(b, true)
-        BeginTextCommandSetBlipName("STRING")
-        AddTextComponentSubstringPlayerName(blip.label or title)
-        EndTextCommandSetBlipName(b)
-        activeBlips[#activeBlips + 1] = b
+local function cleanupQuest()
+    cleanupStepEntities()
+    clearHeldProps()
+end
+
+-- =====================================================================
+--  Dialog chat interactiv (NUI)
+-- =====================================================================
+local dlg = { continue = false, choice = nil, busy = false }
+
+RegisterNUICallback('dlg_next', function(_, cb) dlg.continue = true; cb('ok') end)
+RegisterNUICallback('dlg_choice', function(data, cb) dlg.choice = tonumber(data and data.index) or 1; cb('ok') end)
+
+local function waitContinue()
+    dlg.continue = false
+    while not dlg.continue do Wait(0) end
+end
+
+local function runDialogue(npc, ped)
+    dlg.busy = true
+    local pp = PlayerPedId()
+    FreezeEntityPosition(pp, true)
+    if ped and DoesEntityExist(ped) then
+        TaskTurnPedToFaceEntity(ped, pp, 2000)
+        TaskTurnPedToFaceEntity(pp, ped, 800)
+    end
+    SetNuiFocus(true, true)
+    nui({ action = 'dlg_open', npc = npc.npcName or 'NPC' })
+
+    for _, line in ipairs(npc.lines or {}) do
+        if line.who == 'choice' then
+            local texts = {}
+            for i, o in ipairs(line.options) do texts[i] = o.text end
+            nui({ action = 'dlg_choices', options = texts })
+            dlg.choice = nil
+            while not dlg.choice do Wait(0) end
+            local opt = line.options[dlg.choice] or line.options[1]
+            nui({ action = 'dlg_say', who = 'player', name = 'Tu', text = opt.text })
+            waitContinue()
+            if opt.reply then
+                nui({ action = 'dlg_say', who = opt.reply.who or 'npc', name = (opt.reply.who == 'player') and 'Tu' or (npc.npcName or 'NPC'), text = opt.reply.text })
+                waitContinue()
+            end
+        else
+            local name = (line.who == 'player') and 'Tu' or (npc.npcName or 'NPC')
+            nui({ action = 'dlg_say', who = line.who, name = name, text = line.text })
+            waitContinue()
+        end
     end
 
-    for _, m in ipairs(Config.Missions) do
-        if m.blip and not isCompleted(m.id) and isMissionUnlocked(m.id) then
-            if m.location then
-                addBlip(m.location, m.blip, m.title)
-            elseif m.locations then
-                for _, loc in ipairs(m.locations) do
-                    addBlip(loc, m.blip, m.title)
+    nui({ action = 'dlg_close' })
+    SetNuiFocus(false, false)
+    FreezeEntityPosition(pp, false)
+    dlg.busy = false
+end
+
+-- =====================================================================
+--  Advance / monitor escape
+-- =====================================================================
+local function advance(tok)
+    if tok ~= A.token then return end
+    if A.advancing then return end
+    A.advancing = true
+    cleanupStepEntities()
+    TriggerServerEvent('blacksilva-quests:advance', A.quest, A.step)
+end
+
+-- monitor comun de "scapare" pentru chase / policeChase
+local function monitorEscape(tok, chaserPeds, def, onEscape, labelHint)
+    local escapeDist = def.escapeDistance or Config.Chase.escapeDistance
+    local escapeTime = def.escapeTime or Config.Chase.escapeTime
+    local farSince = nil
+    local lastHint = 0
+    CreateThread(function()
+        while tok == A.token do
+            local pp = PlayerPedId()
+            local pc = GetEntityCoords(pp)
+            local aliveCount, minDist = 0, 99999.0
+            for _, ped in ipairs(chaserPeds) do
+                if DoesEntityExist(ped) and not IsEntityDead(ped) then
+                    aliveCount = aliveCount + 1
+                    local d = #(pc - GetEntityCoords(ped))
+                    if d < minDist then minDist = d end
                 end
             end
+
+            if aliveCount == 0 then
+                onEscape(true)
+                return
+            end
+
+            if minDist >= escapeDist then
+                if not farSince then farSince = GetGameTimer() end
+                if (GetGameTimer() - farSince) >= escapeTime then
+                    onEscape(false)
+                    return
+                end
+            else
+                farSince = nil
+                if GetGameTimer() - lastHint > 5000 then
+                    lastHint = GetGameTimer()
+                    notify(labelHint or '~y~Nu te opri! Inca esti urmarit!')
+                end
+            end
+            Wait(300)
         end
+    end)
+end
+
+-- =====================================================================
+--  Step handlers
+-- =====================================================================
+local startStep -- fwd
+
+local function startDialogueStep(q, def, tok)
+    local ped = def.npc and spawnNpc(def.npc) or nil
+    local target = def.npc and def.npc.coords or nil
+    CreateThread(function()
+        while tok == A.token do
+            if target then
+                local pc = GetEntityCoords(PlayerPedId())
+                local d = dist3(pc, target)
+                if d <= 25.0 then drawMarker(target) end
+                if d <= 2.2 and not dlg.busy then
+                    helpText('Apasa ~INPUT_PICKUP~ pentru a vorbi')
+                    if IsControlJustReleased(0, 38) then
+                        runDialogue(def.dialogue, ped)
+                        advance(tok); return
+                    end
+                end
+                Wait(0)
+            else
+                runDialogue(def.dialogue, nil)
+                advance(tok); return
+            end
+        end
+    end)
+end
+
+local function startGotoStep(def, tok)
+    makeBlip(def.coords, def.blip or { sprite = 1, color = 5, label = def.objective or 'Obiectiv', route = true })
+    CreateThread(function()
+        while tok == A.token do
+            local pc = GetEntityCoords(PlayerPedId())
+            local d = dist3(pc, def.coords)
+            if d <= Config.Marker.drawDistance then drawMarker(def.coords) end
+            local okVeh = (not def.inVehicle) or IsPedInAnyVehicle(PlayerPedId(), false)
+            if d <= (def.radius or Config.Marker.radius) and okVeh then
+                advance(tok); return
+            end
+            Wait(0)
+        end
+    end)
+end
+
+local function startGivePropStep(def, tok)
+    attachProp(def.prop)
+    notify('~g~Ai primit: ~w~' .. ((def.prop and def.prop.label) or 'obiect'))
+    nui({ action = 'flash', text = '+ ' .. ((def.prop and def.prop.label) or 'obiect') })
+    CreateThread(function() Wait(900); advance(tok) end)
+end
+
+local function startDeliverPropStep(def, tok)
+    local target = def.coords or (def.npc and def.npc.coords)
+    if def.npc then spawnNpc(def.npc) end
+    makeBlip(target, def.blip or { sprite = 1, color = 2, label = def.objective or 'Livrare', route = true })
+    CreateThread(function()
+        while tok == A.token do
+            local pc = GetEntityCoords(PlayerPedId())
+            local d = dist3(pc, target)
+            if d <= Config.Marker.drawDistance then drawMarker(target) end
+            if d <= (def.radius or Config.Marker.radius) then
+                helpText('Apasa ~INPUT_PICKUP~ pentru a preda')
+                if IsControlJustReleased(0, 38) then
+                    clearHeldProps()
+                    notify('~g~Ai predat obiectul cu succes.')
+                    advance(tok); return
+                end
+            end
+            Wait(0)
+        end
+    end)
+end
+
+local function startGetVehicleStep(def, tok)
+    local c = def.coords
+    local veh = nil
+    if loadModel(def.model) then
+        veh = CreateVehicle(GetHashKey(def.model), c.x, c.y, c.z, c.w or 0.0, false, false)
+        SetEntityAsMissionEntity(veh, true, true)
+        SetVehicleOnGroundProperly(veh)
+        SetVehicleDoorsLocked(veh, 1)
+        A.vehs[#A.vehs + 1] = veh
+        SetModelAsNoLongerNeeded(GetHashKey(def.model))
+    end
+    makeBlip(c, def.blip or { sprite = 225, color = 5, label = 'Vehicul tinta', route = true })
+    CreateThread(function()
+        while tok == A.token do
+            local pp = PlayerPedId()
+            if veh and DoesEntityExist(veh) and GetVehiclePedIsIn(pp, false) == veh then
+                notify('~g~Ai furat vehiculul!')
+                -- vehiculul ramane al jucatorului: scoatem din lista de cleanup
+                for i = #A.vehs, 1, -1 do if A.vehs[i] == veh then table.remove(A.vehs, i) end end
+                SetEntityAsMissionEntity(veh, false, false)
+                SetVehicleHasBeenOwnedByPlayer(veh, true)
+                advance(tok); return
+            end
+            local pc = GetEntityCoords(pp)
+            if veh and dist3(pc, GetEntityCoords(veh)) <= Config.Marker.drawDistance then drawMarker(GetEntityCoords(veh)) end
+            Wait(0)
+        end
+    end)
+end
+
+local function startChaseStep(def, tok)
+    local chasers = {}
+    for _, c in ipairs(def.chasers or {}) do
+        local _, ped = spawnVehChaser(c)
+        if ped then chasers[#chasers + 1] = ped end
+    end
+    notify('~r~Esti urmarit! Scapa de ei sau elimina-i!')
+    banner('Urmarire', 'Scapa de urmaritori!')
+    monitorEscape(tok, chasers, def, function(allDead)
+        notify(allDead and '~g~I-ai eliminat pe toti!' or '~g~Ai scapat de urmaritori!')
+        advance(tok)
+    end)
+end
+
+local function startPoliceChaseStep(def, tok)
+    if def.wanted and def.wanted > 0 then
+        SetPlayerWantedLevel(PlayerId(), def.wanted, false)
+        SetPlayerWantedLevelNow(PlayerId(), false)
+        A.setWanted = true
+    end
+    local cops = {}
+    local copModels   = { 's_m_y_cop_01', 's_f_y_cop_01' }
+    local copVehicles = { 'police', 'police2', 'police3' }
+    for i = 1, (def.units or 3) do
+        local _, ped = spawnVehChaser({
+            model   = copModels[(i % #copModels) + 1],
+            vehicle = copVehicles[(i % #copVehicles) + 1],
+            weapon  = 'WEAPON_PISTOL',
+        })
+        if ped then cops[#cops + 1] = ped end
+    end
+    notify('~r~Politia te urmareste! Scapa de ei!')
+    banner('Politia', 'Scapa de urmaritori!')
+    monitorEscape(tok, cops, def, function(allDead)
+        clearWanted()
+        notify('~g~Ai pierdut politia!')
+        advance(tok)
+    end, '~b~Politia inca te vede! Continua sa conduci!')
+end
+
+local function startKillStep(def, tok)
+    local targets = {}
+    local n = def.count or 3
+    for i = 1, n do
+        local sp = def.spawn
+        local ang = (math.pi * 2) * (i / n)
+        local rad = (def.spread or 12.0)
+        local c = vec3(sp.x + math.cos(ang) * rad, sp.y + math.sin(ang) * rad, sp.z)
+        local ped = spawnHostilePed(def.model or 'g_m_y_mexgang_01', c, def.weapon or 'WEAPON_PISTOL')
+        if ped then
+            targets[#targets + 1] = ped
+            if def.blip then makeEntityBlip(ped, def.blip) end
+        end
+    end
+    notify(('~r~Elimina toate tintele (0/%d)'):format(n))
+    CreateThread(function()
+        local lastDead = -1
+        while tok == A.token do
+            local dead = 0
+            for _, ped in ipairs(targets) do
+                if not DoesEntityExist(ped) or IsEntityDead(ped) then dead = dead + 1 end
+            end
+            if dead ~= lastDead then
+                lastDead = dead
+                hudUpdate(Config.Quests[A.quest].title, ('%s (%d/%d)'):format(def.objective or 'Elimina tintele', dead, n), A.step, #Config.Quests[A.quest].steps)
+            end
+            if dead >= n then
+                notify('~g~Toate tintele eliminate!')
+                advance(tok); return
+            end
+            Wait(500)
+        end
+    end)
+end
+
+local function startHideVehicleStep(def, tok)
+    makeBlip(def.coords, def.blip or { sprite = 357, color = 2, label = 'Ascunzatoare', route = true })
+    CreateThread(function()
+        while tok == A.token do
+            local pp = PlayerPedId()
+            local pc = GetEntityCoords(pp)
+            local d = dist3(pc, def.coords)
+            if d <= Config.Marker.drawDistance then drawMarker(def.coords) end
+            if d <= (def.radius or 5.0) then
+                if IsPedInAnyVehicle(pp, false) then
+                    helpText('Apasa ~INPUT_PICKUP~ pentru a ascunde vehiculul')
+                    if IsControlJustReleased(0, 38) then
+                        local veh = GetVehiclePedIsIn(pp, false)
+                        TaskLeaveVehicle(pp, veh, 0)
+                        Wait(900)
+                        if DoesEntityExist(veh) then SetEntityAsMissionEntity(veh, true, true); DeleteEntity(veh) end
+                        notify('~g~Vehicul ascuns. Nimeni nu il va gasi.')
+                        advance(tok); return
+                    end
+                else
+                    helpText('Adu vehiculul aici')
+                end
+            end
+            Wait(0)
+        end
+    end)
+end
+
+local function startSceneStep(def, tok)
+    banner(def.title or 'Atentie', def.text or '')
+    if def.text then notify('~y~' .. def.text) end
+    CreateThread(function() Wait(def.duration or 4000); advance(tok) end)
+end
+
+startStep = function(q, idx, def)
+    A.advancing = false
+    hudUpdate(q.title, def.objective or q.description or '', idx, #q.steps)
+    if idx == 1 then banner(q.title, q.intro or 'Misiune noua') end
+    local tok = A.token
+    local t = def.type
+    if     t == 'dialogue'    then startDialogueStep(q, def, tok)
+    elseif t == 'goto'        then startGotoStep(def, tok)
+    elseif t == 'giveProp'    then startGivePropStep(def, tok)
+    elseif t == 'deliverProp' then startDeliverPropStep(def, tok)
+    elseif t == 'getVehicle'  then startGetVehicleStep(def, tok)
+    elseif t == 'chase'       then startChaseStep(def, tok)
+    elseif t == 'policeChase' then startPoliceChaseStep(def, tok)
+    elseif t == 'killTargets' then startKillStep(def, tok)
+    elseif t == 'hideVehicle' then startHideVehicleStep(def, tok)
+    elseif t == 'scene'       then startSceneStep(def, tok)
+    else
+        notify('~r~Pas necunoscut: ' .. tostring(t))
+        advance(tok)
     end
 end
 
--- marker + detectie locatie (reach_location, visit_locations, obtain_weapon)
-local visited = {} -- [missionId] = { [index] = true }
-CreateThread(function()
-    Wait(3000)
-    while true do
-        local sleep = 1000
-        if ESX.IsPlayerLoaded() then
-            local coords = GetEntityCoords(PlayerPedId())
-            local mk = Config.Marker
+-- =====================================================================
+--  Apply state (din server) - diff + start
+-- =====================================================================
+local function applyState(quest, step)
+    if quest == A.quest and step == A.step then return end
+    -- reset complet daca s-a schimbat quest-ul sau am dat inapoi (/quest set)
+    if quest ~= A.quest or step < A.step then cleanupQuest() else cleanupStepEntities() end
+    A.quest, A.step = quest, step
 
-            for _, m in ipairs(Config.Missions) do
-                if not isCompleted(m.id) and isMissionUnlocked(m.id) then
-                    -- reach_location (job center) si obtain_weapon (atelier): markere
-                    local single = m.location
-                    if (m.type == 'reach_location' or m.type == 'obtain_weapon') and single then
-                        local dist = #(coords - single)
-                        if dist <= mk.drawDistance then
-                            sleep = 0
-                            DrawMarker(mk.type, single.x, single.y, single.z - 0.95, 0,0,0, 0,0,0,
-                                mk.size.x, mk.size.y, mk.size.z, mk.color.r, mk.color.g, mk.color.b, mk.color.a,
-                                false, true, 2, false, nil, nil, false)
-                            if dist <= mk.radius and m.type == 'reach_location' then
-                                setProgress(m.id, m.target or 1)
-                            end
-                        end
-                    end
-
-                    -- visit_locations (gunshop-uri)
-                    if m.type == 'visit_locations' and m.locations then
-                        if not visited[m.id] then visited[m.id] = {} end
-                        for i, loc in ipairs(m.locations) do
-                            local dist = #(coords - loc)
-                            if dist <= mk.drawDistance then
-                                sleep = 0
-                                if not visited[m.id][i] then
-                                    DrawMarker(mk.type, loc.x, loc.y, loc.z - 0.95, 0,0,0, 0,0,0,
-                                        mk.size.x, mk.size.y, mk.size.z, mk.color.r, mk.color.g, mk.color.b, mk.color.a,
-                                        false, true, 2, false, nil, nil, false)
-                                end
-                            end
-                            if dist <= mk.radius and not visited[m.id][i] then
-                                visited[m.id][i] = true
-                                local count = 0
-                                for _ in pairs(visited[m.id]) do count = count + 1 end
-                                setProgress(m.id, count)
-                                notify(('~g~Gunshop vizitat (%d/%d)'):format(count, #m.locations))
-                            end
-                        end
-                    end
-                end
-            end
-        end
-        Wait(sleep)
+    local q = Config.Quests[quest]
+    if not q then hudHide(); return end
+    local def = q.steps[step]
+    if not def then
+        hudHide()
+        banner('Felicitari!', 'Ai terminat toate misiunile disponibile.')
+        return
     end
+    startStep(q, step, def)
+end
+
+-- =====================================================================
+--  Sync server -> client
+-- =====================================================================
+RegisterNetEvent('blacksilva-quests:state', function(data)
+    State.quest = data.quest or 0
+    State.step  = data.step or 0
+    completedMap = data.completed or {}
+    applyState(State.quest, State.step)
 end)
 
--- ---------- MISIUNEA 8: command /liber -----------------------------
-RegisterNetEvent('blacksilva-missions:commandUsed')
-AddEventHandler('blacksilva-missions:commandUsed', function(cmd)
-    for _, m in ipairs(Config.Missions) do
-        if m.type == 'command' and m.command == cmd and not isCompleted(m.id) then
-            setProgress(m.id, m.target or 1)
-        end
-    end
+RegisterNetEvent('blacksilva-quests:forceCleanup', function()
+    cleanupQuest()
+    A.quest, A.step = 0, 0
+end)
+
+RegisterNetEvent('blacksilva-quests:reward', function(money, xp, title)
+    banner('Misiune Completa', (title or '') .. (money and (' · $' .. money) or ''))
+    PlaySoundFrontend(-1, 'CHALLENGE_UNLOCKED', 'HUD_AWARDS', true)
+    if money and money > 0 then notify(('~g~Recompensa: ~w~$%s'):format(money)) end
+    if xp and xp > 0 then notify(('~y~+%d XP'):format(xp)) end
+end)
+
+RegisterNetEvent('blacksilva-quests:notify', function(msg) notify(msg) end)
+
+RegisterNetEvent('esx:playerLoaded', function()
+    Wait(1500)
+    TriggerServerEvent('blacksilva-quests:request')
 end)
 
 CreateThread(function()
-    for _, m in ipairs(Config.Missions) do
-        if m.type == 'command' and m.registerCommand and m.command then
-            RegisterCommand(m.command, function()
-                TriggerEvent('blacksilva-missions:commandUsed', m.command)
-            end, false)
-        end
-    end
-end)
-
--- ---------- MISIUNEA 9/10: kill_players ----------------------------
-local recentKills = {}
-AddEventHandler('gameEventTriggered', function(name, args)
-    if name ~= 'CEventNetworkEntityDamage' then return end
-    local victim   = args[1]
-    local attacker = args[2]
-    local isFatal  = args[6]
-
-    if attacker ~= PlayerPedId() then return end
-    if victim == PlayerPedId() then return end
-    if not DoesEntityExist(victim) then return end
-    if not IsPedAPlayer(victim) then return end
-    if isFatal ~= 1 then return end
-
-    -- dedupe pe victima
-    local key = tostring(victim)
-    if recentKills[key] and (GetGameTimer() - recentKills[key]) < 3000 then return end
-
-    SetTimeout(300, function()
-        if DoesEntityExist(victim) and IsEntityDead(victim) then
-            recentKills[key] = GetGameTimer()
-            TriggerServerEvent('blacksilva-missions:playerKill')
-        end
-    end)
+    Wait(2500)
+    if ESX.IsPlayerLoaded() then TriggerServerEvent('blacksilva-quests:request') end
 end)
 
 -- =====================================================================
---  Blocare controale cat timp meniul e deschis
+--  Death watch - cleanup + restart pas curent dupa respawn
 -- =====================================================================
 CreateThread(function()
     while true do
-        if isUIOpen then
-            Wait(0)
-            DisableControlAction(0, 1,  true)  -- look LR
-            DisableControlAction(0, 2,  true)  -- look UD
-            DisableControlAction(0, 24, true)  -- attack
-            DisableControlAction(0, 25, true)  -- aim
-            DisableControlAction(0, 30, true)
-            DisableControlAction(0, 31, true)
-            DisableControlAction(0, 21, true)
-            DisableControlAction(0, 22, true)  -- jump/space
-            DisableControlAction(0, 23, true)
-            DisableControlAction(0, 75, true)
-            DisableControlAction(0, 263, true)
-            DisableControlAction(0, 264, true)
-            DisableControlAction(0, 257, true)
-        else
-            Wait(500)
+        Wait(500)
+        if A.quest > 0 and IsEntityDead(PlayerPedId()) and not dlg.busy then
+            cleanupQuest()
+            local q, s = A.quest, A.step
+            A.quest, A.step = 0, 0
+            notify('~r~Ai esuat misiunea. Reincepe pasul curent.')
+            while IsEntityDead(PlayerPedId()) do Wait(500) end
+            Wait(2500)
+            TriggerServerEvent('blacksilva-quests:request')
         end
     end
 end)
 
--- curatare la oprirea resursei
+-- =====================================================================
+--  Jurnal de misiuni (F5)
+-- =====================================================================
+local journalOpen = false
+local function buildJournalList()
+    local list = {}
+    for id = 1, 1000 do
+        local q = Config.Quests[id]
+        if not q then break end
+        list[#list + 1] = { id = id, title = q.title, done = completedMap[tostring(id)] == true, current = (id == State.quest) }
+    end
+    return list
+end
+
+local function openJournal()
+    if journalOpen or dlg.busy then return end
+    journalOpen = true
+    local q = Config.Quests[State.quest]
+    local def = q and q.steps[State.step]
+    SetNuiFocus(true, true)
+    nui({
+        action = 'journal', show = true,
+        quest = q and {
+            id = State.quest, title = q.title, desc = q.description,
+            objective = def and def.objective or 'Misiune terminata',
+            step = State.step, total = q and #q.steps or 0,
+        } or nil,
+        list = buildJournalList(),
+    })
+end
+
+local function closeJournal()
+    if not journalOpen then return end
+    journalOpen = false
+    SetNuiFocus(false, false)
+    nui({ action = 'journal', show = false })
+end
+
+RegisterNUICallback('journal_close', function(_, cb) closeJournal(); cb('ok') end)
+RegisterNUICallback('journal_track', function(data, cb)
+    -- pune ruta GPS catre obiectivul curent
+    local q = Config.Quests[State.quest]
+    local def = q and q.steps[State.step]
+    local c = def and (def.coords or (def.npc and def.npc.coords) or def.spawn)
+    if c then SetNewWaypoint(c.x + 0.0, c.y + 0.0); notify('~y~GPS setat catre obiectiv.') end
+    cb('ok')
+end)
+
+RegisterCommand('bs_quest_journal', function()
+    if journalOpen then closeJournal() else openJournal() end
+end, false)
+RegisterKeyMapping('bs_quest_journal', 'Jurnal Misiuni', 'keyboard', Config.JournalKey)
+
+RegisterNetEvent('blacksilva-quests:openJournal', function() openJournal() end)
+
+-- =====================================================================
+--  Cleanup la oprirea resursei
+-- =====================================================================
 AddEventHandler('onResourceStop', function(res)
-    if res == GetCurrentResourceName() then
-        if isUIOpen then
-            SetNuiFocus(false, false)
-            local ped = PlayerPedId()
-            FreezeEntityPosition(ped, false)
-        end
-        if clipboardProp and DoesEntityExist(clipboardProp) then DeleteEntity(clipboardProp) end
-        if missionCam then RenderScriptCams(false, false, 0, true, false); DestroyCam(missionCam, false) end
-    end
+    if res ~= GetCurrentResourceName() then return end
+    cleanupQuest()
+    if journalOpen or dlg.busy then SetNuiFocus(false, false) end
+    FreezeEntityPosition(PlayerPedId(), false)
 end)

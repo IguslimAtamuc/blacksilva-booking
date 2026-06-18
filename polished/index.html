@@ -30,11 +30,29 @@
     padding:18px 7vw; backdrop-filter:blur(8px); background:var(--ui-bar); border-bottom:1px solid var(--ui-line); transition:background .15s linear,border-color .15s linear,opacity .7s ease; }
   .brand{ display:flex; align-items:center; gap:11px; letter-spacing:.16em; }
   .brand .dot{ width:9px; height:9px; border-radius:50%; background:linear-gradient(140deg,#fff,#9aa0a6 60%,#3a3d42); box-shadow:0 0 14px rgba(255,255,255,.5); }
-  .navlinks{ display:flex; gap:26px; font-size:12px; letter-spacing:.18em; color:var(--ui-dim); }
-  .navlinks a{ color:inherit; text-decoration:none; }
-  @media(max-width:760px){ .navlinks{ display:none; } nav{ padding:14px 5vw; }
+  .navlinks{ display:flex; gap:24px; align-items:center; font-size:11.5px; letter-spacing:.2em; text-transform:uppercase; color:rgba(247,247,245,.9); }
+  .navlinks a{ color:inherit; text-decoration:none; cursor:pointer; transition:color .18s; white-space:nowrap; }
+  .navlinks a:hover{ color:#e8c478; }
+  .navburger{ display:none; flex-direction:column; gap:5px; width:40px; height:40px; align-items:center; justify-content:center; background:transparent; border:none; cursor:pointer; padding:0; }
+  .navburger span{ display:block; width:22px; height:1.5px; background:rgba(247,247,245,.92); transition:.25s; }
+  .navburger.open span:nth-child(1){ transform:translateY(6.5px) rotate(45deg); }
+  .navburger.open span:nth-child(2){ opacity:0; }
+  .navburger.open span:nth-child(3){ transform:translateY(-6.5px) rotate(-45deg); }
+  body.flow .navlinks, body.flow .navburger{ display:none !important; }
+  @media(max-width:760px){
+    nav{ padding:14px 5vw; }
     nav .brand span:not(.dot){ display:none; } /* hide 'HAIRDRESSER' so it never collides with Restart */
-    nav .brand b{ font-size:15px !important; } }
+    nav .brand b{ font-size:15px !important; }
+    .navburger{ display:flex; }
+    .navlinks{ position:fixed; top:60px; right:14px; left:auto; flex-direction:column; align-items:flex-end; gap:4px;
+      background:rgba(14,11,8,.97); -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px);
+      border:1px solid rgba(232,196,120,.28); border-radius:16px; padding:10px 6px; min-width:170px;
+      box-shadow:0 24px 60px rgba(0,0,0,.6); opacity:0; transform:translateY(-8px) scale(.98); pointer-events:none;
+      transition:opacity .22s ease, transform .22s cubic-bezier(.2,.8,.2,1); font-size:13px; }
+    .navlinks.open{ opacity:1; transform:none; pointer-events:auto; }
+    .navlinks a{ width:100%; text-align:right; padding:12px 16px; border-radius:10px; letter-spacing:.12em; }
+    .navlinks a:active{ background:rgba(232,196,120,.12); }
+  }
 
   #hero{ justify-content:center; align-items:flex-start; }
   .eyebrow{ font-size:11px; letter-spacing:.4em; color:var(--ui-dim); text-transform:uppercase; margin-bottom:20px; }
@@ -331,7 +349,8 @@
   /* ===== clean first impression: only the title + moving shader, until first scroll ===== */
   .hero-reveal{ opacity:0; transform:translateY(20px); transition:opacity .9s ease, transform .9s cubic-bezier(.2,.8,.2,1); will-change:opacity,transform; }
   body.revealed .hero-reveal{ opacity:1; transform:none; }
-  body:not(.revealed) nav{ opacity:0; pointer-events:none; }
+  /* header stays visible from the start (it's the small white nav); only the
+     hero copy + boxes wait for the first scroll */
   body:not(.revealed) .ft-fab{ opacity:0; transform:translateY(14px); pointer-events:none; }
   .ft-fab{ transition:opacity .8s ease, transform .8s cubic-bezier(.2,.8,.2,1); }
   /* the fab CONTAINER must not swallow taps (its hidden panel is wide and was
@@ -529,6 +548,37 @@
     .peek-toggle svg{ width:18px; height:18px; transition:transform .35s cubic-bezier(.2,.8,.2,1); }
     .sheet.min .peek-toggle svg{ transform:rotate(180deg); }
   }
+
+  /* ===== header pop-ups (Prices / Contact) ===== */
+  .navmodal{ position:fixed; inset:0; z-index:45; display:flex; align-items:center; justify-content:center; padding:22px;
+    background:rgba(4,3,2,.62); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
+    opacity:0; pointer-events:none; transition:opacity .3s ease; }
+  .navmodal.on{ opacity:1; pointer-events:auto; }
+  .navmodal .nm-card{ position:relative; width:min(440px,94vw); max-height:88svh; overflow:auto;
+    background:rgba(18,13,9,.97); border:1px solid rgba(232,196,120,.3); border-radius:22px; padding:30px 26px;
+    color:#f4ecdc; box-shadow:0 30px 90px rgba(0,0,0,.62); transform:translateY(14px) scale(.98);
+    transition:transform .3s cubic-bezier(.2,.8,.2,1); scrollbar-width:none; }
+  .navmodal .nm-card::-webkit-scrollbar{ width:0; }
+  .navmodal.on .nm-card{ transform:none; }
+  .navmodal .nm-close{ position:absolute; top:14px; right:14px; width:34px; height:34px; border-radius:50%;
+    border:1px solid rgba(232,196,120,.3); background:rgba(255,255,255,.04); color:#f4ecdc; font-size:22px; line-height:1; cursor:pointer; }
+  .navmodal .nm-close:hover{ border-color:#d8b878; color:#e8c478; }
+  .navmodal .nm-k{ font-size:11px; letter-spacing:.32em; text-transform:uppercase; color:#a0826a; }
+  .navmodal h3{ font-family:var(--display); font-weight:600; font-size:30px; line-height:1.04; margin-top:6px; color:#f4ecdc; }
+  .navmodal p{ color:rgba(244,236,220,.78); font-size:14px; line-height:1.6; margin-top:12px; }
+  .navmodal p b{ color:#f4ecdc; }
+  .nm-ladder{ margin-top:18px; border-top:1px solid rgba(232,196,120,.18); }
+  .nm-ladder div{ display:flex; justify-content:space-between; align-items:center; padding:11px 2px; border-bottom:1px solid rgba(232,196,120,.12); font-size:13.5px; }
+  .nm-ladder span{ color:rgba(244,236,220,.62); } .nm-ladder b{ color:#e8c478; font-size:16px; }
+  .nm-cta{ width:100%; margin-top:20px; padding:15px; border:none; border-radius:14px; background:#d8b878; color:#1a1208;
+    font-weight:800; letter-spacing:.12em; text-transform:uppercase; font-size:12px; cursor:pointer; transition:.16s; }
+  .nm-cta:hover{ transform:translateY(-2px); box-shadow:0 14px 28px rgba(216,184,120,.25); }
+  .nm-contact{ display:flex; flex-direction:column; gap:2px; margin-top:12px; padding:14px 16px; border-radius:14px;
+    border:1px solid rgba(232,196,120,.22); background:rgba(255,255,255,.04); text-decoration:none; color:#f4ecdc; transition:.16s; }
+  .nm-contact:hover{ border-color:#d8b878; background:rgba(216,184,120,.08); transform:translateY(-2px); }
+  .nm-contact span{ font-size:10.5px; letter-spacing:.22em; text-transform:uppercase; color:rgba(244,236,220,.55); }
+  .nm-contact b{ font-size:17px; font-weight:600; font-family:var(--display); }
+  @media(max-width:760px){ .navmodal{ align-items:flex-end; padding:0; } .navmodal .nm-card{ width:100%; border-radius:24px 24px 0 0; padding:26px 20px calc(26px + env(safe-area-inset-bottom)); } }
 </style>
 </head>
 <body>
@@ -538,7 +588,14 @@
 <nav>
   <div class="brand"><span class="dot"></span><b class="serif" style="font-size:17px;letter-spacing:.13em;">BLACK&nbsp;SILVA</b>
     <span style="color:var(--ui-dim);font-weight:500;font-size:10.5px;letter-spacing:.22em;">HAIRDRESSER</span></div>
-  <div class="navlinks"><a href="#hero">Home</a><a href="#s1">Salon</a><a href="#s2">Book</a></div>
+  <div class="navlinks" id="navlinks">
+    <a onclick="BS.bookNow()">Book&nbsp;Now</a>
+    <a onclick="BS.showPrices()">Prices</a>
+    <a onclick="BS.walkIn()">Walk-in</a>
+    <a onclick="BS.showContact()">Contact</a>
+    <a href="reviews.html">Review</a>
+  </div>
+  <button class="navburger" id="navburger" type="button" onclick="BS.toggleMenu(event)" aria-label="Menu"><span></span><span></span><span></span></button>
 </nav>
 <main id="scroll">
   <section id="hero" class="panel hero-centered">
@@ -608,6 +665,35 @@
     <span class="gps-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 L4 14 h7 l-1 8 L20 9 h-7 z"/></svg></span>
     <span class="gps-txt"><small>Press here</small><strong>Fast Track · Book now</strong></span>
   </button>
+</div>
+<!-- header pop-ups -->
+<div class="navmodal" id="modal-prices" onclick="if(event.target===this)BS.closeModal('modal-prices')">
+  <div class="nm-card">
+    <button class="nm-close" type="button" onclick="BS.closeModal('modal-prices')" aria-label="Close">&times;</button>
+    <p class="nm-k">Dynamic pricing</p>
+    <h3 class="serif">How our prices work</h3>
+    <p><b>Hi!</b> Please note that our pricing system is dynamic. What does that mean?</p>
+    <p>We offer you the best available price based on factors such as the duration of the haircut, holiday periods, and booking flow.</p>
+    <p><b>Basically, the earlier you book your appointment, the better the price can be!</b></p>
+    <div class="nm-ladder">
+      <div><span>Booking this week</span><b>500 kr.</b></div>
+      <div><span>About 1 week ahead</span><b>450 kr.</b></div>
+      <div><span>About 2 weeks ahead</span><b>400 kr.</b></div>
+      <div><span>3+ weeks ahead</span><b>375 kr.</b></div>
+    </div>
+    <button class="nm-cta" type="button" onclick="BS.closeModal('modal-prices'); BS.bookNow();">Book now</button>
+  </div>
+</div>
+<div class="navmodal" id="modal-contact" onclick="if(event.target===this)BS.closeModal('modal-contact')">
+  <div class="nm-card">
+    <button class="nm-close" type="button" onclick="BS.closeModal('modal-contact')" aria-label="Close">&times;</button>
+    <p class="nm-k">Get in touch</p>
+    <h3 class="serif">Contact us</h3>
+    <p>Reach us directly — Instagram is usually the fastest.</p>
+    <a class="nm-contact" href="tel:+4552795671"><span>Phone · SMS</span><b>+45 52 79 56 71</b></a>
+    <a class="nm-contact" href="mailto:blacksilvahd@gmail.com"><span>Email</span><b>blacksilvahd@gmail.com</b></a>
+    <a class="nm-contact" href="https://www.instagram.com/blacksilvahd/?hl=da" target="_blank" rel="noopener"><span>Instagram (fastest)</span><b>@blacksilvahd</b></a>
+  </div>
 </div>
 <div id="loader"><div class="l">Black Silva</div><div class="bar"><i></i></div><div class="e" id="err"></div></div>
 
@@ -1117,7 +1203,17 @@ function start(){
   function backBtn(target){ return '<button class="back" onclick="BS.back(\''+target+'\')" aria-label="Back">‹</button>'; }
 
   function enterFlow(){ gated=true; mode='flow'; document.body.classList.add('flow');
-    document.body.style.overflow='hidden'; var rt=document.getElementById('restart-top'); if(rt) rt.style.display='block'; }
+    document.body.style.overflow='hidden'; var rt=document.getElementById('restart-top'); if(rt) rt.style.display='block';
+    var sb=document.getElementById('shaderbg'); if(sb) sb.style.display='none'; /* drop the intro shader if we jumped straight in */
+    var nl=document.getElementById('navlinks'); if(nl) nl.classList.remove('open'); }
+  /* seat the customer instantly (no long walk) — shared by Book Now / Walk-in */
+  function snapSeated(){
+    enterFlow(); setDaylight();
+    var chosen=(choice.stylist==='Eduard')?eduard:elena; setActiveStylist(chosen);
+    cust={x:0,y:CUST_SEAT_Y,z:-4.0,facing:FINAL_FACING,state:'sit'}; chair.rotation.y=FINAL_FACING;
+    sty={x:1.15,y:0,z:-4.2,facing:faceToward(1.15,-4.2,0,-4.0),state:'serve'};
+    bookCam={tx:0.1,ty:1.6,tz:-3.8,zoom:2.2,frontMix:1,rightShift:0.18};
+  }
   function gateBooking(){ if(gated) return; enterFlow();
     cust={x:0,y:0,z:0.7,facing:Math.PI,state:'stand'};
     bookCam={tx:0,ty:1.5,tz:0.3,zoom:1.15,frontMix:0.45,rightShift:0.0};
@@ -1518,10 +1614,33 @@ function start(){
       var saved=loadBooking(val);
       if(!saved){ if(err) err.innerHTML='No previous booking found for <b>'+val+'</b>. Scroll down to book from scratch.'; return; }
       if(err) err.textContent=''; fastTrackConfirm(saved); },
+    /* ===== header actions ===== */
+    toggleMenu:function(e){ if(e&&e.stopPropagation) e.stopPropagation(); var nl=document.getElementById('navlinks'), bg=document.getElementById('navburger');
+      var open=nl.classList.toggle('open'); if(bg) bg.classList.toggle('open',open); },
+    closeMenu:function(){ var nl=document.getElementById('navlinks'), bg=document.getElementById('navburger'); if(nl) nl.classList.remove('open'); if(bg) bg.classList.remove('open'); },
+    showPrices:function(){ BS.closeMenu(); var m=document.getElementById('modal-prices'); if(m) m.classList.add('on'); },
+    showContact:function(){ BS.closeMenu(); var m=document.getElementById('modal-contact'); if(m) m.classList.add('on'); },
+    closeModal:function(id){ var m=document.getElementById(id); if(m) m.classList.remove('on'); },
+    /* Book Now → straight to the Confirm-booking review with sensible defaults */
+    bookNow:function(){ BS.closeMenu();
+      if(!choice.haircut){ choice.haircut='gentleman'; }
+      var c=CUTS[choice.haircut]; choice.service=c.label; choice.fromPrice=c.from;
+      if(!Array.isArray(choice.addons)) choice.addons=[];
+      var today=startDay(new Date());
+      if(choice.dayIdx===null||typeof choice.dayIdx==='undefined'){ choice.dayIdx=0; choice.dayLabel=fullDayLabel(today,0); choice.price=priceForDay(0); choice.priceTier=1; }
+      if(!choice.time) choice.time=TIME_SLOTS[0];
+      if(!choice.stylist) choice.stylist='Eduard';
+      snapSeated(); buildConfirm(); showStep('confirm'); },
+    /* Walk-in → fixed 500 kr, no appointment, straight to payment */
+    walkIn:function(){ BS.closeMenu();
+      choice.haircut='gentleman'; choice.service='Walk-in (no appointment)'; choice.fromPrice=500; choice.addons=[];
+      var today=startDay(new Date()); choice.dayIdx=0; choice.dayLabel='Today · walk-in'; choice.time='Next available';
+      choice.price=500; choice.priceTier=1; if(!choice.stylist) choice.stylist='Eduard';
+      snapSeated(); buildPay(); showStep('pay'); },
     haircut:function(type){ var c=CUTS[type]; if(!c) return; choice.haircut=type; choice.service=c.label; choice.fromPrice=c.from; choice.addons=[]; buildAddons(type); showStep('length'); },
     toggleAddon:function(el,name){ var i=choice.addons.indexOf(name); if(i>=0) choice.addons.splice(i,1); else choice.addons.push(name); el.classList.toggle('on',choice.addons.indexOf(name)>=0); },
     afterLength:function(){ buildCalendar(); showStep('calendar'); },
-    back:function(target){ if(target==='chooser'){ buildLength(); showStep('length'); } else if(target==='addons'){ buildAddons(choice.haircut); showStep('length'); } else if(target==='day'){ buildCalendar(); showStep('calendar'); } else if(target==='time'){ buildTime(); showStep('time'); } else if(target==='calendar'){ buildCalendar(); showStep('calendar'); } else if(target==='pay'){ showStep('pay'); } },
+    back:function(target){ if(target==='chooser'){ buildLength(); showStep('length'); } else if(target==='addons'){ buildAddons(choice.haircut); showStep('length'); } else if(target==='day'){ buildCalendar(); showStep('calendar'); } else if(target==='time'){ buildTime(); showStep('time'); } else if(target==='calendar'){ buildCalendar(); showStep('calendar'); } else if(target==='confirm'){ buildConfirm(); showStep('confirm'); } else if(target==='pay'){ showStep('pay'); } },
     length:function(g,l){ BS.haircut(g==='women'?'lady':'gentleman'); },
     /* picking a day now AUTO-advances to its own Time slide */
     pickDay:function(i,label){ if(BS._adv) return; choice.dayIdx=i; choice.dayLabel=label; document.querySelectorAll('.chip').forEach(function(el){ el.classList.toggle('on',el.id===('day-'+i)); }); refreshCalendarPrice();
@@ -1674,8 +1793,12 @@ function start(){
     });
     document.addEventListener('click',function(e){ if(fab.classList.contains('open') && !fab.contains(e.target)) close();
       /* close the custom Time dropdown when clicking elsewhere */
-      var d=document.getElementById('qm-time-drop'); if(d && d.classList.contains('open') && !d.contains(e.target)) d.classList.remove('open'); });
-    document.addEventListener('keydown',function(e){ if(e.key==='Escape') close(); });
+      var d=document.getElementById('qm-time-drop'); if(d && d.classList.contains('open') && !d.contains(e.target)) d.classList.remove('open');
+      /* close the header menu when tapping outside it */
+      var nl=document.getElementById('navlinks'); if(nl && nl.classList.contains('open') && !nl.contains(e.target) && !e.target.closest('#navburger')){ if(window.BS&&BS.closeMenu) BS.closeMenu(); } });
+    document.addEventListener('keydown',function(e){ if(e.key==='Escape'){ close();
+      if(window.BS&&BS.closeMenu) BS.closeMenu();
+      ['modal-prices','modal-contact'].forEach(function(id){ var m=document.getElementById(id); if(m) m.classList.remove('on'); }); } });
     /* once Fast Track succeeds it enters the booking flow — close the panel */
     var inp=document.getElementById('ft-email'); if(inp) inp.addEventListener('keydown',function(e){ if(e.key==='Enter' && window.BS && BS.fasttrack) BS.fasttrack(); });
   })();

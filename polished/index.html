@@ -1263,7 +1263,7 @@ function start(){
   var SERVICE_ADDONS={ gentleman:['Beard Trim','Hair Wash','Eyebrows'], lady:['Styling','Hair Treatment','Eyebrows'] };
   var ADDON_PRICE=125;
   function addonsTotal(){ return choice.addons.length*ADDON_PRICE; }
-  function grandTotal(){ return choice.price+addonsTotal(); }
+  function grandTotal(){ if(choice.walkIn) return 500; return choice.price+addonsTotal(); }
   var PRICE_STEPS=[500,450,400,375];
   var DAY_NAMES=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   var MONTH_NAMES=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -1336,6 +1336,25 @@ function start(){
       h+='<div class="tslot'+(choice.time===tm?' on':'')+'" id="t-'+tm.replace(':','')+'" onclick="BS.pickTime(\''+tm+'\')"><span>'+tm+'</span></div>';
     });
     h+='</div>';
+    document.getElementById('m-time').innerHTML=h;
+  }
+  /* WALK-IN: a tighter version that only lists today's still-bookable times and
+     locks the price at 500 DKK regardless of dynamic pricing. */
+  function buildWalkinTime(){
+    var now=new Date(), curMins=now.getHours()*60+now.getMinutes();
+    var future=TIME_SLOTS.filter(function(tm){ var p=tm.split(':'); return (+p[0])*60+(+p[1]) >= curMins+10; });
+    var h=grab()+'<p class="bk">Walk-in · Pick a time today</p><h3 class="serif">Next available slots</h3>';
+    h+='<p class="bsub">Today &middot; <b style="color:#d8b878">'+money(500)+'</b> · flat walk-in price</p>';
+    if(!future.length){
+      h+='<p class="bsub" style="margin-top:14px">Sorry, no walk-in time left today. Try tomorrow with a regular booking — better price.</p>';
+      h+='<button class="nm-cta" style="margin-top:14px" onclick="BS.bookNow()">Book a regular appointment</button>';
+    } else {
+      h+='<div class="times">';
+      future.forEach(function(tm){
+        h+='<div class="tslot'+(choice.time===tm?' on':'')+'" id="wt-'+tm.replace(':','')+'" onclick="BS.pickWalkinTime(\''+tm+'\')"><span>'+tm+'</span></div>';
+      });
+      h+='</div>';
+    }
     document.getElementById('m-time').innerHTML=h;
   }
   function buildStylist(){ var h=grab()+backBtn('time')+dots(4)+'<p class="bk">Step 4 · Your stylist</p><h3 class="serif">Who cuts your hair?</h3><div class="scards">';
@@ -1631,12 +1650,18 @@ function start(){
       if(!choice.time) choice.time=TIME_SLOTS[0];
       if(!choice.stylist) choice.stylist='Eduard';
       snapSeated(); buildConfirm(); showStep('confirm'); },
-    /* Walk-in → fixed 500 kr, no appointment, straight to payment */
+    /* Walk-in → pick a today-time first, then payment with a flat 500 DKK */
     walkIn:function(){ BS.closeMenu();
       choice.haircut='gentleman'; choice.service='Walk-in (no appointment)'; choice.fromPrice=500; choice.addons=[];
-      var today=startDay(new Date()); choice.dayIdx=0; choice.dayLabel='Today · walk-in'; choice.time='Next available';
-      choice.price=500; choice.priceTier=1; if(!choice.stylist) choice.stylist='Eduard';
-      snapSeated(); buildPay(); showStep('pay'); },
+      var today=startDay(new Date()); choice.dayIdx=0; choice.dayLabel='Today · walk-in';
+      choice.price=500; choice.priceTier=1; choice.time=null; choice.walkIn=true;
+      if(!choice.stylist) choice.stylist='Eduard';
+      snapSeated(); buildWalkinTime(); showStep('time'); },
+    pickWalkinTime:function(tm){ if(BS._adv) return;
+      choice.time=tm; choice.price=500; choice.walkIn=true;
+      document.querySelectorAll('.tslot').forEach(function(e){ e.classList.remove('on'); });
+      var el=document.getElementById('wt-'+tm.replace(':','')); if(el) el.classList.add('on');
+      BS._adv=true; setTimeout(function(){ BS._adv=false; buildPay(); showStep('pay'); }, 280); },
     haircut:function(type){ var c=CUTS[type]; if(!c) return; choice.haircut=type; choice.service=c.label; choice.fromPrice=c.from; choice.addons=[]; buildAddons(type); showStep('length'); },
     toggleAddon:function(el,name){ var i=choice.addons.indexOf(name); if(i>=0) choice.addons.splice(i,1); else choice.addons.push(name); el.classList.toggle('on',choice.addons.indexOf(name)>=0); },
     afterLength:function(){ buildCalendar(); showStep('calendar'); },

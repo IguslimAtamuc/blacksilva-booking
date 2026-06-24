@@ -450,6 +450,42 @@
   .startcue .sc-track::after{ content:""; position:absolute; left:50%; top:9px; width:4px; height:9px; border-radius:2px; background:#d8b878; transform:translateX(-50%); animation:dot 1.7s ease-in-out infinite; }
   @media(min-width:1280px){ .heroframe.startcue h2{ font-size:76px; } }
 
+  /* ===== "A different chair" comparison overlay (Black Silva vs Others) ===== */
+  .heroframe.vsbox{ width:min(820px, calc(100% - 30px)); padding:24px 24px 22px; }
+  @media(min-width:760px){ .heroframe.vsbox{ width:min(820px, calc(100% - 60px)); padding:30px 32px 28px; } }
+  @media(min-width:1280px){ .heroframe.vsbox{ width:880px; padding:34px 38px 30px; } }
+  .vsbox h3{ margin-bottom:4px; }
+  .vsbox .vs-sub{ font-size:12.5px; color:rgba(244,236,220,.6); line-height:1.5; max-width:560px; }
+  .vs-grid{ margin-top:16px; display:grid; grid-template-columns:1fr 1fr; gap:0; border:1px solid rgba(232,196,120,.16); border-radius:16px; overflow:hidden; }
+  .vs-col{ padding:16px 16px 14px; position:relative; }
+  .vs-col.bs{ background:linear-gradient(170deg, rgba(74,210,126,.14), rgba(74,210,126,.03) 70%); border-right:1px solid rgba(232,196,120,.14); }
+  .vs-col.others{ background:linear-gradient(170deg, rgba(255,90,80,.10), rgba(120,120,130,.04) 80%); }
+  .vs-head{ font-family:var(--display); font-weight:600; font-size:17px; letter-spacing:.06em; text-transform:uppercase; line-height:1; padding-bottom:11px; border-bottom:1px solid rgba(232,196,120,.12); }
+  .vs-col.bs .vs-head{ color:#7cdd9d; text-shadow:0 0 18px rgba(74,210,126,.22); }
+  .vs-col.others .vs-head{ color:rgba(220,220,225,.7); }
+  .vs-list{ margin-top:12px; display:flex; flex-direction:column; gap:9px; list-style:none; padding:0; }
+  .vs-item{ display:flex; align-items:flex-start; gap:9px; font-size:13.5px; line-height:1.35; }
+  .vs-ico{ flex:none; width:19px; height:19px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; line-height:1; margin-top:1px; }
+  .vs-col.bs .vs-ico{ background:rgba(74,210,126,.22); color:#7cdd9d; box-shadow:inset 0 0 0 1px rgba(74,210,126,.34); }
+  .vs-col.others .vs-ico{ background:rgba(255,90,80,.18); color:#ff8a78; box-shadow:inset 0 0 0 1px rgba(255,90,80,.32); }
+  .vs-text{ color:#f4ecdc; font-weight:500; }
+  .vs-col.others .vs-text{ color:rgba(244,236,220,.55); font-weight:400; }
+  @media(max-width:760px){
+    .vs-grid{ grid-template-columns:1fr; }
+    .vs-col.bs{ border-right:none; border-bottom:1px solid rgba(232,196,120,.14); }
+    .vs-col{ padding:14px 14px 12px; }
+    .vs-head{ font-size:14px; padding-bottom:9px; }
+    .vs-list{ gap:7px; margin-top:9px; }
+    .vs-item{ font-size:12.5px; }
+    .vs-ico{ width:17px; height:17px; font-size:10px; }
+  }
+  @media(min-width:1280px){
+    .vs-col{ padding:22px 22px 20px; }
+    .vs-head{ font-size:20px; padding-bottom:13px; }
+    .vs-item{ font-size:14.5px; gap:11px; }
+    .vs-ico{ width:21px; height:21px; font-size:12px; }
+  }
+
   /* ===== responsive show/hide: desktop vs mobile copy ===== */
   .d-only{ display:inline-block; } .m-only{ display:none; }
   @media(max-width:760px){ .d-only{ display:none; } .m-only{ display:inline-block; } }
@@ -665,11 +701,44 @@
   <section id="s3" class="panel"></section>
   <section id="s4" class="panel"></section>
   <section id="s5" class="panel"></section>
+  <section id="s6" class="panel"></section>
 </main>
 
 <!-- scroll-driven centered overlays: these play out FULLY before the walking
      character adventure begins (the scene is held still during this zone) -->
-<div class="heroframe findbox" id="hf-find" data-fadein=".20" data-peakin=".38" data-peakout=".60" data-fadeout=".78">
+<!-- Comparison slide: Black Silva (green) vs Others (gray/red) -->
+<div class="heroframe vsbox" id="hf-vs" data-fadein=".18" data-peakin=".40" data-peakout=".64" data-fadeout=".84">
+  <p class="ft-k">★ Why Black Silva</p>
+  <h3 class="serif">A different chair</h3>
+  <p class="vs-sub">A quick look at what sets the experience apart.</p>
+  <div class="vs-grid">
+    <div class="vs-col bs">
+      <p class="vs-head">Black Silva</p>
+      <ul class="vs-list">
+        <li class="vs-item"><span class="vs-ico" aria-hidden="true">✓</span><span class="vs-text">60-minute consultation</span></li>
+        <li class="vs-item"><span class="vs-ico" aria-hidden="true">✓</span><span class="vs-text">Hair consultation</span></li>
+        <li class="vs-item"><span class="vs-ico" aria-hidden="true">✓</span><span class="vs-text">2 services &mdash; same price</span></li>
+        <li class="vs-item"><span class="vs-ico" aria-hidden="true">✓</span><span class="vs-text">Complimentary drinks</span></li>
+        <li class="vs-item"><span class="vs-ico" aria-hidden="true">✓</span><span class="vs-text">Identity to your haircut</span></li>
+        <li class="vs-item"><span class="vs-ico" aria-hidden="true">✓</span><span class="vs-text">LGBTQ+ community</span></li>
+        <li class="vs-item"><span class="vs-ico" aria-hidden="true">✓</span><span class="vs-text">Guarantee</span></li>
+      </ul>
+    </div>
+    <div class="vs-col others">
+      <p class="vs-head">Others</p>
+      <ul class="vs-list">
+        <li class="vs-item"><span class="vs-ico" aria-hidden="true">✕</span><span class="vs-text">15&ndash;30 minutes</span></li>
+        <li class="vs-item"><span class="vs-ico" aria-hidden="true">✕</span><span class="vs-text">No consultation</span></li>
+        <li class="vs-item"><span class="vs-ico" aria-hidden="true">✕</span><span class="vs-text">Different prices</span></li>
+        <li class="vs-item"><span class="vs-ico" aria-hidden="true">✕</span><span class="vs-text">Maybe tap water</span></li>
+        <li class="vs-item"><span class="vs-ico" aria-hidden="true">✕</span><span class="vs-text">Same haircut</span></li>
+        <li class="vs-item"><span class="vs-ico" aria-hidden="true">✕</span><span class="vs-text">Maybe</span></li>
+        <li class="vs-item"><span class="vs-ico" aria-hidden="true">✕</span><span class="vs-text">No guarantee</span></li>
+      </ul>
+    </div>
+  </div>
+</div>
+<div class="heroframe findbox" id="hf-find" data-fadein="1.00" data-peakin="1.18" data-peakout="1.40" data-fadeout="1.58">
   <p class="ft-k">Find us</p>
   <h3 class="serif">Find the salon</h3>
   <a class="minimap" href="https://www.google.com/maps/dir/?api=1&destination=Black+Silva+Hairdresser%2C+Badstuestr%C3%A6de+16%2C+1209+K%C3%B8benhavn+K%2C+Denmark" target="_blank" rel="noopener" aria-label="Open directions to Black Silva Hairdresser">
@@ -678,7 +747,7 @@
   </a>
   <div class="ft-row"><button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=Black+Silva+Hairdresser%2C+Badstuestr%C3%A6de+16%2C+1209+K%C3%B8benhavn+K%2C+Denmark','_blank')">Get directions ↗</button></div>
 </div>
-<div class="heroframe gframe" id="hf-voices" data-fadein="0.95" data-peakin="1.12" data-peakout="1.35" data-fadeout="1.55">
+<div class="heroframe gframe" id="hf-voices" data-fadein="1.75" data-peakin="1.92" data-peakout="2.15" data-fadeout="2.35">
   <p class="ft-k">★ Trusted in Copenhagen</p>
   <h3 class="serif">What guests say</h3>
 
@@ -708,7 +777,7 @@
   </div>
 </div>
 <!-- elegant invite that fills the gap after the reviews, before the walk-in -->
-<div class="heroframe startcue" id="hf-start" data-fadein="1.70" data-peakin="1.90" data-peakout="2.12" data-fadeout="2.32">
+<div class="heroframe startcue" id="hf-start" data-fadein="2.55" data-peakin="2.74" data-peakout="2.96" data-fadeout="3.18">
   <p class="sc-k">The chair is ready</p>
   <h2 class="serif"><span class="d-only">Scroll</span><span class="m-only">Swipe up</span> to start<br>your booking</h2>
   <span class="sc-cue" aria-hidden="true"><span class="sc-track"></span></span>
@@ -1833,7 +1902,7 @@ function start(){
   var proxy={p:0};
   /* Hold the walking character perfectly still for the first stretch of scroll so the
      Find-us + reviews overlays can play out fully BEFORE the walk-in begins. */
-  var HOLD_VH=2.2;
+  var HOLD_VH=3.05;
   function sceneProgress(){
     var maxS=document.documentElement.scrollHeight-innerHeight;
     var holdFrac=maxS>0?Math.min(0.9,(HOLD_VH*innerHeight)/maxS):0;

@@ -178,9 +178,10 @@
   .svc-card.disabled:hover{ transform:none; border-color:rgba(232,196,120,.20); background:rgba(255,255,255,.04); }
   .svc-count{ margin-top:14px; font-size:11px; letter-spacing:.28em; text-transform:uppercase; color:rgba(244,236,220,.55); text-align:center; }
   /* ===== hair-length picker: mannequin + draggable measuring ruler ===== */
-  .hairpick{ margin-top:14px; display:flex; gap:14px; align-items:stretch; height:clamp(300px,52vh,430px); touch-action:none; -webkit-user-select:none; user-select:none; }
-  .hp-stage{ position:relative; flex:1 1 auto; cursor:ns-resize; }
-  .hp-stage svg{ display:block; width:100%; height:100%; }
+  .hairpick{ margin-top:14px; display:flex; gap:14px; align-items:stretch; justify-content:center; height:clamp(300px,52vh,440px); touch-action:none; -webkit-user-select:none; user-select:none; }
+  .hp-stage{ position:relative; flex:0 0 auto; height:100%; aspect-ratio:786/1029; cursor:ns-resize; }
+  .hp-stage svg, .hp-img{ display:block; width:100%; height:100%; object-fit:cover; }
+  .hp-img{ -webkit-user-drag:none; user-select:none; pointer-events:none; border-radius:10px; }
   .hp-jaw{ position:absolute; left:0; right:0; height:0; border-top:1px dashed rgba(244,236,220,.28); pointer-events:none; }
   .hp-jaw span{ position:absolute; right:0; top:-15px; font-size:8.5px; letter-spacing:.22em; text-transform:uppercase; color:rgba(244,236,220,.4); }
   .hp-line{ position:absolute; left:-4px; right:-4px; height:0; pointer-events:none; z-index:3; transition:top .04s linear; }
@@ -1485,32 +1486,12 @@ function start(){
   function cutCard(type){ var c=CUTS[type]; return '<button class="cutcard txt '+type+'" onclick="BS.haircut(\''+type+'\')"><span class="cutcopy"><b>'+c.label+'</b><small class="cutsub">'+c.sub+'</small><span class="price">from '+c.from+'DKK</span></span></button>'; }
   /* ===== hair-length picker config ===== */
   var HP_CM_MIN=5, HP_CM_MAX=60;     /* ruler range */
-  var HP_LINE_TOP=0.06, HP_LINE_BOT=0.92;  /* where the red line sits on the figure at t=0 / t=1 */
-  var HP_JAW_FRAC=0.46;              /* jawline position on the figure (0=top, 1=bottom) — at/below = Long */
+  var HP_LINE_TOP=0.13, HP_LINE_BOT=0.94;  /* where the red line sits on the photo at t=0 / t=1 */
+  var HP_JAW_FRAC=0.54;              /* jawline position on the photo (0=top, 1=bottom) — at/below = Long */
   if(typeof choice.hairT!=='number') choice.hairT=0.72; /* default ~45 cm, Long */
   function hpLineFrac(t){ return HP_LINE_TOP + t*(HP_LINE_BOT-HP_LINE_TOP); }
   function hpCm(t){ return Math.round(HP_CM_MIN + t*(HP_CM_MAX-HP_CM_MIN)); }
   function hpCategory(t){ return hpLineFrac(t) >= HP_JAW_FRAC ? 'lady' : 'gentleman'; } /* lady=Long, gentleman=Short */
-  function mannequinSVG(){
-    return '<svg viewBox="0 0 200 360" preserveAspectRatio="xMidYMid meet" aria-hidden="true">'
-      +'<defs>'
-      +'<linearGradient id="hpBody" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6f6f4"/><stop offset="0.5" stop-color="#e2e2e6"/><stop offset="1" stop-color="#bdbdc6"/></linearGradient>'
-      +'<radialGradient id="hpHi" cx="0.38" cy="0.34" r="0.55"><stop offset="0" stop-color="#ffffff" stop-opacity="0.85"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient>'
-      +'</defs>'
-      /* shoulders / torso */
-      +'<path d="M2,360 C2,292 30,250 72,242 L72,206 Q100,222 128,206 L128,242 C170,250 198,292 198,360 Z" fill="url(#hpBody)"/>'
-      /* neck */
-      +'<path d="M80,150 L120,150 L122,214 L78,214 Z" fill="url(#hpBody)"/>'
-      +'<path d="M80,150 L120,150 L121,176 Q100,190 79,176 Z" fill="#000" opacity="0.06"/>'
-      /* head */
-      +'<ellipse cx="100" cy="90" rx="54" ry="80" fill="url(#hpBody)"/>'
-      +'<ellipse cx="100" cy="90" rx="54" ry="80" fill="url(#hpHi)"/>'
-      /* subtle face hints */
-      +'<path d="M100,84 Q104,104 100,112 Q96,114 94,112" fill="none" stroke="#000" stroke-opacity="0.08" stroke-width="2" stroke-linecap="round"/>'
-      +'<path d="M90,130 Q100,136 110,130" fill="none" stroke="#000" stroke-opacity="0.10" stroke-width="2" stroke-linecap="round"/>'
-      +'<ellipse cx="80" cy="74" rx="5" ry="3" fill="#000" opacity="0.06"/><ellipse cx="120" cy="74" rx="5" ry="3" fill="#000" opacity="0.06"/>'
-      +'</svg>';
-  }
   function rulerTicks(){ var s=''; for(var cm=HP_CM_MIN; cm<=HP_CM_MAX; cm++){ var top=((cm-HP_CM_MIN)/(HP_CM_MAX-HP_CM_MIN)*100).toFixed(2);
       var cls=(cm%10===0)?'maj':(cm%5===0?'mid':'min'); s+='<i class="hp-tick '+cls+'" style="top:'+top+'%"></i>';
       if(cm%10===0) s+='<b class="hp-num" style="top:'+top+'%">'+cm+'</b>'; }
@@ -1518,7 +1499,7 @@ function start(){
   function buildLength(){ var h=grab()+homeBtn()+dots(1)+'<p class="bk">Step 1 · Hair length</p><h3 class="serif">Choose your hair length</h3><p class="bsub">Drag the measuring tape — the red line shows where your hair falls. <b>From the jawline down counts as Long.</b></p>'
       +'<div class="taphint"><span class="th-ico"></span><span class="th-txt"><span class="d-only">Drag the ruler</span><span class="m-only">Swipe the ruler</span></span></div>';
     h+='<div class="hairpick" id="hairpick">'
-      +'<div class="hp-stage" id="hp-stage">'+mannequinSVG()
+      +'<div class="hp-stage" id="hp-stage"><img class="hp-img" src="mannequin.webp" alt="Mannequin head" draggable="false">'
         +'<div class="hp-jaw" id="hp-jaw" style="top:'+(HP_JAW_FRAC*100)+'%"><span>Jawline</span></div>'
         +'<div class="hp-line" id="hp-line"><span class="hp-knob"></span></div>'
       +'</div>'

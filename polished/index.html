@@ -186,6 +186,9 @@
   .cal-dow i{ font-style:normal; text-align:center; font-size:10px; letter-spacing:.14em; color:#8a8a93; text-transform:uppercase; }
   .cal-days{ display:grid; grid-template-columns:repeat(7,1fr); gap:6px; padding:6px 0 4px; }
   .chip.blank{ background:transparent; border-color:transparent; cursor:default; pointer-events:none; }
+  .chip.closed{ cursor:default; pointer-events:none; opacity:.4; }
+  .chip.closed b{ text-decoration:line-through; }
+  .chip .chip-closed{ font-size:8.5px; letter-spacing:.04em; text-transform:uppercase; color:#ff8a78; font-weight:700; }
   .qm-h{ margin-top:18px; font-size:11px; letter-spacing:.24em; text-transform:uppercase; color:#7d7d84; }
   .qmenu{ margin-top:10px; padding:12px 12px 8px; border-radius:16px; border:1px solid rgba(0,0,0,.1); background:rgba(255,255,255,.5); }
   .qrow{ margin-bottom:10px; }
@@ -670,6 +673,12 @@
   .nm-ladder{ margin-top:18px; border-top:1px solid rgba(232,196,120,.18); }
   .nm-ladder div{ display:flex; justify-content:space-between; align-items:center; padding:11px 2px; border-bottom:1px solid rgba(232,196,120,.12); font-size:13.5px; }
   .nm-ladder span{ color:rgba(244,236,220,.62); } .nm-ladder b{ color:#e8c478; font-size:16px; }
+  .nm-hours{ margin-top:8px; }
+  .nm-hours div{ display:flex; justify-content:space-between; align-items:center; padding:8px 2px; border-bottom:1px solid rgba(232,196,120,.1); font-size:13.5px; }
+  .nm-hours div:last-child{ border-bottom:none; }
+  .nm-hours span{ color:rgba(244,236,220,.7); }
+  .nm-hours b{ color:#f4ecdc; font-weight:600; }
+  .nm-hours b.closed{ color:rgba(244,236,220,.4); font-weight:500; }
   .nm-cta{ width:100%; margin-top:20px; padding:15px; border:none; border-radius:14px; background:#d8b878; color:#1a1208;
     font-weight:800; letter-spacing:.12em; text-transform:uppercase; font-size:12px; cursor:pointer; transition:.16s; }
   .nm-cta:hover{ transform:translateY(-2px); box-shadow:0 14px 28px rgba(216,184,120,.25); }
@@ -792,7 +801,7 @@
   <div class="sheet" id="m-stripe"></div>
   <div class="sheet" id="m-done"></div>
 </div>
-<button id="restart-top" onclick="location.reload()">&#8634; Restart</button>
+<!-- restart button removed: the page only resets on a full browser refresh -->
 <!-- Fast Track floating pill removed by request -->
 <!-- header pop-ups -->
 <div class="navmodal" id="modal-prices" onclick="if(event.target===this)BS.closeModal('modal-prices')">
@@ -820,6 +829,16 @@
     <p>You'll find us in the heart of Copenhagen, just a short walk from Nyhavn and Strøget.</p>
     <a class="nm-contact" href="https://www.google.com/maps/dir/?api=1&destination=Black+Silva+Hairdresser%2C+Badstuestr%C3%A6de+16%2C+1209+K%C3%B8benhavn+K%2C+Denmark" target="_blank" rel="noopener"><span>Address</span><b>Badstuestræde 16</b></a>
     <a class="nm-contact" href="https://www.google.com/maps/dir/?api=1&destination=Black+Silva+Hairdresser%2C+Badstuestr%C3%A6de+16%2C+1209+K%C3%B8benhavn+K%2C+Denmark" target="_blank" rel="noopener"><span>Postal · City</span><b>1209 København K</b></a>
+    <p class="nm-k" style="margin-top:18px">Opening hours</p>
+    <div class="nm-hours">
+      <div><span>Monday</span><b class="closed">Closed</b></div>
+      <div><span>Tuesday</span><b class="closed">Closed</b></div>
+      <div><span>Wednesday</span><b>14:00 – 20:00</b></div>
+      <div><span>Thursday</span><b>11:00 – 17:00</b></div>
+      <div><span>Friday</span><b>11:00 – 17:00</b></div>
+      <div><span>Saturday</span><b>11:00 – 17:00</b></div>
+      <div><span>Sunday</span><b>11:00 – 17:00</b></div>
+    </div>
     <button class="nm-cta" type="button" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=Black+Silva+Hairdresser%2C+Badstuestr%C3%A6de+16%2C+1209+K%C3%B8benhavn+K%2C+Denmark','_blank','noopener')">Get directions ↗</button>
   </div>
 </div>
@@ -1346,7 +1365,7 @@ function start(){
   function confirmBackTarget(){ return (CUTS[choice.haircut] && CUTS[choice.haircut].pickStylist) ? 'stylist' : 'time'; }
 
   function enterFlow(){ gated=true; mode='flow'; document.body.classList.add('flow');
-    document.body.style.overflow='hidden'; var rt=document.getElementById('restart-top'); if(rt) rt.style.display='block';
+    document.body.style.overflow='hidden';
     var sb=document.getElementById('shaderbg'); if(sb) sb.style.display='none'; /* drop the intro shader if we jumped straight in */
     var nl=document.getElementById('navlinks'); if(nl) nl.classList.remove('open'); }
   /* seat the customer instantly (no long walk) — used by Book Now */
@@ -1378,7 +1397,7 @@ function start(){
     choice.haircut=saved.haircut; choice.service=saved.service; choice.fromPrice=saved.fromPrice||0;
     choice.addons=Array.isArray(saved.addons)?saved.addons.slice():[];
     choice.stylist=saved.stylist||'Eduard'; choice.name=saved.name||''; choice.email=saved.email||'';
-    var today=startDay(new Date()); choice.dayIdx=0; choice.dayLabel=fullDayLabel(today,0); choice.price=priceForDay(0); choice.priceTier=1;
+    defaultDay();
     choice.time=saved.time||'10:00';
     enterFlow(); setDaylight();
     var chosen=(choice.stylist==='Eduard')?eduard:elena; setActiveStylist(chosen);
@@ -1418,6 +1437,8 @@ function start(){
   function addonsTotal(){ return 0; }
   function grandTotal(){ return choice.price; }
   var PRICE_STEPS=[500,450,400,375];
+  /* Opening hours, keyed by JS day (0=Sun … 6=Sat). null = closed. [openHour, closeHour] */
+  var OPEN_HOURS={ 0:[11,17], 1:null, 2:null, 3:[14,20], 4:[11,17], 5:[11,17], 6:[11,17] };
   var DAY_NAMES=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   var MONTH_NAMES=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   function money(v){ return v+' DKK'; }
@@ -1426,6 +1447,13 @@ function start(){
   function bookingEndDate(today){ var e=new Date(today); e.setMonth(e.getMonth()+2); return e; }
   function priceTier(daysAhead){ if(daysAhead<7) return 0; if(daysAhead<14) return 1; if(daysAhead<21) return 2; return 3; }
   function priceForDay(daysAhead){ return PRICE_STEPS[priceTier(daysAhead)]; }
+  /* ===== opening-hours helpers ===== */
+  function dateForIdx(idx){ return addDays(startDay(new Date()), idx||0); }
+  function isOpenDay(d){ return !!OPEN_HOURS[d.getDay()]; }
+  function slotsForDay(d){ var hrs=OPEN_HOURS[d.getDay()]; if(!hrs) return []; var out=[]; for(var s=hrs[0]; s<=hrs[1]-1; s++){ out.push(pad2(s)+':00'); } return out; }
+  function firstOpenIdx(){ var today=startDay(new Date()), end=bookingEndDate(today); for(var i=0;i<400;i++){ var d=addDays(today,i); if(d>end) break; if(isOpenDay(d)) return i; } return 0; }
+  function defaultDay(){ var i=firstOpenIdx(), d=dateForIdx(i); choice.dayIdx=i; choice.dayLabel=fullDayLabel(d,i); choice.price=priceForDay(i); choice.priceTier=priceTier(i)+1; }
+  function confirmDayOptions(){ var today=startDay(new Date()), end=bookingEndDate(today), out=[]; for(var i=0;i<400 && out.length<30;i++){ var d=addDays(today,i); if(d>end) break; if(isOpenDay(d)) out.push({idx:i,label:fullDayLabel(d,i)}); } return out; }
   /* first month follows the weekly tiers; week 4 onward (incl. the whole second month) holds the best 375 price */
   function tierLabel(tier){ return tier>=4 ? 'Best price' : 'Week '+tier+' price'; }
   function fullDayLabel(d,daysAhead){ return DAY_NAMES[d.getDay()]+' '+d.getDate()+' '+MONTH_NAMES[d.getMonth()]; }
@@ -1476,15 +1504,16 @@ function start(){
     for(var day=1; day<=monthLast.getDate(); day++){
       var d=new Date(view.getFullYear(),view.getMonth(),day);
       var idx=Math.round((d-today)/86400000);
-      var dis=(d<today || d>end), on=(idx===choice.dayIdx);
+      var outOfRange=(d<today || d>end), closed=(!outOfRange && !isOpenDay(d));
+      var dis=outOfRange||closed, on=(idx===choice.dayIdx);
       var lbl=fullDayLabel(d,idx);
       var dayPrice=dis?'':priceForDay(idx);
-      html+='<div class="chip'+(dis?' blank':'')+(on?' on':'')+'" id="day-'+idx+'"'+(dis?'':' onclick="BS.pickDay('+idx+',\''+lbl+'\')"')+'><small>'+DAY_NAMES[d.getDay()].slice(0,3)+'</small><b>'+day+'</b>'+(dis?'':'<em class="chip-price">'+dayPrice+'</em>')+'</div>';
+      html+='<div class="chip'+(outOfRange?' blank':'')+(closed?' closed':'')+(on?' on':'')+'" id="day-'+idx+'"'+(dis?'':' onclick="BS.pickDay('+idx+',\''+lbl+'\')"')+'><small>'+DAY_NAMES[d.getDay()].slice(0,3)+'</small><b>'+day+'</b>'+(closed?'<em class="chip-closed">Closed</em>':(dis?'':'<em class="chip-price">'+dayPrice+'</em>'))+'</div>';
     }
     grid.innerHTML=html;
   }
   function buildCalendar(){ var today=startDay(new Date());
-    if(choice.dayIdx===null||typeof choice.dayIdx==='undefined'){ choice.dayIdx=0; choice.dayLabel=fullDayLabel(today,0); choice.price=priceForDay(0); choice.priceTier=1; }
+    if(choice.dayIdx===null||typeof choice.dayIdx==='undefined'){ defaultDay(); }
     if(!calMonthOffset) calMonthOffset=0;
     var h=grab()+backBtn('addons')+dots(2)+'<p class="bk">Step 2 · Date</p><h3 class="serif">Pick your day</h3>';
     h+='<p class="bsub">Each day shows its price — book a month early and it stays at its best <b style="color:#d8b878">375 DKK</b>.</p>';
@@ -1496,7 +1525,9 @@ function start(){
     var h=grab()+backBtn('day')+dots(3)+'<p class="bk">Step 3 · Time</p><h3 class="serif">Pick your time</h3>';
     h+='<p class="bsub">'+(choice.dayLabel||'')+' &middot; <b style="color:#d8b878">'+money(choice.price)+'</b></p>';
     h+='<div class="times">';
-    ['10:00','11:30','13:00','14:30','16:00','17:30','19:00','20:00'].forEach(function(tm){
+    var slots=slotsForDay(dateForIdx(choice.dayIdx));
+    if(!slots.length){ h+='<p class="bsub" style="grid-column:1/-1">We\'re closed that day — please pick another.</p>'; }
+    slots.forEach(function(tm){
       h+='<div class="tslot'+(choice.time===tm?' on':'')+'" id="t-'+tm.replace(':','')+'" onclick="BS.pickTime(\''+tm+'\')"><span>'+tm+'</span></div>';
     });
     h+='</div>';
@@ -1510,6 +1541,9 @@ function start(){
   function loggedInEmail(){ return choice.email||''; }
   function loggedInName(){ return choice.name||''; }
   function totalLine(){ var addons=addonsTotal(); return addons>0 ? money(choice.price)+' + '+money(addons)+' = '+money(grandTotal()) : money(grandTotal()); }
+  /* refresh just the summary block on the Confirm sheet (after a day/time change) */
+  function refreshConfirmSummary(){ var s=document.querySelector('#m-confirm .summary'); if(!s) return;
+    s.innerHTML='Length&nbsp;&nbsp;<b>'+choice.service+'</b><br>Services&nbsp;&nbsp;'+addonText()+'<br>When&nbsp;&nbsp;'+choice.dayLabel+' · '+choice.time+'<br>Stylist&nbsp;&nbsp;'+choice.stylist+'<br><span class="tot">Total&nbsp;&nbsp;'+totalLine()+'</span>'; }
   function buildConfirm(){
     if(!choice.email) choice.email=loggedInEmail();
     if(!choice.name)  choice.name=loggedInName();
@@ -1518,9 +1552,15 @@ function start(){
     h+='<p class="qm-h">Quick changes</p><div class="qmenu">';
     h+=' <div class="qrow"><label>Email</label><input id="qm-email" type="email" autocomplete="email" value="'+(choice.email||'')+'" placeholder="you@email.com"></div>';
     h+=' <div class="qrow"><label>Name (for this visit)</label><input id="qm-name" type="text" autocomplete="name" value="'+(choice.name||'')+'" placeholder="Your name"></div>';
-    /* custom Time dropdown — same dark palette, no native styling, no blue selection highlight */
-    h+=' <div class="qrow"><label>Time</label><div class="qdrop" id="qm-time-drop"><button type="button" class="qdrop-btn" onclick="BS.toggleTime(event)"><span id="qm-time-text">'+(choice.time||TIME_SLOTS[0])+'</span><span class="qdrop-caret">▾</span></button><div class="qdrop-list" id="qm-time-list">';
-    TIME_SLOTS.forEach(function(t){ h+='<button type="button" class="'+(t===choice.time?'on':'')+'" onclick="BS.setTime(\''+t+'\')">'+t+'</button>'; });
+    /* custom Day dropdown — change the date right here (open days only) */
+    h+=' <div class="qrow"><label>Day</label><div class="qdrop" id="qm-day-drop"><button type="button" class="qdrop-btn" onclick="BS.toggleDay(event)"><span id="qm-day-text">'+(choice.dayLabel||'')+'</span><span class="qdrop-caret">▾</span></button><div class="qdrop-list" id="qm-day-list">';
+    confirmDayOptions().forEach(function(o){ h+='<button type="button" data-idx="'+o.idx+'" class="'+(o.idx===choice.dayIdx?'on':'')+'" onclick="BS.setDay('+o.idx+',&quot;'+o.label+'&quot;)">'+o.label+'</button>'; });
+    h+='</div></div></div>';
+    /* custom Time dropdown — slots depend on the chosen day */
+    var cSlots=slotsForDay(dateForIdx(choice.dayIdx));
+    if(cSlots.indexOf(choice.time)<0) choice.time=cSlots[0]||'';
+    h+=' <div class="qrow"><label>Time</label><div class="qdrop" id="qm-time-drop"><button type="button" class="qdrop-btn" onclick="BS.toggleTime(event)"><span id="qm-time-text">'+(choice.time||'—')+'</span><span class="qdrop-caret">▾</span></button><div class="qdrop-list" id="qm-time-list">';
+    cSlots.forEach(function(t){ h+='<button type="button" class="'+(t===choice.time?'on':'')+'" onclick="BS.setTime(\''+t+'\')">'+t+'</button>'; });
     h+='</div></div></div>';
     /* Long Hair → Elena is fixed; only show the picker for Short Hair */
     if(CUTS[choice.haircut] && CUTS[choice.haircut].pickStylist){
@@ -1796,8 +1836,8 @@ function start(){
       var c=CUTS[choice.haircut]; choice.service=c.label; choice.fromPrice=c.from;
       if(!Array.isArray(choice.addons)) choice.addons=[];
       var today=startDay(new Date());
-      if(choice.dayIdx===null||typeof choice.dayIdx==='undefined'){ choice.dayIdx=0; choice.dayLabel=fullDayLabel(today,0); choice.price=priceForDay(0); choice.priceTier=1; }
-      if(!choice.time) choice.time=TIME_SLOTS[0];
+      if(choice.dayIdx===null||typeof choice.dayIdx==='undefined'){ defaultDay(); }
+      if(!choice.time){ var _sl=slotsForDay(dateForIdx(choice.dayIdx)); choice.time=_sl[0]||''; }
       if(!choice.stylist) choice.stylist='Eduard';
       snapSeated(); buildConfirm(); showStep('confirm'); },
     haircut:function(type){ var c=CUTS[type]; if(!c) return;
@@ -1843,13 +1883,29 @@ function start(){
     _cc:function(){},
     /* tap the round arrow to push the sheet down (and tap again to bring it back) */
     togglePeek:function(btn){ var s=btn&&btn.closest&&btn.closest('.sheet'); if(s) s.classList.toggle('min'); },
+    /* custom Day dropdown in the Confirm step */
+    toggleDay:function(e){ if(e&&e.stopPropagation) e.stopPropagation();
+      var d=document.getElementById('qm-day-drop'); if(d) d.classList.toggle('open');
+      var t=document.getElementById('qm-time-drop'); if(t) t.classList.remove('open'); },
+    setDay:function(i,label){ choice.dayIdx=i; choice.dayLabel=label;
+      choice.price=priceForDay(i); choice.priceTier=priceTier(i)+1;
+      var dt=document.getElementById('qm-day-text'); if(dt) dt.textContent=label;
+      document.querySelectorAll('#qm-day-list button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-idx')===String(i)); });
+      /* rebuild the time options for the new day and keep a valid selection */
+      var slots=slotsForDay(dateForIdx(i)); if(slots.indexOf(choice.time)<0) choice.time=slots[0]||'';
+      var tt=document.getElementById('qm-time-text'); if(tt) tt.textContent=choice.time||'—';
+      var tl=document.getElementById('qm-time-list'); if(tl){ tl.innerHTML=slots.map(function(t){ return '<button type="button" class="'+(t===choice.time?'on':'')+'" onclick="BS.setTime(\''+t+'\')">'+t+'</button>'; }).join(''); }
+      var d=document.getElementById('qm-day-drop'); if(d) d.classList.remove('open');
+      refreshConfirmSummary(); },
     /* custom Time dropdown in the Confirm step */
     toggleTime:function(e){ if(e&&e.stopPropagation) e.stopPropagation();
-      var d=document.getElementById('qm-time-drop'); if(d) d.classList.toggle('open'); },
+      var d=document.getElementById('qm-time-drop'); if(d) d.classList.toggle('open');
+      var dd=document.getElementById('qm-day-drop'); if(dd) dd.classList.remove('open'); },
     setTime:function(tm){ choice.time=tm;
       var t=document.getElementById('qm-time-text'); if(t) t.textContent=tm;
       document.querySelectorAll('#qm-time-list button').forEach(function(b){ b.classList.toggle('on', b.textContent===tm); });
-      var d=document.getElementById('qm-time-drop'); if(d) d.classList.remove('open'); },
+      var d=document.getElementById('qm-time-drop'); if(d) d.classList.remove('open');
+      refreshConfirmSummary(); },
     stylist:function(who){ choice.stylist=who; setActiveStylist(who==='Eduard'?eduard:null); showStep('');
       seatCustomer(function(){ stylistArriveAndCut(function(){ buildConfirm(); showStep('confirm'); }); }); },
     pickStylist:function(who){ choice.stylist=who; setActiveStylist(who==='Eduard'?eduard:elena); document.querySelectorAll('.qopt').forEach(function(el){ el.classList.toggle('on', el.textContent===who); }); },
@@ -1981,6 +2037,7 @@ function start(){
   (function(){
     document.addEventListener('click',function(e){
       var d=document.getElementById('qm-time-drop'); if(d && d.classList.contains('open') && !d.contains(e.target)) d.classList.remove('open');
+      var dd=document.getElementById('qm-day-drop'); if(dd && dd.classList.contains('open') && !dd.contains(e.target)) dd.classList.remove('open');
       var nl=document.getElementById('navlinks'); if(nl && nl.classList.contains('open') && !nl.contains(e.target) && !e.target.closest('#navburger')){ if(window.BS&&BS.closeMenu) BS.closeMenu(); }
     });
     document.addEventListener('keydown',function(e){ if(e.key==='Escape'){

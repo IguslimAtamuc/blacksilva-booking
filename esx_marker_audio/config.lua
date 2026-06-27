@@ -56,8 +56,10 @@ Config.Audio = {
     volume = 0.5,
 
     -- Daca audio-ul se reia automat in bucla cat timp jucatorul e in cerc
-    loop = true,
+    -- false = se reda o singura data, pana la final (NU in bucla)
+    loop = false,
 
     -- Daca true, audio-ul se opreste cand jucatorul iese din cerc
-    stopOnLeave = true,
+    -- false = audio-ul continua sa ruleze pana se termina, chiar daca iesi din cerc
+    stopOnLeave = false,
 }

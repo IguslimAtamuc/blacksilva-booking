@@ -1,0 +1,9 @@
+PUNE FISIERUL TAU MP3 IN ACEST FOLDER!
+
+1. Copiaza fisierul tau .mp3 in acest folder (html/audio/).
+2. Daca numele este diferit de "audio.mp3", schimba in config.lua:
+       Config.Audio.file = 'numele_fisierului_tau.mp3'
+3. Sterge acest fisier text dupa ce ai adaugat MP3-ul.
+
+Exemplu structura corecta:
+   html/audio/audio.mp3

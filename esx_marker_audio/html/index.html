@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <title>ESX Marker Audio</title>
+</head>
+<body>
+    <!-- Element audio folosit pentru redarea fisierelor MP3 -->
+    <audio id="player"></audio>
+
+    <script>
+        const player = document.getElementById('player');
+
+        window.addEventListener('message', function (event) {
+            const data = event.data;
+
+            if (data.action === 'play') {
+                // Seteaza sursa MP3 din folderul html/audio/
+                player.src    = 'audio/' + data.file;
+                player.volume = (typeof data.volume === 'number') ? data.volume : 0.5;
+                player.loop   = data.loop === true;
+
+                // Reia de la inceput si porneste redarea
+                player.currentTime = 0;
+                player.play().catch(function (err) {
+                    console.log('Eroare la redarea audio:', err);
+                });
+            }
+
+            if (data.action === 'stop') {
+                player.pause();
+                player.currentTime = 0;
+            }
+
+            if (data.action === 'volume') {
+                player.volume = data.volume;
+            }
+        });
+    </script>
+</body>
+</html>

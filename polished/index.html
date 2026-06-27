@@ -184,7 +184,7 @@
   .hp-img{ -webkit-user-drag:none; user-select:none; pointer-events:none; border-radius:10px; }
   .hp-jaw{ position:absolute; left:0; right:0; height:0; border-top:1px dashed rgba(244,236,220,.28); pointer-events:none; }
   .hp-jaw span{ position:absolute; right:0; top:-15px; font-size:8.5px; letter-spacing:.22em; text-transform:uppercase; color:rgba(244,236,220,.4); }
-  .hp-line{ position:absolute; left:-4px; right:-4px; height:0; pointer-events:none; z-index:3; transition:top .04s linear; }
+  .hp-line{ position:absolute; left:-4px; right:-4px; height:0; pointer-events:none; z-index:3; will-change:top; }
   .hp-line::before{ content:""; position:absolute; left:0; right:0; top:-1.5px; height:3px; background:#ff3b3b; border-radius:3px; box-shadow:0 0 12px rgba(255,59,59,.7); }
   .hp-line .hp-knob{ position:absolute; left:-2px; top:-6px; width:12px; height:12px; border-radius:50%; background:#ff3b3b; box-shadow:0 0 10px rgba(255,59,59,.8); }
   .hp-ruler{ flex:0 0 86px; display:flex; flex-direction:column; align-items:center; }
@@ -200,7 +200,7 @@
   .hp-readout{ margin-top:14px; text-align:center; font-size:12px; letter-spacing:.22em; text-transform:uppercase; color:rgba(244,236,220,.55); }
   .hp-readout b{ color:#f4ecdc; }
   .hp-readout b.cat{ color:#d8b878; }
-  @media(max-width:760px){ .hairpick{ height:clamp(260px,42vh,360px); gap:10px; } .hp-ruler{ flex-basis:72px; } .hp-bubble{ font-size:12px; padding:6px 10px; } }
+  @media(max-width:760px){ .hairpick{ height:min(46vh,78vw); gap:8px; } .hp-ruler{ flex-basis:60px; } .hp-bubble{ font-size:11.5px; padding:5px 9px; } .hp-num{ right:22px; font-size:10px; } .hp-readout{ margin-top:10px; font-size:11px; } }
   .cal-nav{ margin-top:14px; display:flex; align-items:center; justify-content:space-between; gap:10px; }
   .cal-arrow{ width:36px; height:36px; border-radius:50%; border:1px solid rgba(0,0,0,.14); background:rgba(255,255,255,.6); color:var(--ink); font-size:20px; line-height:1; cursor:pointer; padding:0 2px 2px 0; }
   .cal-arrow:hover,.cal-arrow:active{ border-color:var(--ink); }
@@ -1496,7 +1496,7 @@ function start(){
       var cls=(cm%10===0)?'maj':(cm%5===0?'mid':'min'); s+='<i class="hp-tick '+cls+'" style="top:'+top+'%"></i>';
       if(cm%10===0) s+='<b class="hp-num" style="top:'+top+'%">'+cm+'</b>'; }
     return s; }
-  function buildLength(){ var h=grab()+homeBtn()+dots(1)+'<p class="bk">Step 1 · Hair length</p><h3 class="serif">Choose your hair length</h3><p class="bsub">Drag the measuring tape — the red line shows where your hair falls. <b>From the jawline down counts as Long.</b></p>'
+  function buildLength(){ var h=grab()+homeBtn()+dots(1)+'<p class="bk">Step 1 · Hair length</p><h3 class="serif">Choose your hair length</h3><p class="bsub">Drag the tape — <b>from the jawline down counts as Long.</b></p>'
       +'<div class="taphint"><span class="th-ico"></span><span class="th-txt"><span class="d-only">Drag the ruler</span><span class="m-only">Swipe the ruler</span></span></div>';
     h+='<div class="hairpick" id="hairpick">'
       +'<div class="hp-stage" id="hp-stage"><img class="hp-img" src="mannequin.webp" alt="Mannequin head" draggable="false">'
@@ -1526,18 +1526,27 @@ function start(){
   }
   function hpInit(){
     var pick=document.getElementById('hairpick'), stage=document.getElementById('hp-stage'); if(!pick||!stage) return;
-    function setFromClientY(cy){ var r=stage.getBoundingClientRect(); var t=(cy-r.top)/r.height; t=Math.max(0,Math.min(1,t)); choice.hairT=t; hpRender(); }
-    var dragging=false;
-    function down(e){ if(e.target.closest('.hp-chev')) return; dragging=true; window.__hpDrag=true; pick.setPointerCapture&&e.pointerId!=null&&pick.setPointerCapture(e.pointerId); var y=e.clientY!=null?e.clientY:(e.touches&&e.touches[0]?e.touches[0].clientY:0); setFromClientY(y); e.preventDefault(); }
-    function move(e){ if(!dragging) return; var y=e.clientY!=null?e.clientY:(e.touches&&e.touches[0]?e.touches[0].clientY:0); setFromClientY(y); e.preventDefault(); }
-    function up(){ dragging=false; setTimeout(function(){ window.__hpDrag=false; },50); }
+    /* cache the stage geometry so dragging never forces a layout (no reflow = no lag),
+       and batch DOM writes to one per animation frame */
+    var rectTop=0, rectH=1, dragging=false, pendingY=null, raf=0;
+    function measure(){ var r=stage.getBoundingClientRect(); rectTop=r.top; rectH=r.height||1; }
+    function apply(){ raf=0; if(pendingY==null) return; var y=pendingY; pendingY=null;
+      var t=(y-rectTop)/rectH; t=t<0?0:(t>1?1:t); choice.hairT=t; hpRender(); }
+    function queue(y){ pendingY=y; if(!raf) raf=requestAnimationFrame(apply); }
+    function yOf(e){ return e.clientY!=null?e.clientY:(e.touches&&e.touches[0]?e.touches[0].clientY:0); }
+    function down(e){ if(e.target.closest('.hp-chev')) return; dragging=true; window.__hpDrag=true; measure();
+      if(pick.setPointerCapture && e.pointerId!=null){ try{ pick.setPointerCapture(e.pointerId); }catch(_){} }
+      queue(yOf(e)); e.preventDefault(); }
+    function move(e){ if(!dragging) return; queue(yOf(e)); e.preventDefault(); }
+    function up(){ dragging=false; setTimeout(function(){ window.__hpDrag=false; },60); }
     if(window.PointerEvent){
-      pick.addEventListener('pointerdown',down); pick.addEventListener('pointermove',move);
+      pick.addEventListener('pointerdown',down); pick.addEventListener('pointermove',move,{passive:false});
       pick.addEventListener('pointerup',up); pick.addEventListener('pointercancel',up);
     } else {
       pick.addEventListener('mousedown',down); window.addEventListener('mousemove',move); window.addEventListener('mouseup',up);
       pick.addEventListener('touchstart',down,{passive:false}); pick.addEventListener('touchmove',move,{passive:false}); pick.addEventListener('touchend',up);
     }
+    addEventListener('resize',measure);
     hpRender();
   }
   function addonText(){ return choice.addons.length ? choice.addons.join(', ') : 'None'; }

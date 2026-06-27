@@ -1,0 +1,41 @@
+# ==========================================================================
+# Black Silva Hairdresser — security headers
+# Upload this file into the SAME folder as index.html (public_html).
+# Works on Apache / LiteSpeed shared hosting (e.g. FudgeHost).
+# It is a hidden file (starts with a dot) — enable "show hidden files"
+# in your file manager / OS if you don't see it.
+# ==========================================================================
+
+<IfModule mod_headers.c>
+    # Force HTTPS for a year (only takes effect once the site is served over HTTPS)
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+
+    # Don't allow the site to be framed by others (clickjacking protection)
+    Header always set X-Frame-Options "SAMEORIGIN"
+
+    # Stop MIME-type sniffing
+    Header always set X-Content-Type-Options "nosniff"
+
+    # Limit referrer information sent to other sites
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+
+    # Disable browser features the site doesn't use
+    Header always set Permissions-Policy "accelerometer=(), autoplay=(self), camera=(), display-capture=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), usb=()"
+
+    # Content Security Policy — whitelists exactly the services the site loads
+    # (Three.js/GSAP via cdnjs, Google Fonts, Stripe, optional Google Maps & Worker, Resend).
+    Header always set Content-Security-Policy "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'; img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://js.stripe.com https://*.stripe.com https://maps.googleapis.com https://maps.gstatic.com; connect-src 'self' https://api.resend.com https://*.stripe.com https://*.stripe.network https://maps.googleapis.com https://*.googleapis.com https://*.workers.dev; frame-src https://js.stripe.com https://*.stripe.com https://*.stripe.network; worker-src 'self' blob:; upgrade-insecure-requests"
+</IfModule>
+
+# Optional: force every visitor onto HTTPS. Uncomment the 3 lines below ONLY
+# after your SSL certificate is active (otherwise you can cause a redirect loop).
+# <IfModule mod_rewrite.c>
+#     RewriteEngine On
+#     RewriteCond %{HTTPS} off
+#     RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+# </IfModule>
+
+# Don't serve the .htaccess itself or other dotfiles
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>

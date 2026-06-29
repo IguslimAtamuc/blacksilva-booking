@@ -177,30 +177,24 @@
   .svc-card.disabled{ opacity:.42; cursor:not-allowed; }
   .svc-card.disabled:hover{ transform:none; border-color:rgba(232,196,120,.20); background:rgba(255,255,255,.04); }
   .svc-count{ margin-top:14px; font-size:11px; letter-spacing:.28em; text-transform:uppercase; color:rgba(244,236,220,.55); text-align:center; }
-  /* ===== hair-length picker: mannequin + draggable measuring ruler ===== */
-  .hairpick{ margin-top:14px; display:flex; gap:14px; align-items:stretch; justify-content:center; height:clamp(300px,52vh,440px); touch-action:none; -webkit-user-select:none; user-select:none; }
-  .hp-stage{ position:relative; flex:0 0 auto; height:100%; aspect-ratio:786/1029; cursor:ns-resize; }
-  .hp-stage svg, .hp-img{ display:block; width:100%; height:100%; object-fit:cover; }
-  .hp-img{ -webkit-user-drag:none; user-select:none; pointer-events:none; border-radius:10px; }
-  .hp-jaw{ position:absolute; left:0; right:0; height:0; border-top:1px dashed rgba(244,236,220,.28); pointer-events:none; }
-  .hp-jaw span{ position:absolute; right:0; top:-15px; font-size:8.5px; letter-spacing:.22em; text-transform:uppercase; color:rgba(244,236,220,.4); }
-  .hp-line{ position:absolute; left:-4px; right:-4px; height:0; pointer-events:none; z-index:3; will-change:top; }
-  .hp-line::before{ content:""; position:absolute; left:0; right:0; top:-1.5px; height:3px; background:#ff3b3b; border-radius:3px; box-shadow:0 0 12px rgba(255,59,59,.7); }
-  .hp-line .hp-knob{ position:absolute; left:-2px; top:-6px; width:12px; height:12px; border-radius:50%; background:#ff3b3b; box-shadow:0 0 10px rgba(255,59,59,.8); }
-  .hp-ruler{ flex:0 0 86px; display:flex; flex-direction:column; align-items:center; }
-  .hp-chev{ flex:0 0 auto; width:34px; height:26px; border:none; background:transparent; color:rgba(244,236,220,.55); cursor:pointer; font-size:16px; line-height:1; padding:0; }
-  .hp-chev:hover,.hp-chev:active{ color:#f4ecdc; }
-  .hp-track{ position:relative; flex:1 1 auto; width:100%; cursor:ns-resize; }
-  .hp-track::after{ content:""; position:absolute; right:2px; top:0; bottom:0; width:2px; background:rgba(244,236,220,.5); border-radius:2px; }
-  .hp-tick{ position:absolute; right:4px; height:1px; background:rgba(244,236,220,.45); transform:translateY(-50%); }
-  .hp-tick.min{ width:8px; } .hp-tick.mid{ width:13px; background:rgba(244,236,220,.6); } .hp-tick.maj{ width:18px; background:rgba(244,236,220,.85); height:1.5px; }
-  .hp-num{ position:absolute; right:26px; transform:translateY(-50%); font-size:11px; font-weight:700; color:rgba(244,236,220,.8); }
-  .hp-bubble{ position:absolute; right:6px; transform:translateY(-50%); background:#f4ecdc; color:#1a1208; font-weight:800; font-size:13px; letter-spacing:.02em; padding:7px 12px; border-radius:9px; white-space:nowrap; box-shadow:0 6px 18px rgba(0,0,0,.5); pointer-events:none; z-index:2; }
-  .hp-bubble::after{ content:""; position:absolute; left:-5px; top:50%; transform:translateY(-50%); border:5px solid transparent; border-right-color:#f4ecdc; }
-  .hp-readout{ margin-top:14px; text-align:center; font-size:12px; letter-spacing:.22em; text-transform:uppercase; color:rgba(244,236,220,.55); }
-  .hp-readout b{ color:#f4ecdc; }
-  .hp-readout b.cat{ color:#d8b878; }
-  @media(max-width:760px){ .hairpick{ height:min(46vh,78vw); gap:8px; } .hp-ruler{ flex-basis:60px; } .hp-bubble{ font-size:11.5px; padding:5px 9px; } .hp-num{ right:22px; font-size:10px; } .hp-readout{ margin-top:10px; font-size:11px; } }
+  /* ===== hair-length picker: mannequin split into Short / Long, divided at the jawline ===== */
+  .len-note{ margin-top:12px; padding:12px 15px; border-radius:13px; background:rgba(255,90,80,.08); border:1px solid rgba(255,120,90,.32); font-size:12.5px; line-height:1.5; color:#f4ecdc; }
+  .len-note b{ color:#ffb9a7; } .len-note u{ text-decoration-color:rgba(255,120,90,.6); }
+  .lenpick{ margin-top:14px; display:flex; justify-content:center; }
+  .lp-stage{ position:relative; height:clamp(300px,50vh,430px); aspect-ratio:786/1029; max-width:100%; }
+  .lp-stage .hp-img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; -webkit-user-drag:none; user-select:none; pointer-events:none; }
+  .lp-zone{ position:absolute; left:0; right:0; display:flex; flex-direction:column; align-items:center; gap:3px; border:none; background:transparent; color:#f4ecdc; font-family:inherit; cursor:pointer; padding:12px 8px; z-index:2; }
+  .lp-zone.short{ top:0; height:54%; justify-content:flex-start; }
+  .lp-zone.long{ top:54%; bottom:0; justify-content:flex-end; }
+  .lp-zone::before{ content:""; position:absolute; inset:6px; border-radius:14px; border:1.5px solid rgba(232,196,120,.16); background:rgba(255,255,255,.015); transition:.16s; }
+  .lp-zone:hover::before{ border-color:rgba(232,196,120,.5); background:rgba(216,184,120,.08); }
+  .lp-zone.sel::before{ border-color:#4ad27e; background:rgba(74,210,126,.14); box-shadow:inset 0 0 0 1px rgba(74,210,126,.4); }
+  .lp-tag{ position:relative; font-family:var(--display); font-weight:600; font-size:24px; line-height:1; }
+  .lp-sub{ position:relative; font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:rgba(244,236,220,.7); }
+  .lp-zone.sel .lp-tag{ color:#7cdd9d; }
+  .lp-jaw{ position:absolute; left:0; right:0; top:54%; height:0; border-top:2px solid #ff3b3b; box-shadow:0 0 12px rgba(255,59,59,.6); pointer-events:none; z-index:3; }
+  .lp-jaw span{ position:absolute; right:8px; top:-9px; font-size:9px; font-weight:800; letter-spacing:.24em; color:#fff; background:#ff3b3b; padding:2px 7px; border-radius:5px; }
+  @media(max-width:760px){ .lp-stage{ height:min(48vh,82vw); } .lp-tag{ font-size:20px; } .lp-sub{ font-size:9px; } }
   .cal-nav{ margin-top:14px; display:flex; align-items:center; justify-content:space-between; gap:10px; }
   .cal-arrow{ width:36px; height:36px; border-radius:50%; border:1px solid rgba(0,0,0,.14); background:rgba(255,255,255,.6); color:var(--ink); font-size:20px; line-height:1; cursor:pointer; padding:0 2px 2px 0; }
   .cal-arrow:hover,.cal-arrow:active{ border-color:var(--ink); }
@@ -417,11 +411,18 @@
   .scrollcue-msg b{ font-family:var(--display); font-size:18px; letter-spacing:.02em; text-transform:none; color:#f4ecdc; font-weight:500; line-height:1.05; }
   .scrollcue-msg svg{ width:22px; height:22px; color:#d8b878; animation:scrollchev 1.5s ease-in-out infinite; }
   @keyframes scrollchev{ 0%,100%{ transform:translateY(0); opacity:.55 } 50%{ transform:translateY(6px); opacity:1 } }
+  /* solid tappable Continue button */
+  .cont-btn{ width:100%; margin-top:18px; padding:16px; border:none; border-radius:14px; background:#d8b878; color:#1a1208;
+    font-weight:800; letter-spacing:.14em; text-transform:uppercase; font-size:13px; cursor:pointer; transition:.16s; font-family:inherit; }
+  .cont-btn:hover,.cont-btn:active{ transform:translateY(-2px); box-shadow:0 14px 28px rgba(216,184,120,.25); }
+  .cont-btn.disabled{ background:rgba(255,255,255,.05); color:rgba(244,236,220,.4); cursor:default; box-shadow:none; transform:none; border:1px solid rgba(232,196,120,.18); pointer-events:none; }
   @media(max-width:760px){
-    .sheet.on .scrollcue-msg{ position:sticky; bottom:0; z-index:2;
+    .sheet.on .scrollcue-msg, .sheet.on .cont-btn{ position:sticky; bottom:0; z-index:2;
       background:linear-gradient(to top, rgba(20,15,10,.99), rgba(20,15,10,.94));
       padding-bottom:calc(14px + env(safe-area-inset-bottom)); padding-top:14px;
       box-shadow:0 -20px 26px -10px rgba(20,15,10,.95); }
+    .sheet.on .cont-btn{ background:#d8b878; color:#1a1208; box-shadow:none; }
+    .sheet.on .cont-btn.disabled{ background:rgba(40,32,22,.96); }
   }
 
   /* hide scrollbars everywhere on this immersive page (still scrolls) */
@@ -483,6 +484,16 @@
   .startcue .sc-track{ display:block; width:30px; height:48px; border:1px solid rgba(232,196,120,.5); border-radius:18px; position:relative; margin:0 auto; }
   .startcue .sc-track::after{ content:""; position:absolute; left:50%; top:9px; width:4px; height:9px; border-radius:2px; background:#d8b878; transform:translateX(-50%); animation:dot 1.7s ease-in-out infinite; }
   @media(min-width:1280px){ .heroframe.startcue h2{ font-size:76px; } }
+  /* big iconic-price slide */
+  .heroframe.priceframe{ background:none; border:none; box-shadow:none; -webkit-backdrop-filter:none; backdrop-filter:none;
+    overflow:visible; text-align:center; max-height:none; padding:0; width:min(560px, calc(100% - 40px)); }
+  .priceframe .pf-k{ font-size:11px; letter-spacing:.4em; text-transform:uppercase; color:rgba(232,196,120,.9); }
+  .priceframe .pf-amt{ font-family:var(--display); font-weight:600; font-size:clamp(72px,18vw,128px); line-height:.9; color:#d8b878; margin-top:6px; text-shadow:0 4px 40px rgba(216,184,120,.35); }
+  .priceframe .pf-amt span{ font-size:.3em; letter-spacing:.12em; color:#f4ecdc; margin-left:.18em; vertical-align:0.5em; }
+  .priceframe .pf-list{ list-style:none; padding:0; margin:20px 0 0; display:flex; flex-direction:column; gap:11px; align-items:center; }
+  .priceframe .pf-list li{ font-size:16px; font-weight:600; color:#f4ecdc; display:flex; align-items:center; gap:10px; }
+  .priceframe .pf-list li::before{ content:"✓"; color:#4ad27e; font-weight:800; font-size:15px; }
+  @media(min-width:1280px){ .priceframe .pf-amt{ font-size:140px; } .priceframe .pf-list li{ font-size:18px; } }
 
   /* ===== "A different chair" comparison overlay (Black Silva vs Others) ===== */
   .heroframe.vsbox{ width:min(820px, calc(100% - 30px)); padding:24px 24px 22px; }
@@ -659,6 +670,22 @@
     box-shadow:0 18px 40px rgba(0,0,0,.55); scrollbar-width:none; }
   .qdrop-list::-webkit-scrollbar{ width:0; }
   .qdrop.open .qdrop-list{ opacity:1; pointer-events:auto; transform:translateY(0); }
+  /* Day calendar — inline accordion (expands in flow so the sheet can scroll to it) */
+  .qdrop-cal .qdrop-list{ position:static; left:auto; right:auto; top:auto; transform:none; box-shadow:none;
+    opacity:1; pointer-events:auto; max-height:0; overflow:hidden; padding:0 12px; transition:max-height .22s ease, padding .22s ease; }
+  .qdrop-cal.open .qdrop-list{ max-height:430px; padding:12px; }
+  .qcal .cal-nav{ margin-top:0; }
+  .qcal .cal-nav button{ width:32px; height:32px; display:inline-flex; align-items:center; justify-content:center; padding:0; }
+  .qcal .cal-title{ font-size:15px; }
+  .qcal .cal-days{ padding:6px 0 0; gap:5px; }
+  .qcal .chip{ min-height:40px; padding:5px 2px; border-radius:9px; }
+  .qcal .chip small{ font-size:8px; } .qcal .chip b{ font-size:14px; }
+  .qcal .chip.avail{ border-color:rgba(74,210,126,.45); background:rgba(74,210,126,.08); }
+  .qcal .chip.avail b{ color:#7cdd9d; }
+  .qcal .chip.avail:hover{ border-color:#4ad27e; background:rgba(74,210,126,.18); }
+  .qcal .chip.on, .qcal .chip.avail.on{ background:#4ad27e; border-color:#4ad27e; }
+  .qcal .chip.on b, .qcal .chip.on small{ color:#0c1a10; }
+  .qcal .chip.closed{ opacity:.35; }
   .qdrop-list button{ display:block; width:100%; padding:9px 11px; border:none; background:transparent;
     color:#f4ecdc; font:inherit; font-size:14px; text-align:left; border-radius:7px; cursor:pointer; font-family:inherit; }
   .qdrop-list button:hover, .qdrop-list button:active{ background:rgba(255,255,255,.06); }
@@ -711,10 +738,44 @@
   .nm-contact:hover{ border-color:#d8b878; background:rgba(216,184,120,.08); transform:translateY(-2px); }
   .nm-contact span{ font-size:10.5px; letter-spacing:.22em; text-transform:uppercase; color:rgba(244,236,220,.55); }
   .nm-contact b{ font-size:17px; font-weight:600; font-family:var(--display); }
+  /* ===== entry gate: New vs Existing customer over a blurred backdrop ===== */
+  #entrygate{ position:fixed; inset:0; z-index:120; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:26px; padding:24px;
+    background:rgba(8,6,5,.5); -webkit-backdrop-filter:blur(18px) saturate(1.1); backdrop-filter:blur(18px) saturate(1.1); text-align:center; transition:opacity .5s ease; }
+  #entrygate.hide{ opacity:0; pointer-events:none; }
+  #entrygate .eg-k{ font-size:11px; letter-spacing:.42em; text-transform:uppercase; color:rgba(232,196,120,.85); }
+  #entrygate .eg-h{ font-family:var(--display); font-weight:500; font-size:clamp(30px,7.5vw,54px); line-height:1.02; color:#f4ecdc; margin-top:8px; }
+  #entrygate .eg-cards{ display:flex; gap:16px; flex-wrap:wrap; justify-content:center; width:100%; max-width:560px; }
+  #entrygate .eg-card{ flex:1 1 220px; min-width:190px; padding:26px 22px; border-radius:18px; cursor:pointer; font-family:inherit;
+    border:1px solid rgba(232,196,120,.3); background:rgba(20,15,10,.72); color:#f4ecdc; transition:.18s; text-align:center; }
+  #entrygate .eg-card:hover{ transform:translateY(-3px); border-color:#d8b878; background:rgba(216,184,120,.1); }
+  #entrygate .eg-card .ec-t{ display:block; font-family:var(--display); font-size:24px; font-weight:600; }
+  #entrygate .eg-card .ec-s{ display:block; margin-top:8px; font-size:12.5px; color:rgba(244,236,220,.65); line-height:1.5; }
+  #entrygate .eg-card.primary{ background:#d8b878; color:#1a1208; border-color:#d8b878; }
+  #entrygate .eg-card.primary .ec-s{ color:rgba(26,18,8,.72); }
   @media(max-width:760px){ .navmodal{ align-items:flex-end; padding:0; } .navmodal .nm-card{ width:100%; border-radius:24px 24px 0 0; padding:26px 20px calc(26px + env(safe-area-inset-bottom)); } }
 </style>
 </head>
 <body>
+<div id="entrygate">
+  <div>
+    <p class="eg-k">Welcome to</p>
+    <h2 class="eg-h">Black Silva Hairdresser</h2>
+  </div>
+  <div class="eg-cards">
+    <button type="button" class="eg-card" onclick="bsNewCustomer()"><span class="ec-t">New customer</span><span class="ec-s">Discover the studio — scroll through and book step by step.</span></button>
+    <button type="button" class="eg-card primary" onclick="bsExistingCustomer()"><span class="ec-t">Existing customer</span><span class="ec-s">Skip ahead and book your next visit right away.</span></button>
+  </div>
+</div>
+<script>
+  /* entry gate — lock the page until the guest picks a path */
+  (function(){ try{ document.documentElement.style.overflow='hidden'; document.body.style.overflow='hidden'; }catch(e){} })();
+  function bsCloseGate(){ var g=document.getElementById('entrygate'); if(g) g.classList.add('hide');
+    document.documentElement.style.overflow=''; document.body.style.overflow='';
+    setTimeout(function(){ if(g&&g.parentNode) g.parentNode.removeChild(g); }, 600); }
+  function bsNewCustomer(){ bsCloseGate(); }
+  function bsExistingCustomer(){ bsCloseGate();
+    if(window.BS && BS.bookNow){ BS.bookNow(); } else { window.__pendingBookNow=true; } }
+</script>
 <div id="stage"></div>
 <div id="shaderbg"></div>
 <div id="fx"></div>
@@ -742,12 +803,23 @@
   <section id="s3" class="panel"></section>
   <section id="s4" class="panel"></section>
   <section id="s5" class="panel"></section>
+  <section id="s6" class="panel"></section>
 </main>
 
 <!-- scroll-driven centered overlays: these play out FULLY before the walking
      character adventure begins (the scene is held still during this zone) -->
+<!-- Big iconic-price slide -->
+<div class="heroframe priceframe" id="hf-price" data-fadein=".12" data-peakin=".32" data-peakout=".55" data-fadeout=".75">
+  <p class="pf-k">Same iconic price</p>
+  <div class="pf-amt">375<span>DKK</span></div>
+  <ul class="pf-list">
+    <li>More services</li>
+    <li>More time</li>
+    <li>Personalized experience</li>
+  </ul>
+</div>
 <!-- Comparison slide: Black Silva (green) vs Others (gray/red) -->
-<div class="heroframe vsbox" id="hf-vs" data-fadein=".18" data-peakin=".40" data-peakout=".64" data-fadeout=".84">
+<div class="heroframe vsbox" id="hf-vs" data-fadein=".92" data-peakin="1.12" data-peakout="1.40" data-fadeout="1.62">
   <p class="ft-k">★ Why Black Silva</p>
   <h3 class="serif">A different chair</h3>
   <p class="vs-sub">A quick look at what sets the experience apart.</p>
@@ -779,7 +851,7 @@
   </div>
 </div>
 <!-- Find the salon moved to the burger menu (BS.showFind) -->
-<div class="heroframe gframe" id="hf-voices" data-fadein="0.95" data-peakin="1.15" data-peakout="1.38" data-fadeout="1.58">
+<div class="heroframe gframe" id="hf-voices" data-fadein="1.78" data-peakin="1.98" data-peakout="2.25" data-fadeout="2.48">
   <p class="ft-k">★ Trusted in Copenhagen</p>
   <h3 class="serif">What guests say</h3>
 
@@ -809,7 +881,7 @@
   </div>
 </div>
 <!-- elegant invite that fills the gap after the reviews, before the walk-in -->
-<div class="heroframe startcue" id="hf-start" data-fadein="1.75" data-peakin="1.95" data-peakout="2.18" data-fadeout="2.40">
+<div class="heroframe startcue" id="hf-start" data-fadein="2.62" data-peakin="2.82" data-peakout="3.05" data-fadeout="3.28">
   <p class="sc-k">The chair is ready</p>
   <h2 class="serif"><span class="d-only">Scroll</span><span class="m-only">Swipe up</span> to start<br>your booking</h2>
   <span class="sc-cue" aria-hidden="true"><span class="sc-track"></span></span>
@@ -1377,11 +1449,9 @@ function start(){
   function grab(){ return '<button class="peek-toggle" type="button" onclick="BS.togglePeek(this)" aria-label="Show or hide the panel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></button>'; }
   /* the scroll-down cue that replaces the Continue/Confirm buttons — scrolling
      down (or tapping the cue) advances; scrolling up runs the back button. */
-  function scrollCue(top){ return '<button type="button" class="scrollcue-msg" onclick="BS.advance()" aria-label="Continue to the next step">'+
-    '<span>'+(top||'When you are ready')+'</span>'+
-    '<b>Scroll down to continue</b>'+
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>'+
-  '</button>'; }
+  /* tappable Continue button (replaces the old "scroll down to continue" cue) */
+  function contBtn(disabled,label){ return '<button type="button" class="cont-btn'+(disabled?' disabled':'')+'" id="cont-btn" onclick="BS.advance()">'+(label||'Continue')+'</button>'; }
+  function scrollCue(top){ return contBtn(false, 'Continue'); }
   function backBtn(target){ return '<button class="back" onclick="BS.back(\''+target+'\')" aria-label="Back">‹</button>'; }
   /* Exits the booking flow back to the homepage. Used as the "back" on the very first sheet. */
   function homeBtn(){ return '<button class="back" onclick="BS.exitFlow()" aria-label="Back to homepage">‹</button>'; }
@@ -1471,12 +1541,16 @@ function start(){
   function bookingEndDate(today){ var e=new Date(today); e.setMonth(e.getMonth()+2); return e; }
   function priceTier(daysAhead){ if(daysAhead<7) return 0; if(daysAhead<14) return 1; if(daysAhead<21) return 2; return 3; }
   function priceForDay(daysAhead){ return PRICE_STEPS[priceTier(daysAhead)]; }
+  /* Long hair (past the jawline) costs more than the iconic short-hair price.
+     The premium matches the existing from-price gap (gentleman 375 vs lady 500). */
+  var LONG_PREMIUM=125;
+  function lenPrice(daysAhead){ return priceForDay(daysAhead) + (choice.haircut==='lady'?LONG_PREMIUM:0); }
   /* ===== opening-hours helpers ===== */
   function dateForIdx(idx){ return addDays(startDay(new Date()), idx||0); }
   function isOpenDay(d){ return !!OPEN_HOURS[d.getDay()]; }
   function slotsForDay(d){ var hrs=OPEN_HOURS[d.getDay()]; if(!hrs) return []; var out=[]; for(var s=hrs[0]; s<=hrs[1]-1; s++){ out.push(pad2(s)+':00'); } return out; }
   function firstOpenIdx(){ var today=startDay(new Date()), end=bookingEndDate(today); for(var i=0;i<400;i++){ var d=addDays(today,i); if(d>end) break; if(isOpenDay(d)) return i; } return 0; }
-  function defaultDay(){ var i=firstOpenIdx(), d=dateForIdx(i); choice.dayIdx=i; choice.dayLabel=fullDayLabel(d,i); choice.price=priceForDay(i); choice.priceTier=priceTier(i)+1; }
+  function defaultDay(){ var i=firstOpenIdx(), d=dateForIdx(i); choice.dayIdx=i; choice.dayLabel=fullDayLabel(d,i); choice.price=lenPrice(i); choice.priceTier=priceTier(i)+1; }
   function confirmDayOptions(){ var today=startDay(new Date()), end=bookingEndDate(today), out=[]; for(var i=0;i<400 && out.length<30;i++){ var d=addDays(today,i); if(d>end) break; if(isOpenDay(d)) out.push({idx:i,label:fullDayLabel(d,i)}); } return out; }
   /* first month follows the weekly tiers; week 4 onward (incl. the whole second month) holds the best 375 price */
   function tierLabel(tier){ return tier>=4 ? 'Best price' : 'Week '+tier+' price'; }
@@ -1496,24 +1570,23 @@ function start(){
       var cls=(cm%10===0)?'maj':(cm%5===0?'mid':'min'); s+='<i class="hp-tick '+cls+'" style="top:'+top+'%"></i>';
       if(cm%10===0) s+='<b class="hp-num" style="top:'+top+'%">'+cm+'</b>'; }
     return s; }
-  function buildLength(){ var h=grab()+homeBtn()+dots(1)+'<p class="bk">Step 1 · Hair length</p><h3 class="serif">Choose your hair length</h3><p class="bsub">Drag the tape — <b>from the jawline down counts as Long.</b></p>'
-      +'<div class="taphint"><span class="th-ico"></span><span class="th-txt"><span class="d-only">Drag the ruler</span><span class="m-only">Swipe the ruler</span></span></div>';
-    h+='<div class="hairpick" id="hairpick">'
-      +'<div class="hp-stage" id="hp-stage"><img class="hp-img" src="mannequin.webp" alt="Mannequin head" draggable="false">'
-        +'<div class="hp-jaw" id="hp-jaw" style="top:'+(HP_JAW_FRAC*100)+'%"><span>Jawline</span></div>'
-        +'<div class="hp-line" id="hp-line"><span class="hp-knob"></span></div>'
-      +'</div>'
-      +'<div class="hp-ruler">'
-        +'<button type="button" class="hp-chev" onclick="BS.hpNudge(-1)" aria-label="Shorter">⌃</button>'
-        +'<div class="hp-track" id="hp-track">'+rulerTicks()+'<div class="hp-bubble" id="hp-bubble">45 cm</div></div>'
-        +'<button type="button" class="hp-chev" onclick="BS.hpNudge(1)" aria-label="Longer">⌄</button>'
+  function buildLength(){ var sel=choice.haircut;
+    var h=grab()+homeBtn()+dots(1)+'<p class="bk">Step 1 · Hair length</p><h3 class="serif">Choose your hair length</h3>';
+    /* very clear note: this is the length you ARRIVE with, not the result */
+    h+='<div class="len-note"><b>This is NOT your result.</b> Choose how long your hair is <u>when you walk in</u>. If it falls <b>past the jawline</b>, the <b>Long-hair</b> price applies.</div>';
+    h+='<div class="lenpick">'
+      +'<div class="lp-stage">'
+        +'<img class="hp-img" src="mannequin.webp" alt="Mannequin" draggable="false">'
+        +'<button type="button" class="lp-zone short'+(sel==='gentleman'?' sel':'')+'" onclick="BS.pickLen(\'gentleman\')" aria-label="Short hair">'
+          +'<span class="lp-tag">Short</span><span class="lp-sub">At / above jawline · from 375 DKK</span></button>'
+        +'<div class="lp-jaw"><span>JAWLINE</span></div>'
+        +'<button type="button" class="lp-zone long'+(sel==='lady'?' sel':'')+'" onclick="BS.pickLen(\'lady\')" aria-label="Long hair">'
+          +'<span class="lp-tag">Long</span><span class="lp-sub">Past the jawline · from 500 DKK</span></button>'
       +'</div>'
     +'</div>';
-    h+='<p class="hp-readout">Selected length: <b id="hp-cm">45 cm</b> &middot; <b class="cat" id="hp-cat">Long Hair</b></p>';
     h+=dynamicInfo();
-    h+=scrollCue('Continue');
+    h+=contBtn(!sel, sel? ('Continue with '+(sel==='lady'?'Long':'Short')+' hair') : 'Tap Short or Long');
     document.getElementById('m-length').innerHTML=h;
-    hpInit();
   }
   /* wire up the drag interaction + render the current value */
   function hpRender(){
@@ -1565,10 +1638,10 @@ function start(){
     });
     h+='</div>';
     h+='<p class="svc-count" id="svc-count">'+choice.addons.length+'/'+MAX_SERVICES+' selected</p>';
-    h+=scrollCue(choice.addons.length?'Looks good':'Pick at least one service');
+    h+=contBtn(choice.addons.length<1);
     document.getElementById('m-length').innerHTML=h; }
   function refreshCalendarPrice(){
-    var idx=choice.dayIdx===null?0:choice.dayIdx; choice.price=priceForDay(idx); choice.priceTier=priceTier(idx)+1;
+    var idx=choice.dayIdx===null?0:choice.dayIdx; choice.price=lenPrice(idx); choice.priceTier=priceTier(idx)+1;
     var price=document.getElementById('slot-price'); if(price) price.textContent=money(choice.price);
     var tier=document.getElementById('slot-tier'); if(tier) tier.textContent=tierLabel(choice.priceTier);
     document.querySelectorAll('.slot-price').forEach(function(el){ el.textContent=money(choice.price); });
@@ -1592,8 +1665,32 @@ function start(){
       var outOfRange=(d<today || d>end), closed=(!outOfRange && !isOpenDay(d));
       var dis=outOfRange||closed, on=(idx===choice.dayIdx);
       var lbl=fullDayLabel(d,idx);
-      var dayPrice=dis?'':priceForDay(idx);
+      var dayPrice=dis?'':lenPrice(idx);
       html+='<div class="chip'+(outOfRange?' blank':'')+(closed?' closed':'')+(on?' on':'')+'" id="day-'+idx+'"'+(dis?'':' onclick="BS.pickDay('+idx+',\''+lbl+'\')"')+'><small>'+DAY_NAMES[d.getDay()].slice(0,3)+'</small><b>'+day+'</b>'+(closed?'<em class="chip-closed">Closed</em>':(dis?'':'<em class="chip-price">'+dayPrice+'</em>'))+'</div>';
+    }
+    grid.innerHTML=html;
+  }
+  /* ===== Confirm-step calendar popover (available days in green) ===== */
+  var qcOffset=0;
+  function monthOffsetForIdx(idx){ var t=startDay(new Date()), d=dateForIdx(idx); return Math.max(0,(d.getFullYear()-t.getFullYear())*12+(d.getMonth()-t.getMonth())); }
+  function renderConfirmCal(){
+    var today=startDay(new Date()), end=bookingEndDate(today);
+    var view=new Date(today.getFullYear(),today.getMonth()+qcOffset,1);
+    var monthLast=new Date(view.getFullYear(),view.getMonth()+1,0);
+    var title=document.getElementById('qc-title'); if(title) title.textContent=FULL_MONTH_NAMES[view.getMonth()]+' '+view.getFullYear();
+    var prev=document.getElementById('qc-prev'), next=document.getElementById('qc-next');
+    if(prev) prev.classList.toggle('off', qcOffset<=0);
+    if(next) next.classList.toggle('off', view.getMonth()===end.getMonth() && view.getFullYear()===end.getFullYear());
+    var grid=document.getElementById('qc-grid'); if(!grid) return;
+    var html='', firstDow=view.getDay();
+    for(var p=0;p<firstDow;p++) html+='<div class="chip blank"></div>';
+    for(var day=1; day<=monthLast.getDate(); day++){
+      var d=new Date(view.getFullYear(),view.getMonth(),day);
+      var idx=Math.round((d-today)/86400000);
+      var outOfRange=(d<today||d>end), closed=(!outOfRange && !isOpenDay(d));
+      var dis=outOfRange||closed, on=(idx===choice.dayIdx);
+      var lbl=fullDayLabel(d,idx);
+      html+='<div class="chip'+(outOfRange?' blank':'')+(closed?' closed':'')+(!dis?' avail':'')+(on?' on':'')+'"'+(dis?'':' onclick="BS.setDayCal('+idx+',&quot;'+lbl+'&quot;)"')+'><small>'+DAY_NAMES[d.getDay()].slice(0,3)+'</small><b>'+day+'</b>'+(closed?'<em class="chip-closed">Closed</em>':'')+'</div>';
     }
     grid.innerHTML=html;
   }
@@ -1637,10 +1734,13 @@ function start(){
     h+='<p class="qm-h">Quick changes</p><div class="qmenu">';
     h+=' <div class="qrow"><label>Email</label><input id="qm-email" type="email" autocomplete="email" value="'+(choice.email||'')+'" placeholder="you@email.com"></div>';
     h+=' <div class="qrow"><label>Name (for this visit)</label><input id="qm-name" type="text" autocomplete="name" value="'+(choice.name||'')+'" placeholder="Your name"></div>';
-    /* custom Day dropdown — change the date right here (open days only) */
-    h+=' <div class="qrow"><label>Day</label><div class="qdrop" id="qm-day-drop"><button type="button" class="qdrop-btn" onclick="BS.toggleDay(event)"><span id="qm-day-text">'+(choice.dayLabel||'')+'</span><span class="qdrop-caret">▾</span></button><div class="qdrop-list" id="qm-day-list">';
-    confirmDayOptions().forEach(function(o){ h+='<button type="button" data-idx="'+o.idx+'" class="'+(o.idx===choice.dayIdx?'on':'')+'" onclick="BS.setDay('+o.idx+',&quot;'+o.label+'&quot;)">'+o.label+'</button>'; });
-    h+='</div></div></div>';
+    /* Day → opens a full calendar; available days are shown in green */
+    h+=' <div class="qrow"><label>Day</label><div class="qdrop qdrop-cal" id="qm-day-drop"><button type="button" class="qdrop-btn" onclick="BS.toggleDay(event)"><span id="qm-day-text">'+(choice.dayLabel||'')+'</span><span class="qdrop-caret">▾</span></button>'
+      +'<div class="qdrop-list" id="qm-day-list"><div class="qcal">'
+        +'<div class="cal-nav"><button type="button" class="cal-arrow" id="qc-prev" onclick="BS.qcMonth(event,-1)" aria-label="Previous month">‹</button><b class="cal-title" id="qc-title"></b><button type="button" class="cal-arrow" id="qc-next" onclick="BS.qcMonth(event,1)" aria-label="Next month">›</button></div>'
+        +'<div class="cal-dow"><i>Sun</i><i>Mon</i><i>Tue</i><i>Wed</i><i>Thu</i><i>Fri</i><i>Sat</i></div>'
+        +'<div class="cal-days" id="qc-grid"></div>'
+      +'</div></div></div></div>';
     /* custom Time dropdown — slots depend on the chosen day */
     var cSlots=slotsForDay(dateForIdx(choice.dayIdx));
     if(cSlots.indexOf(choice.time)<0) choice.time=cSlots[0]||'';
@@ -1652,7 +1752,7 @@ function start(){
       h+=' <div class="qrow"><label>Stylist</label><div class="qpick"><button class="qopt'+(choice.stylist==='Eduard'?' on':'')+'" onclick="BS.pickStylist(\'Eduard\')">Eduard</button><button class="qopt'+(choice.stylist==='Elena'?' on':'')+'" onclick="BS.pickStylist(\'Elena\')">Elena</button></div></div>';
     }
     h+='</div>';
-    h+=scrollCue('Looks good?');
+    h+=contBtn(false,'Continue');
     document.getElementById('m-confirm').innerHTML=h;
     var qe=document.getElementById('qm-email'); if(qe) qe.addEventListener('input',function(){ choice.email=qe.value.trim(); });
     var qn=document.getElementById('qm-name'); if(qn) qn.addEventListener('input',function(){ choice.name=qn.value.trim(); });
@@ -1931,10 +2031,12 @@ function start(){
       if(c.fixedStylist){ choice.stylist=c.fixedStylist; }
       else if(!choice.stylist || choice.stylist==='Elena' && CUTS[type].pickStylist){ choice.stylist=choice.stylist||'Eduard'; }
       buildAddons(type); showStep('length'); },
-    /* nudge the measuring ruler by one cm (chevron buttons) */
-    hpNudge:function(dir){ var step=1/(HP_CM_MAX-HP_CM_MIN); choice.hairT=Math.max(0,Math.min(1,(choice.hairT||0)+dir*step)); hpRender(); },
-    /* confirm the chosen length → go to the services menu for that category */
-    pickLength:function(){ BS.haircut(hpCategory(choice.hairT||0)); },
+    /* Step 1: tap the SHORT or LONG half of the mannequin to record the length you arrive with */
+    pickLen:function(type){ var c=CUTS[type]; if(!c) return;
+      choice.haircut=type; choice.service=c.label; choice.fromPrice=c.from; choice.addons=[];
+      choice.stylist = c.fixedStylist ? c.fixedStylist : 'Eduard';
+      document.querySelectorAll('.lp-zone').forEach(function(z){ z.classList.toggle('sel', z.classList.contains(type==='gentleman'?'short':'long')); });
+      var btn=document.getElementById('cont-btn'); if(btn){ btn.classList.remove('disabled'); btn.textContent='Continue with '+(type==='lady'?'Long':'Short')+' hair'; } },
     toggleAddon:function(el,name){
       var i=choice.addons.indexOf(name);
       if(i>=0){ choice.addons.splice(i,1); }
@@ -1949,7 +2051,7 @@ function start(){
         c.classList.toggle('disabled', !sel && choice.addons.length>=MAX_SERVICES);
       });
       var cnt=document.getElementById('svc-count'); if(cnt) cnt.textContent=choice.addons.length+'/'+MAX_SERVICES+' selected';
-      var cue=document.querySelector('#m-length .scrollcue-msg span'); if(cue) cue.textContent = choice.addons.length ? 'Looks good' : 'Pick at least one service';
+      var btn=document.getElementById('cont-btn'); if(btn) btn.classList.toggle('disabled', choice.addons.length<1);
     },
     afterLength:function(){ buildCalendar(); showStep('calendar'); },
     back:function(target){ if(target==='chooser'){ buildLength(); showStep('length'); } else if(target==='addons'){ buildAddons(choice.haircut); showStep('length'); } else if(target==='day'){ buildCalendar(); showStep('calendar'); } else if(target==='time'){ buildTime(); showStep('time'); } else if(target==='stylist'){ buildStylist(); showStep('stylist'); } else if(target==='calendar'){ buildCalendar(); showStep('calendar'); } else if(target==='confirm'){ buildConfirm(); showStep('confirm'); } else if(target==='pay'){ showStep('pay'); } },
@@ -1972,14 +2074,20 @@ function start(){
     _cc:function(){},
     /* tap the round arrow to push the sheet down (and tap again to bring it back) */
     togglePeek:function(btn){ var s=btn&&btn.closest&&btn.closest('.sheet'); if(s) s.classList.toggle('min'); },
-    /* custom Day dropdown in the Confirm step */
+    /* Day calendar popover in the Confirm step */
     toggleDay:function(e){ if(e&&e.stopPropagation) e.stopPropagation();
-      var d=document.getElementById('qm-day-drop'); if(d) d.classList.toggle('open');
-      var t=document.getElementById('qm-time-drop'); if(t) t.classList.remove('open'); },
-    setDay:function(i,label){ choice.dayIdx=i; choice.dayLabel=label;
-      choice.price=priceForDay(i); choice.priceTier=priceTier(i)+1;
+      var d=document.getElementById('qm-day-drop'); if(!d) return;
+      var open=d.classList.toggle('open');
+      var t=document.getElementById('qm-time-drop'); if(t) t.classList.remove('open');
+      if(open){ qcOffset=monthOffsetForIdx(choice.dayIdx||0); renderConfirmCal();
+        setTimeout(function(){ var q=document.querySelector('#qm-day-drop .qcal'); if(q&&q.scrollIntoView) q.scrollIntoView({block:'nearest'}); }, 60); } },
+    qcMonth:function(e,dir){ if(e&&e.stopPropagation) e.stopPropagation();
+      var today=startDay(new Date()), end=bookingEndDate(today);
+      var maxOff=(end.getFullYear()-today.getFullYear())*12+(end.getMonth()-today.getMonth());
+      qcOffset=Math.max(0,Math.min(maxOff,qcOffset+dir)); renderConfirmCal(); },
+    setDayCal:function(i,label){ choice.dayIdx=i; choice.dayLabel=label;
+      choice.price=lenPrice(i); choice.priceTier=priceTier(i)+1;
       var dt=document.getElementById('qm-day-text'); if(dt) dt.textContent=label;
-      document.querySelectorAll('#qm-day-list button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-idx')===String(i)); });
       /* rebuild the time options for the new day and keep a valid selection */
       var slots=slotsForDay(dateForIdx(i)); if(slots.indexOf(choice.time)<0) choice.time=slots[0]||'';
       var tt=document.getElementById('qm-time-text'); if(tt) tt.textContent=choice.time||'—';
@@ -2013,7 +2121,7 @@ function start(){
       if(!on) return;
       if(on==='m-length'){
         var s=document.getElementById('m-length');
-        if(s && s.querySelector('#hairpick')){ BS.pickLength(); }          /* length picker → services */
+        if(s && s.querySelector('.lenpick')){ if(choice.haircut) buildAddons(choice.haircut); }  /* length → services */
         else if(s && s.querySelector('.svc-grid') && choice.addons.length>=1){ BS.afterLength(); } /* services → date */
       } else if(on==='m-confirm'){
         BS.confirm();
@@ -2064,7 +2172,7 @@ function start(){
   var proxy={p:0};
   /* Hold the walking character perfectly still for the first stretch of scroll so the
      Find-us + reviews overlays can play out fully BEFORE the walk-in begins. */
-  var HOLD_VH=2.25;
+  var HOLD_VH=3.15;
   function sceneProgress(){
     var maxS=document.documentElement.scrollHeight-innerHeight;
     var holdFrac=maxS>0?Math.min(0.9,(HOLD_VH*innerHeight)/maxS):0;
@@ -2084,6 +2192,8 @@ function start(){
   applyScene(0); tick();
   var loader=document.getElementById('loader'); gsap.to(loader,{opacity:0,duration:.7,delay:.3,onComplete:function(){ loader.style.display='none'; }});
   setTimeout(function(){ ScrollTrigger.refresh(); window.scrollTo(0,0); },250);
+  /* if an Existing customer tapped before the scene finished booting, jump them to Book Now now */
+  if(window.__pendingBookNow){ window.__pendingBookNow=false; setTimeout(function(){ try{ BS.bookNow(); }catch(e){} }, 300); }
 
   /* ===== flow-mode navigation by scroll: wheel/touch on the active sheet
      advances to the next step when content is at the bottom edge, or runs the
@@ -2092,7 +2202,7 @@ function start(){
   (function(){
     var cooldown=0, accumDown=0, accumUp=0;
     function curSheet(){ var found=null; document.querySelectorAll('.sheet.on').forEach(function(el){ found=el; }); return found; }
-    function elig(id,dir){ if(dir>0){ if(id==='m-length'){ var s=document.getElementById('m-length'); return !!(s && (s.querySelector('#hairpick') || (s.querySelector('.svc-grid') && choice.addons.length>=1))); } return id==='m-confirm'; }
+    function elig(id,dir){ if(dir>0){ if(id==='m-length'){ var s=document.getElementById('m-length'); return !!(s && ((s.querySelector('.lenpick') && choice.haircut) || (s.querySelector('.svc-grid') && choice.addons.length>=1))); } return id==='m-confirm'; }
       var s=document.getElementById(id); return !!(s && s.querySelector('.back')); }
     function fire(dir){ if(Date.now()<cooldown) return;
       var s=curSheet(); if(!s) return; var id=s.id; if(!elig(id,dir)) return;

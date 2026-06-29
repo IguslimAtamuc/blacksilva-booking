@@ -778,6 +778,19 @@
   #shoppage .shop-price{ margin-top:2px; font-size:12.5px; color:rgba(244,236,220,.6); }
   #shoppage .shop-foot{ text-align:center; margin:30px 0 calc(34px + env(safe-area-inset-bottom)); font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:rgba(244,236,220,.4); }
   @media(max-width:760px){ .navmodal{ align-items:flex-end; padding:0; } .navmodal .nm-card{ width:100%; border-radius:24px 24px 0 0; padding:26px 20px calc(26px + env(safe-area-inset-bottom)); } }
+  /* ===== cancel-appointment modal ===== */
+  #modal-cancel{ z-index:140; }
+  #modal-cancel label{ display:block; margin:16px 0 7px; font-size:10.5px; letter-spacing:.22em; text-transform:uppercase; color:rgba(244,236,220,.55); }
+  #modal-cancel input{ width:100%; padding:13px 14px; border-radius:12px; border:1px solid rgba(232,196,120,.22); background:rgba(255,255,255,.04); color:#f4ecdc; font:inherit; font-size:16px; outline:none; }
+  #modal-cancel #cx-code{ text-align:center; letter-spacing:.5em; font-family:'Courier New',monospace; font-size:22px; }
+  #modal-cancel input:focus{ border-color:#d8b878; }
+  #modal-cancel .cx-link{ display:block; width:100%; margin-top:10px; padding:8px; background:none; border:none; color:rgba(244,236,220,.6); font:inherit; font-size:12.5px; cursor:pointer; }
+  #modal-cancel .cx-link:hover{ color:#f4ecdc; }
+  #modal-cancel .cx-msg{ margin-top:12px; min-height:16px; font-size:13px; line-height:1.5; }
+  #modal-cancel .cx-msg.ok{ color:#4ad27e; } #modal-cancel .cx-msg.err{ color:#ff9b8a; } #modal-cancel .cx-msg.info{ color:rgba(244,236,220,.6); }
+  #modal-cancel .cx-check{ width:54px; height:54px; margin:4px auto 0; border-radius:50%; background:rgba(74,210,126,.16); border:1px solid #4ad27e; display:flex; align-items:center; justify-content:center; }
+  #modal-cancel .cx-check svg{ width:26px; height:26px; }
+  #modal-cancel #cx-done{ text-align:center; }
 </style>
 </head>
 <body>
@@ -852,6 +865,7 @@
     <a onclick="bsOpenShop()">Shop</a>
     <a onclick="BS.showFind()">Find&nbsp;us</a>
     <a onclick="BS.showContact()">Contact</a>
+    <a onclick="BS.showCancel()">Cancel&nbsp;booking</a>
     <a onclick="bsGoogleReview()">Review</a>
   </div>
   <button class="navburger" id="navburger" type="button" onclick="BS.toggleMenu(event)" aria-label="Menu"><span></span><span></span><span></span></button>
@@ -1012,6 +1026,35 @@
     <a class="nm-contact" href="https://www.instagram.com/blacksilvahd/?hl=da" target="_blank" rel="noopener"><span>Instagram · fastest reply</span><b>@blacksilvahd</b></a>
     <a class="nm-contact" href="mailto:blacksilvahd@gmail.com"><span>Email</span><b>blacksilvahd@gmail.com</b></a>
     <p style="margin-top:14px;font-size:12.5px;line-height:1.55;color:rgba(244,236,220,.6)">Our direct phone number is shared with you by email once your appointment is confirmed.</p>
+  </div>
+</div>
+<div class="navmodal" id="modal-cancel" onclick="if(event.target===this)BS.closeModal('modal-cancel')">
+  <div class="nm-card">
+    <button class="nm-close" type="button" onclick="BS.closeModal('modal-cancel')" aria-label="Close">&times;</button>
+    <p class="nm-k">Manage booking</p>
+    <h3 class="serif">Cancel appointment</h3>
+    <!-- step 1: email -->
+    <div id="cx-step1">
+      <p>Enter the email you used when booking. We'll send a 6-digit security code to confirm it's really you.</p>
+      <label for="cx-email">Email used for the booking</label>
+      <input id="cx-email" type="email" autocomplete="email" placeholder="you@email.com">
+      <button class="nm-cta" type="button" onclick="BS.cancelRequestCode()">Send security code</button>
+    </div>
+    <!-- step 2: code -->
+    <div id="cx-step2" style="display:none">
+      <p>We emailed a code to <b id="cx-email-echo"></b>. Enter it below to confirm the cancellation.</p>
+      <label for="cx-code">Security code</label>
+      <input id="cx-code" type="text" inputmode="numeric" maxlength="6" placeholder="••••••" autocomplete="one-time-code">
+      <button class="nm-cta" type="button" onclick="BS.cancelConfirm()">Confirm cancellation</button>
+      <button class="cx-link" type="button" onclick="BS.cancelBackToEmail()">‹ Use a different email</button>
+    </div>
+    <!-- done -->
+    <div id="cx-done" style="display:none">
+      <div class="cx-check"><svg viewBox="0 0 24 24" fill="none" stroke="#4ad27e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>
+      <h4 class="serif" style="font-size:22px;margin-top:8px;color:#f4ecdc">Appointment cancelled</h4>
+      <p style="margin-top:8px">Your cancellation has been recorded and the salon has been notified. A confirmation has been emailed to you.</p>
+    </div>
+    <div class="cx-msg" id="cx-msg"></div>
   </div>
 </div>
 <div id="loader"><div class="l">Black Silva</div><div class="bar"><i></i></div><div class="e" id="err"></div></div>
@@ -1849,6 +1892,7 @@ function start(){
   var RESEND_FROM="Black Silva <onboarding@resend.dev>";
   var OWNER_EMAIL="blacksilvahd@gmail.com";
   var SALON_LOCATION="Black Silva Hairdresser, Badstuestræde 16, Copenhagen";
+  var SITE_URL=(location.origin+location.pathname).replace(/[#?].*$/,'');  /* used for the "cancel" link in emails */
   /* Stripe — sandbox/test integration.
      Publishable key is browser-safe. Secret key is held only in this browser
      via localStorage so it never lives in the repo (GitHub blocks pushes
@@ -1985,6 +2029,11 @@ function start(){
         '<p style="margin:0 0 14px; font-size:15px; color:#16161a"><b>Salon phone · SMS:</b> <a href="tel:+4552795671" style="color:#16161a;text-decoration:none;font-weight:700">+45 52 79 56 71</a></p>'+
         '<a href="https://www.instagram.com/blacksilvahd/?hl=da" style="display:inline-block; padding:11px 18px; background:#16161a; color:#fff; text-decoration:none; border-radius:10px; font-weight:700; font-size:13px; margin:0 8px 6px 0">Open Instagram (fastest)</a>'+
         '<a href="mailto:blacksilvahd@gmail.com" style="display:inline-block; padding:11px 18px; background:transparent; color:#16161a; text-decoration:none; border:1px solid #16161a; border-radius:10px; font-weight:700; font-size:13px">Email us</a>'+
+      '</div>'+
+      '<div style="margin:14px 0 4px; padding:16px 20px; background:#fff7f5; border:1px solid #f3d9d2; border-radius:14px">'+
+        '<p style="font-size:11px; letter-spacing:.3em; text-transform:uppercase; color:#b06a5a; margin:0">Need to cancel?</p>'+
+        '<p style="margin:8px 0 12px; font-size:13.5px; color:#444; line-height:1.55">You can cancel this appointment yourself — you\'ll get a one-time security code by email to confirm it\'s you.</p>'+
+        '<a href="'+SITE_URL+'#cancel" style="display:inline-block; padding:11px 18px; background:#b03a2e; color:#fff; text-decoration:none; border-radius:10px; font-weight:700; font-size:13px">Cancel appointment</a>'+
       '</div>';
     return '<div style="font-family:Arial,Helvetica,sans-serif;max-width:540px;margin:0 auto;color:#16161a">'+
       '<h2 style="font-family:Georgia,serif;font-weight:600;margin:0 0 4px">'+title+'</h2>'+
@@ -2008,6 +2057,14 @@ function start(){
     return fetch('https://api.resend.com/emails',{method:'POST',headers:{'Authorization':'Bearer '+RESEND_KEY,'Content-Type':'application/json'},
       body:JSON.stringify({from:RESEND_FROM,to:[to],subject:subject,html:html,attachments:[{filename:'black-silva-booking.ics',content:ics}]})}).then(function(r){ return r.ok; });
   }
+  /* plain email (no calendar attachment) — used by the cancellation flow */
+  function sendMail(to,subject,html){ if(!RESEND_KEY) return Promise.resolve(false);
+    return fetch('https://api.resend.com/emails',{method:'POST',headers:{'Authorization':'Bearer '+RESEND_KEY,'Content-Type':'application/json'},
+      body:JSON.stringify({from:RESEND_FROM,to:[to],subject:subject,html:html})}).then(function(r){ return r.ok; }).catch(function(){ return false; }); }
+  function simpleEmail(title,bodyHtml){ return '<div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;margin:0 auto;color:#16161a">'+
+      '<h2 style="font-family:Georgia,serif;font-weight:600;margin:0 0 10px">'+title+'</h2>'+bodyHtml+
+      '<p style="color:#aaa;font-size:12px;margin-top:22px">Black Silva Hairdresser · '+escHtml(SALON_LOCATION)+'</p></div>'; }
+  function genCancelCode(){ var n; try{ var a=new Uint32Array(1); crypto.getRandomValues(a); n=a[0]%1000000; }catch(e){ n=Math.floor(Math.random()*1000000); } return ('000000'+n).slice(-6); }
   function sendBookingEmails(){
     var st=document.getElementById('mail-status'); if(st) st.innerHTML='<span class="ms-info">Sending confirmations…</span>';
     if(BOOKING_API){
@@ -2080,6 +2137,53 @@ function start(){
     showFind:function(){ BS.closeMenu(); var m=document.getElementById('modal-find'); if(m) m.classList.add('on'); },
     showContact:function(){ BS.closeMenu(); var m=document.getElementById('modal-contact'); if(m) m.classList.add('on'); },
     closeModal:function(id){ var m=document.getElementById(id); if(m) m.classList.remove('on'); },
+    /* ===== Cancel appointment: email → security code → confirm ===== */
+    showCancel:function(){ BS.closeMenu();
+      /* reset to step 1 each time it opens */
+      var s1=document.getElementById('cx-step1'), s2=document.getElementById('cx-step2'), dn=document.getElementById('cx-done'), msg=document.getElementById('cx-msg');
+      if(s1) s1.style.display=''; if(s2) s2.style.display='none'; if(dn) dn.style.display='none'; if(msg){ msg.textContent=''; msg.className='cx-msg'; }
+      var m=document.getElementById('modal-cancel'); if(m) m.classList.add('on');
+      var e=document.getElementById('cx-email'); if(e){ if(!e.value && choice.email) e.value=choice.email; setTimeout(function(){ e.focus(); },120); } },
+    cancelMsg:function(text,kind){ var m=document.getElementById('cx-msg'); if(m){ m.textContent=text; m.className='cx-msg '+(kind||''); } },
+    cancelRequestCode:function(){
+      var e=document.getElementById('cx-email'); var email=e?e.value.trim():'';
+      if(email.indexOf('@')<1 || email.length<5){ BS.cancelMsg('Please enter the email you booked with.','err'); return; }
+      var code=genCancelCode();
+      try{ localStorage.setItem('bs_cancel', JSON.stringify({ email:email.toLowerCase(), code:code, exp:Date.now()+20*60000 })); }catch(_){}
+      BS.cancelMsg('Sending your security code…','info');
+      var html=simpleEmail('Cancel your appointment',
+        '<p style="color:#444;line-height:1.5">Use this security code to confirm cancelling your Black Silva appointment:</p>'+
+        '<p style="font-size:34px;letter-spacing:.3em;font-weight:700;font-family:\'Courier New\',monospace;color:#b03a2e;margin:14px 0">'+code+'</p>'+
+        '<p style="color:#777;font-size:13px">The code expires in 20 minutes. If you didn\'t request this, just ignore this email — nothing will change.</p>');
+      sendMail(email,'Your Black Silva cancellation code: '+code, html).then(function(ok){
+        /* move to step 2 regardless (the code is stored); tell them if the email failed */
+        var s1=document.getElementById('cx-step1'), s2=document.getElementById('cx-step2'), echo=document.getElementById('cx-email-echo');
+        if(echo) echo.textContent=email; if(s1) s1.style.display='none'; if(s2) s2.style.display='';
+        var ci=document.getElementById('cx-code'); if(ci) setTimeout(function(){ ci.focus(); },120);
+        if(ok) BS.cancelMsg('Code sent — check your inbox (and spam).','ok');
+        else BS.cancelMsg('We couldn\'t send the email automatically. Please contact us on Instagram to cancel.','err');
+      });
+    },
+    cancelBackToEmail:function(){ var s1=document.getElementById('cx-step1'), s2=document.getElementById('cx-step2');
+      if(s1) s1.style.display=''; if(s2) s2.style.display='none'; BS.cancelMsg('',''); },
+    cancelConfirm:function(){
+      var ci=document.getElementById('cx-code'); var code=ci?ci.value.trim():'';
+      var rec=null; try{ rec=JSON.parse(localStorage.getItem('bs_cancel')||'null'); }catch(_){}
+      if(!rec){ BS.cancelMsg('Please request a new code.','err'); return; }
+      if(Date.now()>rec.exp){ BS.cancelMsg('That code has expired — request a new one.','err'); return; }
+      if(code!==rec.code){ BS.cancelMsg('That code is not correct. Check your email and try again.','err'); return; }
+      /* code OK → notify the salon + the guest, clear any local booking, show success */
+      var email=rec.email;
+      var ownerHtml=simpleEmail('Appointment cancelled',
+        '<p style="color:#444;line-height:1.5"><b>'+escHtml(email)+'</b> just cancelled their appointment through the website.</p>'+
+        '<p style="color:#777;font-size:13px">Please free up the slot in your calendar.</p>');
+      var guestHtml=simpleEmail('Your appointment is cancelled',
+        '<p style="color:#444;line-height:1.5">Your Black Silva appointment has been cancelled. We hope to see you another time — you can rebook anytime from our website.</p>');
+      sendMail(OWNER_EMAIL,'Cancellation — '+email, ownerHtml);
+      sendMail(email,'Your Black Silva appointment is cancelled', guestHtml);
+      try{ localStorage.removeItem(bookingKey(email)); localStorage.removeItem('bs_cancel'); }catch(_){}
+      var s2=document.getElementById('cx-step2'), dn=document.getElementById('cx-done'); if(s2) s2.style.display='none'; if(dn) dn.style.display='block';
+      BS.cancelMsg('',''); },
     /* Book Now → straight to the Confirm-booking review with sensible defaults */
     bookNow:function(){ BS.closeMenu();
       if(!choice.haircut){ choice.haircut='gentleman'; }
@@ -2259,6 +2363,8 @@ function start(){
   setTimeout(function(){ ScrollTrigger.refresh(); window.scrollTo(0,0); },250);
   /* if an Existing customer tapped before the scene finished booting, jump them to Book Now now */
   if(window.__pendingBookNow){ window.__pendingBookNow=false; setTimeout(function(){ try{ BS.bookNow(); }catch(e){} }, 300); }
+  /* arriving from the "Cancel appointment" link in an email → open the cancel flow */
+  if(/cancel/i.test(location.hash)){ setTimeout(function(){ try{ if(window.bsCloseGate) bsCloseGate(); BS.showCancel(); }catch(e){} }, 350); }
 
   /* ===== flow-mode navigation by scroll: wheel/touch on the active sheet
      advances to the next step when content is at the bottom edge, or runs the
@@ -2306,7 +2412,7 @@ function start(){
     });
     document.addEventListener('keydown',function(e){ if(e.key==='Escape'){
       if(window.BS&&BS.closeMenu) BS.closeMenu();
-      ['modal-prices','modal-find','modal-contact'].forEach(function(id){ var m=document.getElementById(id); if(m) m.classList.remove('on'); }); } });
+      ['modal-prices','modal-find','modal-contact','modal-cancel'].forEach(function(id){ var m=document.getElementById(id); if(m) m.classList.remove('on'); }); } });
   })();
 </script>
 <script>

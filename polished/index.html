@@ -484,6 +484,9 @@
   .startcue .sc-track{ display:block; width:30px; height:48px; border:1px solid rgba(232,196,120,.5); border-radius:18px; position:relative; margin:0 auto; }
   .startcue .sc-track::after{ content:""; position:absolute; left:50%; top:9px; width:4px; height:9px; border-radius:2px; background:#d8b878; transform:translateX(-50%); animation:dot 1.7s ease-in-out infinite; }
   @media(min-width:1280px){ .heroframe.startcue h2{ font-size:76px; } }
+  .startcue .tapring{ position:relative; display:inline-block; width:30px; height:30px; margin-top:30px; }
+  .startcue .tapring::before{ content:""; position:absolute; inset:0; border:1.5px solid #d8b878; border-radius:50%; animation:tapRing 1.7s ease-out infinite; }
+  .startcue .tapring::after{ content:""; position:absolute; left:50%; top:50%; width:9px; height:9px; margin:-4.5px 0 0 -4.5px; border-radius:50%; background:#d8b878; animation:tapDot 1.7s ease-out infinite; }
   /* big iconic-price slide */
   .heroframe.priceframe{ background:none; border:none; box-shadow:none; -webkit-backdrop-filter:none; backdrop-filter:none;
     overflow:visible; text-align:center; max-height:none; padding:0; width:min(560px, calc(100% - 40px)); }
@@ -817,25 +820,25 @@
   <div class="shop-grid" id="shop-grid"></div>
   <p class="shop-foot">More products coming soon</p>
 </div>
+<!-- product list lives in its own easy-to-edit file: shop/products.js -->
+<script src="shop/products.js"></script>
 <script>
   /* ===========================================================================
      ENTRY GATE + SHOP
-     To add real product photos: upload the image next to index.html and set its
-     file name as "img" below (e.g. img:'product1.webp'). Leave img:'' for a
-     placeholder. Add/remove items freely — the grid lays itself out.
+     Products + prices are edited in shop/products.js, and photos go in the
+     shop/ folder (image1.jpg, image2.jpg ...). Nothing to change here.
      =========================================================================== */
-  var SHOP_PRODUCTS = [
+  var SHOP_PRODUCTS = (window.SHOP_PRODUCTS && window.SHOP_PRODUCTS.length) ? window.SHOP_PRODUCTS : [
     { name:'Product 1', price:'', img:'' },
     { name:'Product 2', price:'', img:'' },
-    { name:'Product 3', price:'', img:'' },
-    { name:'Product 4', price:'', img:'' },
-    { name:'Product 5', price:'', img:'' },
-    { name:'Product 6', price:'', img:'' }
+    { name:'Product 3', price:'', img:'' }
   ];
-  function bsEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function bsEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+  function bsImgFail(img){ if(img&&img.parentNode){ img.parentNode.innerHTML='<span class="ph">Add photo</span>'; } }
   function bsRenderShop(){ var g=document.getElementById('shop-grid'); if(!g) return;
     g.innerHTML = SHOP_PRODUCTS.map(function(p){
-      var photo = p.img ? '<img src="'+bsEsc(p.img)+'" alt="'+bsEsc(p.name)+'">' : '<span class="ph">Add photo</span>';
+      /* if a photo file is set but missing, fall back to the "Add photo" placeholder */
+      var photo = p.img ? '<img src="'+bsEsc(p.img)+'" alt="'+bsEsc(p.name)+'" onerror="bsImgFail(this)">' : '<span class="ph">Add photo</span>';
       return '<div class="shop-card"><div class="shop-photo">'+photo+'</div><div class="shop-name">'+bsEsc(p.name)+'</div>'+(p.price?'<div class="shop-price">'+bsEsc(p.price)+'</div>':'')+'</div>';
     }).join('');
   }
@@ -875,7 +878,7 @@
     <h1 data-fade>Black Silva<br><span class="thin">Hairdresser</span></h1>
     <p class="eyebrow hero-reveal" style="transition-delay:.02s">Copenhagen · Badstuestræde 16</p>
     <p class="tagline hero-reveal" style="transition-delay:.06s">Step out of the dark and into the chair. Scroll to walk into the studio.</p>
-    <div class="scrollcue hero-reveal" style="transition-delay:.1s"><span class="track"></span> <span class="d-only">Scroll to walk in</span><span class="m-only">Swipe up to walk in</span></div>
+    <div class="scrollcue hero-reveal" style="transition-delay:.1s"><span class="track"></span> Tap to walk in</div>
   </section>
   <section id="s1" class="panel"></section>
   <section id="s2" class="panel"></section>
@@ -962,9 +965,8 @@
 <!-- elegant invite that fills the gap after the reviews, before the walk-in -->
 <div class="heroframe startcue" id="hf-start" data-fadein="2.62" data-peakin="2.82" data-peakout="3.05" data-fadeout="3.28">
   <p class="sc-k">The chair is ready</p>
-  <h2 class="serif"><span class="d-only">Scroll</span><span class="m-only">Swipe up</span> to start<br>your booking</h2>
-  <span class="sc-cue" aria-hidden="true"><span class="sc-track"></span></span>
-  <span class="swipecue" aria-hidden="true"><span class="sw-finger"></span><span class="sw-chevron"></span></span>
+  <h2 class="serif">Tap to start<br>your booking</h2>
+  <span class="tapring" aria-hidden="true"></span>
 </div>
 <div id="ui">
   <div class="sheet" id="m-length"></div>
@@ -2423,6 +2425,32 @@ function start(){
     addEventListener('wheel', onWheel, {passive:true});
     addEventListener('touchstart', onTouchStart, {passive:true});
     addEventListener('touchmove', onTouchMove, {passive:true});
+  })();
+
+  /* ===== TAP TO ADVANCE — the intro plays slide-by-slide on tap (not scroll).
+     Each tap smooth-scrolls to the next stop (price → vs → reviews → start →
+     into the salon/booking). The booking sheets keep their own Continue taps. ===== */
+  (function(){
+    var peaks=[]; document.querySelectorAll('.heroframe[data-peakin]').forEach(function(el){ peaks.push(parseFloat(el.dataset.peakin)); });
+    peaks.sort(function(a,b){ return a-b; });
+    function maxScroll(){ return Math.max(1, document.documentElement.scrollHeight-innerHeight); }
+    function gateY(){ var maxS=maxScroll(); var holdFrac=Math.min(0.9,(HOLD_VH*innerHeight)/maxS); return Math.min(maxS, (holdFrac + 0.80*(1-holdFrac))*maxS); }
+    function stops(){ var a=peaks.map(function(v){ return v*innerHeight; }); a.push(gateY()); a.unshift(0); return a; }
+    function smoothTo(y){ try{ window.scrollTo({top:y,behavior:'smooth'}); }catch(e){ window.scrollTo(0,y); } }
+    function nextStop(){ var y=window.scrollY||window.pageYOffset||0; var s=stops(); for(var i=0;i<s.length;i++){ if(s[i] > y+10) return s[i]; } return s[s.length-1]; }
+    function blocked(e){
+      if(document.body.classList.contains('flow')) return true;                 /* booking flow uses its own taps */
+      if(document.getElementById('entrygate')) return true;                      /* welcome gate still up */
+      var sp=document.getElementById('shoppage'); if(sp && sp.classList.contains('on')) return true;
+      if(document.querySelector('.navmodal.on')) return true;                    /* a pop-up is open */
+      if(e.target.closest('a,button,input,textarea,select,label,nav,.navlinks,#navburger,.heroframe .ft-row')) return true;
+      return false;
+    }
+    function onTap(e){ if(blocked(e)) return;
+      if((window.scrollY||window.pageYOffset||0) < 2) document.body.classList.add('revealed');  /* first tap reveals + starts */
+      smoothTo(nextStop());
+    }
+    document.addEventListener('click', onTap);
   })();
 }
 </script>

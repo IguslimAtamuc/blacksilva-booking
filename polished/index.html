@@ -1593,7 +1593,7 @@ function start(){
     fadeMats.forEach(function(m){ m.opacity=0; m.visible=false; });
   }
   function bookingKey(email){ return 'bs_booking_'+String(email||'').trim().toLowerCase(); }
-  function saveBooking(){ try{ var data={haircut:choice.haircut,service:choice.service,fromPrice:choice.fromPrice,addons:choice.addons,stylist:choice.stylist,time:choice.time,name:choice.name,email:choice.email}; localStorage.setItem(bookingKey(choice.email),JSON.stringify(data)); }catch(e){} }
+  function saveBooking(){ try{ var data={haircut:choice.haircut,service:choice.service,fromPrice:choice.fromPrice,addons:choice.addons,stylist:choice.stylist,time:choice.time,name:choice.name,email:choice.email,dayLabel:choice.dayLabel,startISO:bookingStart().toISOString()}; localStorage.setItem(bookingKey(choice.email),JSON.stringify(data)); }catch(e){} }
   function loadBooking(email){ try{ var s=localStorage.getItem(bookingKey(email)); return s?JSON.parse(s):null; }catch(e){ return null; } }
   function fastTrackConfirm(saved){
     choice.haircut=saved.haircut; choice.service=saved.service; choice.fromPrice=saved.fromPrice||0;
@@ -1893,6 +1893,8 @@ function start(){
   var OWNER_EMAIL="blacksilvahd@gmail.com";
   var SALON_LOCATION="Black Silva Hairdresser, Badstuestræde 16, Copenhagen";
   var SITE_URL=(location.origin+location.pathname).replace(/[#?].*$/,'');  /* used for the "cancel" link in emails */
+  var CANCEL_CUTOFF_HOURS=12;  /* online cancellation closes this many hours before the appointment */
+  function parseCancelHash(){ var h=location.hash||''; var q=h.indexOf('?'); if(q<0) return {}; try{ var p=new URLSearchParams(h.slice(q+1)); return { email:p.get('e')||'', t:p.get('t')||'' }; }catch(e){ return {}; } }
   /* Stripe — sandbox/test integration.
      Publishable key is browser-safe. Secret key is held only in this browser
      via localStorage so it never lives in the repo (GitHub blocks pushes
@@ -2032,8 +2034,8 @@ function start(){
       '</div>'+
       '<div style="margin:14px 0 4px; padding:16px 20px; background:#fff7f5; border:1px solid #f3d9d2; border-radius:14px">'+
         '<p style="font-size:11px; letter-spacing:.3em; text-transform:uppercase; color:#b06a5a; margin:0">Need to cancel?</p>'+
-        '<p style="margin:8px 0 12px; font-size:13.5px; color:#444; line-height:1.55">You can cancel this appointment yourself — you\'ll get a one-time security code by email to confirm it\'s you.</p>'+
-        '<a href="'+SITE_URL+'#cancel" style="display:inline-block; padding:11px 18px; background:#b03a2e; color:#fff; text-decoration:none; border-radius:10px; font-weight:700; font-size:13px">Cancel appointment</a>'+
+        '<p style="margin:8px 0 12px; font-size:13.5px; color:#444; line-height:1.55">You can cancel this appointment yourself up to <b>12 hours before</b> it starts — you\'ll get a one-time security code by email to confirm it\'s you.</p>'+
+        '<a href="'+SITE_URL+'#cancel?e='+encodeURIComponent(choice.email||'')+'&t='+encodeURIComponent(bookingStart().toISOString())+'" style="display:inline-block; padding:11px 18px; background:#b03a2e; color:#fff; text-decoration:none; border-radius:10px; font-weight:700; font-size:13px">Cancel appointment</a>'+
       '</div>';
     return '<div style="font-family:Arial,Helvetica,sans-serif;max-width:540px;margin:0 auto;color:#16161a">'+
       '<h2 style="font-family:Georgia,serif;font-weight:600;margin:0 0 4px">'+title+'</h2>'+
@@ -2138,16 +2140,36 @@ function start(){
     showContact:function(){ BS.closeMenu(); var m=document.getElementById('modal-contact'); if(m) m.classList.add('on'); },
     closeModal:function(id){ var m=document.getElementById(id); if(m) m.classList.remove('on'); },
     /* ===== Cancel appointment: email → security code → confirm ===== */
-    showCancel:function(){ BS.closeMenu();
-      /* reset to step 1 each time it opens */
+    showCancel:function(token){ BS.closeMenu();
+      /* a token from the email link carries the email + appointment time (works on any device) */
+      if(token && token.email){ window.__cancelEmail=String(token.email).toLowerCase(); }
+      if(token && token.t){ var d=new Date(token.t); if(!isNaN(d)) window.__cancelStart=d.getTime(); }
       var s1=document.getElementById('cx-step1'), s2=document.getElementById('cx-step2'), dn=document.getElementById('cx-done'), msg=document.getElementById('cx-msg');
       if(s1) s1.style.display=''; if(s2) s2.style.display='none'; if(dn) dn.style.display='none'; if(msg){ msg.textContent=''; msg.className='cx-msg'; }
       var m=document.getElementById('modal-cancel'); if(m) m.classList.add('on');
-      var e=document.getElementById('cx-email'); if(e){ if(!e.value && choice.email) e.value=choice.email; setTimeout(function(){ e.focus(); },120); } },
+      var e=document.getElementById('cx-email'); if(e){ var pre=(token&&token.email)||choice.email||''; if(pre) e.value=pre; setTimeout(function(){ e.focus(); },120); } },
     cancelMsg:function(text,kind){ var m=document.getElementById('cx-msg'); if(m){ m.textContent=text; m.className='cx-msg '+(kind||''); } },
+    /* the appointment start for an email: prefer the email-link token, else the local booking record */
+    cancelApptStart:function(email){
+      email=String(email||'').toLowerCase();
+      if(window.__cancelStart && window.__cancelEmail===email) return new Date(window.__cancelStart);
+      var rec=loadBooking(email); if(rec && rec.startISO){ var d=new Date(rec.startISO); if(!isNaN(d)) return d; }
+      return null;
+    },
+    /* hours remaining before the appointment, or null if unknown */
+    cancelHoursLeft:function(email){ var s=BS.cancelApptStart(email); return s? (s.getTime()-Date.now())/3600000 : null; },
     cancelRequestCode:function(){
       var e=document.getElementById('cx-email'); var email=e?e.value.trim():'';
       if(email.indexOf('@')<1 || email.length<5){ BS.cancelMsg('Please enter the email you booked with.','err'); return; }
+      var hrs=BS.cancelHoursLeft(email);
+      if(hrs===null){ BS.cancelMsg("We couldn't find that booking on this device. Please open the “Cancel appointment” link in your confirmation email — it lets you cancel from any device.",'err'); return; }
+      if(hrs < CANCEL_CUTOFF_HOURS){
+        var when=BS.cancelApptStart(email);
+        var whenTxt=when?when.toLocaleString('en-GB',{weekday:'short',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'';
+        if(hrs<=0) BS.cancelMsg('This appointment time has already passed, so it can no longer be cancelled online.','err');
+        else BS.cancelMsg('Online cancellation closes 12 hours before your appointment ('+whenTxt+'). For last-minute changes please message us on Instagram.','err');
+        return;
+      }
       var code=genCancelCode();
       try{ localStorage.setItem('bs_cancel', JSON.stringify({ email:email.toLowerCase(), code:code, exp:Date.now()+20*60000 })); }catch(_){}
       BS.cancelMsg('Sending your security code…','info');
@@ -2156,7 +2178,6 @@ function start(){
         '<p style="font-size:34px;letter-spacing:.3em;font-weight:700;font-family:\'Courier New\',monospace;color:#b03a2e;margin:14px 0">'+code+'</p>'+
         '<p style="color:#777;font-size:13px">The code expires in 20 minutes. If you didn\'t request this, just ignore this email — nothing will change.</p>');
       sendMail(email,'Your Black Silva cancellation code: '+code, html).then(function(ok){
-        /* move to step 2 regardless (the code is stored); tell them if the email failed */
         var s1=document.getElementById('cx-step1'), s2=document.getElementById('cx-step2'), echo=document.getElementById('cx-email-echo');
         if(echo) echo.textContent=email; if(s1) s1.style.display='none'; if(s2) s2.style.display='';
         var ci=document.getElementById('cx-code'); if(ci) setTimeout(function(){ ci.focus(); },120);
@@ -2172,16 +2193,21 @@ function start(){
       if(!rec){ BS.cancelMsg('Please request a new code.','err'); return; }
       if(Date.now()>rec.exp){ BS.cancelMsg('That code has expired — request a new one.','err'); return; }
       if(code!==rec.code){ BS.cancelMsg('That code is not correct. Check your email and try again.','err'); return; }
+      /* re-check the 12-hour rule in case time elapsed since the code was requested */
+      var hrs=BS.cancelHoursLeft(rec.email);
+      if(hrs!==null && hrs < CANCEL_CUTOFF_HOURS){ BS.cancelMsg('The 12-hour cancellation window has now closed. Please contact us on Instagram.','err'); return; }
       /* code OK → notify the salon + the guest, clear any local booking, show success */
-      var email=rec.email;
+      var email=rec.email; var when=BS.cancelApptStart(email);
+      var whenTxt=when?when.toLocaleString('en-GB',{weekday:'long',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'';
       var ownerHtml=simpleEmail('Appointment cancelled',
-        '<p style="color:#444;line-height:1.5"><b>'+escHtml(email)+'</b> just cancelled their appointment through the website.</p>'+
+        '<p style="color:#444;line-height:1.5"><b>'+escHtml(email)+'</b> just cancelled their appointment through the website'+(whenTxt?(' (was '+escHtml(whenTxt)+')'):'')+'.</p>'+
         '<p style="color:#777;font-size:13px">Please free up the slot in your calendar.</p>');
       var guestHtml=simpleEmail('Your appointment is cancelled',
-        '<p style="color:#444;line-height:1.5">Your Black Silva appointment has been cancelled. We hope to see you another time — you can rebook anytime from our website.</p>');
+        '<p style="color:#444;line-height:1.5">Your Black Silva appointment'+(whenTxt?(' on <b>'+escHtml(whenTxt)+'</b>'):'')+' has been cancelled. We hope to see you another time — you can rebook anytime from our website.</p>');
       sendMail(OWNER_EMAIL,'Cancellation — '+email, ownerHtml);
       sendMail(email,'Your Black Silva appointment is cancelled', guestHtml);
       try{ localStorage.removeItem(bookingKey(email)); localStorage.removeItem('bs_cancel'); }catch(_){}
+      window.__cancelStart=null;
       var s2=document.getElementById('cx-step2'), dn=document.getElementById('cx-done'); if(s2) s2.style.display='none'; if(dn) dn.style.display='block';
       BS.cancelMsg('',''); },
     /* Book Now → straight to the Confirm-booking review with sensible defaults */
@@ -2364,7 +2390,7 @@ function start(){
   /* if an Existing customer tapped before the scene finished booting, jump them to Book Now now */
   if(window.__pendingBookNow){ window.__pendingBookNow=false; setTimeout(function(){ try{ BS.bookNow(); }catch(e){} }, 300); }
   /* arriving from the "Cancel appointment" link in an email → open the cancel flow */
-  if(/cancel/i.test(location.hash)){ setTimeout(function(){ try{ if(window.bsCloseGate) bsCloseGate(); BS.showCancel(); }catch(e){} }, 350); }
+  if(/cancel/i.test(location.hash)){ var _ct=parseCancelHash(); setTimeout(function(){ try{ if(window.bsCloseGate) bsCloseGate(); BS.showCancel(_ct); }catch(e){} }, 350); }
 
   /* ===== flow-mode navigation by scroll: wheel/touch on the active sheet
      advances to the next step when content is at the bottom edge, or runs the

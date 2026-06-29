@@ -738,36 +738,95 @@
   .nm-contact:hover{ border-color:#d8b878; background:rgba(216,184,120,.08); transform:translateY(-2px); }
   .nm-contact span{ font-size:10.5px; letter-spacing:.22em; text-transform:uppercase; color:rgba(244,236,220,.55); }
   .nm-contact b{ font-size:17px; font-weight:600; font-family:var(--display); }
-  /* ===== entry gate: New vs Existing customer over a blurred backdrop ===== */
-  #entrygate{ position:fixed; inset:0; z-index:120; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:26px; padding:24px;
-    background:rgba(8,6,5,.5); -webkit-backdrop-filter:blur(18px) saturate(1.1); backdrop-filter:blur(18px) saturate(1.1); text-align:center; transition:opacity .5s ease; }
+  /* ===== entry gate: screen split top/bottom (New / Existing) with a SHOP circle in the middle ===== */
+  #entrygate{ position:fixed; inset:0; z-index:120; overflow:hidden; text-align:center; transition:opacity .5s ease;
+    background:rgba(8,6,5,.5); -webkit-backdrop-filter:blur(18px) saturate(1.1); backdrop-filter:blur(18px) saturate(1.1); }
   #entrygate.hide{ opacity:0; pointer-events:none; }
-  #entrygate .eg-k{ font-size:11px; letter-spacing:.42em; text-transform:uppercase; color:rgba(232,196,120,.85); }
-  #entrygate .eg-h{ font-family:var(--display); font-weight:500; font-size:clamp(30px,7.5vw,54px); line-height:1.02; color:#f4ecdc; margin-top:8px; }
-  #entrygate .eg-cards{ display:flex; gap:16px; flex-wrap:wrap; justify-content:center; width:100%; max-width:560px; }
-  #entrygate .eg-card{ flex:1 1 220px; min-width:190px; padding:26px 22px; border-radius:18px; cursor:pointer; font-family:inherit;
-    border:1px solid rgba(232,196,120,.3); background:rgba(20,15,10,.72); color:#f4ecdc; transition:.18s; text-align:center; }
-  #entrygate .eg-card:hover{ transform:translateY(-3px); border-color:#d8b878; background:rgba(216,184,120,.1); }
-  #entrygate .eg-card .ec-t{ display:block; font-family:var(--display); font-size:24px; font-weight:600; }
-  #entrygate .eg-card .ec-s{ display:block; margin-top:8px; font-size:12.5px; color:rgba(244,236,220,.65); line-height:1.5; }
-  #entrygate .eg-card.primary{ background:#d8b878; color:#1a1208; border-color:#d8b878; }
-  #entrygate .eg-card.primary .ec-s{ color:rgba(26,18,8,.72); }
+  #entrygate .eg-brand{ position:absolute; top:calc(20px + env(safe-area-inset-top)); left:0; right:0; z-index:2; pointer-events:none;
+    font-size:10px; letter-spacing:.36em; text-transform:uppercase; color:rgba(244,236,220,.5); }
+  #entrygate .eg-half{ position:absolute; left:0; right:0; height:50%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:7px;
+    border:none; background:transparent; color:#f4ecdc; font-family:inherit; cursor:pointer; padding:24px; transition:background .2s ease; }
+  #entrygate .eg-half.new{ top:0; }
+  #entrygate .eg-half.existing{ bottom:0; }
+  #entrygate .eg-half.new:hover{ background:linear-gradient(to bottom, rgba(216,184,120,.12), transparent 80%); }
+  #entrygate .eg-half.existing:hover{ background:linear-gradient(to top, rgba(216,184,120,.12), transparent 80%); }
+  #entrygate .eg-eyebrow{ font-size:10px; letter-spacing:.32em; text-transform:uppercase; color:rgba(232,196,120,.85); }
+  #entrygate .eg-title{ font-family:var(--display); font-weight:600; font-size:clamp(30px,8.5vw,54px); line-height:1; }
+  #entrygate .eg-desc{ font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:rgba(244,236,220,.6); }
+  #entrygate .eg-divider{ position:absolute; left:0; right:0; top:50%; height:1px; pointer-events:none;
+    background:linear-gradient(to right, transparent, rgba(232,196,120,.55), transparent); }
+  #entrygate .eg-shop{ position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:96px; height:96px; border-radius:50%;
+    border:1px solid rgba(232,196,120,.6); background:rgba(12,9,7,.92); color:#f4ecdc; font-family:var(--display); font-weight:600; font-size:18px; letter-spacing:.12em;
+    cursor:pointer; z-index:3; transition:.18s; box-shadow:0 0 0 7px rgba(8,6,5,.55), 0 12px 32px rgba(0,0,0,.55); }
+  #entrygate .eg-shop:hover{ background:#d8b878; color:#1a1208; border-color:#d8b878; transform:translate(-50%,-50%) scale(1.07); }
+  /* ===== Shop page (opens over everything) ===== */
+  #shoppage{ position:fixed; inset:0; z-index:130; display:none; background:#0b0907; color:#f4ecdc; overflow-y:auto; }
+  #shoppage.on{ display:block; }
+  #shoppage .shop-head{ position:sticky; top:0; z-index:2; display:flex; align-items:center; gap:14px;
+    padding:calc(16px + env(safe-area-inset-top)) 20px 16px; background:rgba(11,9,7,.96); border-bottom:1px solid rgba(232,196,120,.14); }
+  #shoppage .shop-back{ width:40px; height:40px; flex:none; border-radius:50%; border:1px solid rgba(232,196,120,.28); background:rgba(255,255,255,.04); color:#f4ecdc; font-size:22px; line-height:1; cursor:pointer; }
+  #shoppage .shop-back:hover{ border-color:#d8b878; }
+  #shoppage .shop-k{ font-size:10px; letter-spacing:.32em; text-transform:uppercase; color:rgba(244,236,220,.5); }
+  #shoppage .shop-title{ font-family:var(--display); font-weight:600; font-size:26px; line-height:1; margin-top:2px; }
+  #shoppage .shop-grid{ max-width:1040px; margin:24px auto 0; padding:0 18px; display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:16px; }
+  #shoppage .shop-card{ text-align:left; }
+  #shoppage .shop-photo{ aspect-ratio:1/1; border-radius:14px; overflow:hidden; display:flex; align-items:center; justify-content:center;
+    background:rgba(255,255,255,.035); border:1px dashed rgba(232,196,120,.28); }
+  #shoppage .shop-photo img{ width:100%; height:100%; object-fit:cover; }
+  #shoppage .shop-photo .ph{ font-size:10.5px; letter-spacing:.22em; text-transform:uppercase; color:rgba(244,236,220,.4); }
+  #shoppage .shop-name{ margin-top:11px; font-weight:600; font-size:15px; }
+  #shoppage .shop-price{ margin-top:2px; font-size:12.5px; color:rgba(244,236,220,.6); }
+  #shoppage .shop-foot{ text-align:center; margin:30px 0 calc(34px + env(safe-area-inset-bottom)); font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:rgba(244,236,220,.4); }
   @media(max-width:760px){ .navmodal{ align-items:flex-end; padding:0; } .navmodal .nm-card{ width:100%; border-radius:24px 24px 0 0; padding:26px 20px calc(26px + env(safe-area-inset-bottom)); } }
 </style>
 </head>
 <body>
 <div id="entrygate">
-  <div>
-    <p class="eg-k">Welcome to</p>
-    <h2 class="eg-h">Black Silva Hairdresser</h2>
+  <p class="eg-brand">Welcome to Black Silva Hairdresser</p>
+  <button type="button" class="eg-half new" onclick="bsNewCustomer()">
+    <span class="eg-eyebrow">First time here?</span>
+    <span class="eg-title serif">New customer</span>
+    <span class="eg-desc">Discover the studio · book step by step</span>
+  </button>
+  <button type="button" class="eg-half existing" onclick="bsExistingCustomer()">
+    <span class="eg-title serif">Existing customer</span>
+    <span class="eg-desc">Skip ahead · book your next visit</span>
+  </button>
+  <div class="eg-divider"></div>
+  <button type="button" class="eg-shop" onclick="bsOpenShop()" aria-label="Open the shop">Shop</button>
+</div>
+<!-- Shop page: opens over everything when SHOP is tapped -->
+<div id="shoppage">
+  <div class="shop-head">
+    <button type="button" class="shop-back" onclick="bsCloseShop()" aria-label="Back">‹</button>
+    <div><p class="shop-k">Black Silva</p><h2 class="shop-title">Shop</h2></div>
   </div>
-  <div class="eg-cards">
-    <button type="button" class="eg-card" onclick="bsNewCustomer()"><span class="ec-t">New customer</span><span class="ec-s">Discover the studio — scroll through and book step by step.</span></button>
-    <button type="button" class="eg-card primary" onclick="bsExistingCustomer()"><span class="ec-t">Existing customer</span><span class="ec-s">Skip ahead and book your next visit right away.</span></button>
-  </div>
+  <div class="shop-grid" id="shop-grid"></div>
+  <p class="shop-foot">More products coming soon</p>
 </div>
 <script>
-  /* entry gate — lock the page until the guest picks a path */
+  /* ===========================================================================
+     ENTRY GATE + SHOP
+     To add real product photos: upload the image next to index.html and set its
+     file name as "img" below (e.g. img:'product1.webp'). Leave img:'' for a
+     placeholder. Add/remove items freely — the grid lays itself out.
+     =========================================================================== */
+  var SHOP_PRODUCTS = [
+    { name:'Product 1', price:'', img:'' },
+    { name:'Product 2', price:'', img:'' },
+    { name:'Product 3', price:'', img:'' },
+    { name:'Product 4', price:'', img:'' },
+    { name:'Product 5', price:'', img:'' },
+    { name:'Product 6', price:'', img:'' }
+  ];
+  function bsEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function bsRenderShop(){ var g=document.getElementById('shop-grid'); if(!g) return;
+    g.innerHTML = SHOP_PRODUCTS.map(function(p){
+      var photo = p.img ? '<img src="'+bsEsc(p.img)+'" alt="'+bsEsc(p.name)+'">' : '<span class="ph">Add photo</span>';
+      return '<div class="shop-card"><div class="shop-photo">'+photo+'</div><div class="shop-name">'+bsEsc(p.name)+'</div>'+(p.price?'<div class="shop-price">'+bsEsc(p.price)+'</div>':'')+'</div>';
+    }).join('');
+  }
+  /* lock the page until the guest picks a path */
   (function(){ try{ document.documentElement.style.overflow='hidden'; document.body.style.overflow='hidden'; }catch(e){} })();
   function bsCloseGate(){ var g=document.getElementById('entrygate'); if(g) g.classList.add('hide');
     document.documentElement.style.overflow=''; document.body.style.overflow='';
@@ -775,6 +834,11 @@
   function bsNewCustomer(){ bsCloseGate(); }
   function bsExistingCustomer(){ bsCloseGate();
     if(window.BS && BS.bookNow){ BS.bookNow(); } else { window.__pendingBookNow=true; } }
+  function bsOpenShop(){ bsRenderShop(); window.__shopPrevOverflow=document.body.style.overflow;
+    document.documentElement.style.overflow='hidden'; document.body.style.overflow='hidden';
+    var s=document.getElementById('shoppage'); if(s){ s.classList.add('on'); s.scrollTop=0; } }
+  function bsCloseShop(){ var s=document.getElementById('shoppage'); if(s) s.classList.remove('on');
+    var prev=window.__shopPrevOverflow||''; document.documentElement.style.overflow=prev; document.body.style.overflow=prev; }
 </script>
 <div id="stage"></div>
 <div id="shaderbg"></div>
@@ -785,6 +849,7 @@
   <div class="navlinks" id="navlinks">
     <a onclick="BS.bookNow()">Book&nbsp;Now</a>
     <a onclick="BS.showPrices()">Prices</a>
+    <a onclick="bsOpenShop()">Shop</a>
     <a onclick="BS.showFind()">Find&nbsp;us</a>
     <a onclick="BS.showContact()">Contact</a>
     <a onclick="bsGoogleReview()">Review</a>

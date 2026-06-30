@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<script src="config.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
@@ -813,6 +814,29 @@
   #modal-cancel .cx-check{ width:54px; height:54px; margin:4px auto 0; border-radius:50%; background:rgba(74,210,126,.16); border:1px solid #4ad27e; display:flex; align-items:center; justify-content:center; }
   #modal-cancel .cx-check svg{ width:26px; height:26px; }
   #modal-cancel #cx-done{ text-align:center; }
+  /* gold burger-menu links */
+  .navlinks a.nav-gold{ color:#e8c478; }
+  .navlinks a.nav-gold:hover{ color:#f0d9a8; }
+  /* redeem modal inputs (reuse cancel look) */
+  #modal-redeem label{ display:block; margin:16px 0 7px; font-size:10.5px; letter-spacing:.22em; text-transform:uppercase; color:rgba(244,236,220,.55); }
+  #modal-redeem input{ width:100%; padding:13px 14px; border-radius:12px; border:1px solid rgba(232,196,120,.22); background:rgba(255,255,255,.04); color:#f4ecdc; font:inherit; font-size:18px; outline:none; text-align:center; letter-spacing:.14em; text-transform:uppercase; font-family:'Courier New',monospace; }
+  #modal-redeem input:focus{ border-color:#d8b878; }
+  #modal-redeem #rd-done{ text-align:center; }
+  #modal-redeem .cx-check, #modal-vouchers .cx-check{ width:54px; height:54px; margin:4px auto 0; border-radius:50%; background:rgba(74,210,126,.16); border:1px solid #4ad27e; display:flex; align-items:center; justify-content:center; }
+  #modal-redeem .cx-check svg{ width:26px; height:26px; }
+  .cx-link{ display:block; width:100%; margin-top:10px; padding:8px; background:none; border:none; color:rgba(244,236,220,.6); font:inherit; font-size:12.5px; cursor:pointer; }
+  .cx-link:hover{ color:#f4ecdc; }
+  .cx-msg{ margin-top:12px; min-height:16px; font-size:13px; line-height:1.5; text-align:center; }
+  .cx-msg.ok{ color:#4ad27e; } .cx-msg.err{ color:#ff9b8a; } .cx-msg.info{ color:rgba(244,236,220,.6); }
+  /* scratch card */
+  .scratch-wrap{ position:relative; width:100%; height:150px; margin-top:16px; border-radius:16px; overflow:hidden; }
+  .scratch-prize{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px;
+    background:radial-gradient(120% 120% at 50% 0%, rgba(216,184,120,.16), rgba(20,15,10,.9)); border:1px solid rgba(232,196,120,.3); }
+  .scratch-prize .sp-k{ font-size:10px; letter-spacing:.3em; text-transform:uppercase; color:rgba(244,236,220,.55); }
+  .scratch-prize .sp-code{ font-family:'Courier New',monospace; font-size:26px; font-weight:700; letter-spacing:.14em; color:#e8c478; }
+  .scratch-prize .sp-sub{ font-size:11px; color:rgba(244,236,220,.6); }
+  .scratch-canvas{ position:absolute; inset:0; width:100%; height:100%; cursor:grab; touch-action:none; }
+  .vc-actions{ margin-top:14px; }
 </style>
 </head>
 <body>
@@ -907,6 +931,8 @@
     <a onclick="BS.bookNow()">Book&nbsp;Now</a>
     <a onclick="BS.showPrices()">Prices</a>
     <a onclick="bsOpenShop()">Shop</a>
+    <a class="nav-gold" onclick="BS.showVouchers()">Vouchers</a>
+    <a class="nav-gold" onclick="BS.showRedeem()">Redeem&nbsp;Voucher</a>
     <a onclick="BS.showFind()">Find&nbsp;us</a>
     <a onclick="BS.showContact()">Contact</a>
     <a onclick="BS.showCancel()">Cancel&nbsp;booking</a>
@@ -1097,6 +1123,43 @@
       <p style="margin-top:8px">Your cancellation has been recorded and the salon has been notified. A confirmation has been emailed to you.</p>
     </div>
     <div class="cx-msg" id="cx-msg"></div>
+  </div>
+</div>
+<div class="navmodal" id="modal-vouchers" onclick="if(event.target===this)BS.closeModal('modal-vouchers')">
+  <div class="nm-card">
+    <button class="nm-close" type="button" onclick="BS.closeModal('modal-vouchers')" aria-label="Close">&times;</button>
+    <p class="nm-k" style="color:#d8b878">Vouchers</p>
+    <h3 class="serif">Scratch &amp; win</h3>
+    <p>Scratch the gold panel to reveal your promo code — <b>20% off</b> your next visit. Only a few are available!</p>
+    <div class="scratch-wrap" id="scratch-wrap">
+      <div class="scratch-prize" id="scratch-prize"><span class="sp-k">Your code</span><span class="sp-code" id="scratch-code">— — —</span><span class="sp-sub">20% off · tap “Redeem” to use it</span></div>
+      <canvas class="scratch-canvas" id="scratch-canvas"></canvas>
+    </div>
+    <div class="vc-actions" id="vc-actions" style="display:none">
+      <button class="nm-cta" type="button" onclick="BS.voucherRedeem()">Redeem this code</button>
+      <button class="cx-link" type="button" onclick="BS.voucherCopy()">Copy code</button>
+    </div>
+    <div class="cx-msg" id="vc-msg"></div>
+  </div>
+</div>
+<div class="navmodal" id="modal-redeem" onclick="if(event.target===this)BS.closeModal('modal-redeem')">
+  <div class="nm-card">
+    <button class="nm-close" type="button" onclick="BS.closeModal('modal-redeem')" aria-label="Close">&times;</button>
+    <p class="nm-k" style="color:#d8b878">Redeem voucher</p>
+    <h3 class="serif">Have a code?</h3>
+    <p>Enter your promo code below. The discount is applied to your booking total automatically.</p>
+    <div id="rd-form">
+      <label for="rd-code">Promo code</label>
+      <input id="rd-code" type="text" placeholder="e.g. BSV20-7421" autocomplete="off">
+      <button class="nm-cta" type="button" onclick="BS.redeemApply()">Apply code</button>
+    </div>
+    <div id="rd-done" style="display:none">
+      <div class="cx-check"><svg viewBox="0 0 24 24" fill="none" stroke="#4ad27e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>
+      <h4 class="serif" style="font-size:22px;margin-top:8px;color:#f4ecdc" id="rd-done-title">Code applied</h4>
+      <p style="margin-top:8px" id="rd-done-sub"></p>
+      <button class="nm-cta" type="button" onclick="BS.closeModal('modal-redeem'); BS.bookNow();">Book now with discount</button>
+    </div>
+    <div class="cx-msg" id="rd-msg"></div>
   </div>
 </div>
 <div id="loader"><div class="l">Black Silva</div><div class="bar"><i></i></div><div class="e" id="err"></div></div>
@@ -1682,7 +1745,17 @@ function start(){
   var SERVICE_ADDONS=SERVICE_LISTS;
   var ADDON_PRICE=0;                      /* services are included — no extra cost */
   function addonsTotal(){ return 0; }
-  function grandTotal(){ return choice.price; }
+  /* ===== promo / voucher codes ===== */
+  var PROMOS={ 'BSV20-7421':20,'BSV20-3856':20,'BSV20-9134':20,'BSV20-5208':20,'BSV20-6677':20, 'NEWBLACK100':100 };
+  var VOUCHER_CODES=['BSV20-7421','BSV20-3856','BSV20-9134','BSV20-5208','BSV20-6677']; /* the 5 scratch-card 20% codes */
+  function normCode(c){ return String(c||'').toUpperCase().replace(/\s+/g,''); }
+  function promoPct(code){ code=normCode(code); return PROMOS.hasOwnProperty(code)?PROMOS[code]:0; }
+  function getPromo(){ try{ var p=JSON.parse(localStorage.getItem('bs_promo')||'null'); if(p&&PROMOS[p.code]) return {code:p.code,pct:PROMOS[p.code]}; }catch(e){} return null; }
+  function setPromo(code){ code=normCode(code); if(!PROMOS[code]) return false; try{ localStorage.setItem('bs_promo',JSON.stringify({code:code,pct:PROMOS[code]})); }catch(e){} return true; }
+  function clearPromo(){ try{ localStorage.removeItem('bs_promo'); }catch(e){} }
+  function activePct(){ var p=getPromo(); return p?p.pct:0; }
+  function grossTotal(){ return choice.price; }
+  function grandTotal(){ return Math.max(0, Math.round(grossTotal()*(100-activePct())/100)); }
   var PRICE_STEPS=[500,450,400,375];   /* SHORT hair, by tier (0=this week … 3=3+ weeks early) */
   var LONG_STEPS =[650,550,450,450];   /* LONG hair: this week 650 → ~1 week 550 → 2+ weeks 450 */
   /* Opening hours, keyed by JS day (0=Sun … 6=Sat). null = closed. [openHour, closeHour] */
@@ -1744,6 +1817,32 @@ function start(){
   /* big gold price-range shown when a length is picked (like the 375 DKK slide) */
   function lpPriceHTML(type){ var r=(type==='lady')?'450–650':'375–500', lab=(type==='lady')?'Long hair':'Short hair';
     return '<span class="lp-amt">'+r+' <small>DKK</small></span><span class="lp-plab">'+lab+' · price by how early you book</span>'; }
+  /* ===== scratch-card voucher ===== */
+  function bsVoucherRevealed(){ var code=window.__voucherCode; if(!code) return;
+    try{ var cl=JSON.parse(localStorage.getItem('bs_vouchers_claimed')||'[]'); if(cl.indexOf(code)<0){ cl.push(code); localStorage.setItem('bs_vouchers_claimed',JSON.stringify(cl)); } }catch(e){}
+    var a=document.getElementById('vc-actions'); if(a) a.style.display='';
+    var msg=document.getElementById('vc-msg'); if(msg){ msg.textContent='Code revealed — it\'s yours!'; msg.className='cx-msg ok'; } }
+  function bsScratchInit(){
+    var wrap=document.getElementById('scratch-wrap'), cv=document.getElementById('scratch-canvas'); if(!wrap||!cv) return;
+    var ctx=cv.getContext('2d'); var r=wrap.getBoundingClientRect(); if(!r.width){ return setTimeout(bsScratchInit,80); }
+    var dpr=Math.min(window.devicePixelRatio||1,2); cv.width=r.width*dpr; cv.height=r.height*dpr; ctx.scale(dpr,dpr);
+    cv.style.opacity='1';
+    var g=ctx.createLinearGradient(0,0,r.width,r.height); g.addColorStop(0,'#caa869'); g.addColorStop(1,'#9c7e44');
+    ctx.globalCompositeOperation='source-over'; ctx.fillStyle=g; ctx.fillRect(0,0,r.width,r.height);
+    ctx.fillStyle='rgba(20,15,10,.5)'; ctx.font="700 13px Manrope,system-ui,sans-serif"; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('S C R A T C H   H E R E', r.width/2, r.height/2);
+    var drawing=false, done=false;
+    function at(e){ var b=cv.getBoundingClientRect(); var t=e.touches&&e.touches[0]; var cx=t?t.clientX:e.clientX, cy=t?t.clientY:e.clientY; return {x:cx-b.left, y:cy-b.top}; }
+    function scratch(p){ ctx.globalCompositeOperation='destination-out'; ctx.beginPath(); ctx.arc(p.x,p.y,20,0,Math.PI*2); ctx.fill(); }
+    function cleared(){ var d=ctx.getImageData(0,0,cv.width,cv.height).data, c=0, n=0; for(var i=3;i<d.length;i+=4*32){ n++; if(d[i]===0) c++; } return n?c/n:0; }
+    function check(){ if(done) return; if(cleared()>0.5){ done=true; cv.style.transition='opacity .45s'; cv.style.opacity='0'; bsVoucherRevealed(); } }
+    function down(e){ drawing=true; scratch(at(e)); if(e.cancelable) e.preventDefault(); }
+    function move(e){ if(!drawing) return; scratch(at(e)); check(); if(e.cancelable) e.preventDefault(); }
+    function up(){ if(drawing){ drawing=false; check(); } }
+    if(window.PointerEvent){ cv.onpointerdown=down; cv.onpointermove=move; window.addEventListener('pointerup',up); }
+    else { cv.onmousedown=down; cv.onmousemove=move; window.addEventListener('mouseup',up);
+      cv.addEventListener('touchstart',down,{passive:false}); cv.addEventListener('touchmove',move,{passive:false}); cv.addEventListener('touchend',up); }
+  }
   /* wire up the drag interaction + render the current value */
   function hpRender(){
     var t=choice.hairT, frac=hpLineFrac(t), cm=hpCm(t), cat=hpCategory(t);
@@ -1878,7 +1977,9 @@ function start(){
   var TIME_SLOTS=['10:00','11:30','13:00','14:30','16:00','17:30','19:00','20:00'];
   function loggedInEmail(){ return choice.email||''; }
   function loggedInName(){ return choice.name||''; }
-  function totalLine(){ var addons=addonsTotal(); return addons>0 ? money(choice.price)+' + '+money(addons)+' = '+money(grandTotal()) : money(grandTotal()); }
+  function totalLine(){ var p=getPromo();
+    if(p) return '<s style="opacity:.55;font-weight:400">'+money(grossTotal())+'</s> &nbsp;'+money(grandTotal())+' <span style="color:#4ad27e;font-weight:700">('+p.code+' &minus;'+p.pct+'%)</span>';
+    return money(grandTotal()); }
   /* refresh just the summary block on the Confirm sheet (after a day/time change) */
   function refreshConfirmSummary(){ var s=document.querySelector('#m-confirm .summary'); if(!s) return;
     s.innerHTML='Length&nbsp;&nbsp;<b>'+choice.service+'</b><br>Services&nbsp;&nbsp;'+addonText()+'<br>When&nbsp;&nbsp;'+choice.dayLabel+' · '+choice.time+'<br>Stylist&nbsp;&nbsp;'+choice.stylist+'<br><span class="tot">Total&nbsp;&nbsp;'+totalLine()+'</span>'; }
@@ -1922,10 +2023,16 @@ function start(){
   ];
   function buildPay(){
     var h=grab()+backBtn('confirm')+'<p class="bk">Payment</p><h3 class="serif">How would you like to pay?</h3>';
-    h+='<p class="bsub">Total <b>'+money(grandTotal())+'</b> · '+choice.service+(choice.addons.length?' + '+choice.addons.length+' extra'+(choice.addons.length>1?'s':''):'')+'</p>';
-    h+='<div class="paylist">';
-    PAY_METHODS.forEach(function(p){ h+='<button class="payopt" onclick="BS.pay(\''+p.k+'\')"><span class="payicon '+p.k+'"></span><span class="paytxt"><b>'+p.label+'</b><small>'+p.sub+'</small></span><span class="paychev">›</span></button>'; });
-    h+='</div>';
+    var pr=getPromo();
+    h+='<p class="bsub">Total <b>'+money(grandTotal())+'</b>'+(pr?' <span style="color:#4ad27e">('+pr.code+' &minus;'+pr.pct+'%)</span>':'')+' · '+choice.service+'</p>';
+    if(grandTotal()<=0){
+      h+='<div class="stripe-test" style="border-color:#4ad27e;color:#7cdd9d;background:rgba(74,210,126,.08)"><b>Free booking</b> — your voucher covers the full price. No payment needed.</div>';
+      h+='<button class="confirm-btn" onclick="BS.pay(\'free\')"><span class="cbcircle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span><span>Confirm free booking</span></button>';
+    } else {
+      h+='<div class="paylist">';
+      PAY_METHODS.forEach(function(p){ h+='<button class="payopt" onclick="BS.pay(\''+p.k+'\')"><span class="payicon '+p.k+'"></span><span class="paytxt"><b>'+p.label+'</b><small>'+p.sub+'</small></span><span class="paychev">›</span></button>'; });
+      h+='</div>';
+    }
     document.getElementById('m-pay').innerHTML=h;
   }
   /* ===== Automatic booking email + calendar =====
@@ -1935,10 +2042,11 @@ function start(){
      it calls Resend directly from the browser — that only works in browsers
      that ignore CORS for testing (file://, dev mode, CORS-Unblock extension)
      because Resend's API does not return Access-Control-Allow-Origin. */
-  var BOOKING_API="";
-  var RESEND_KEY="re_XQwEoWfo_Mi1gM31YX4CF3PjofPyaoXcd";
-  var RESEND_FROM="Black Silva <onboarding@resend.dev>";
-  var OWNER_EMAIL="blacksilvahd@gmail.com";
+  var CFG=window.BS_CONFIG||{};
+  var BOOKING_API=CFG.BOOKING_API||"";
+  var RESEND_KEY=CFG.RESEND_KEY||"re_XQwEoWfo_Mi1gM31YX4CF3PjofPyaoXcd";
+  var RESEND_FROM=CFG.RESEND_FROM||"Black Silva <onboarding@resend.dev>";
+  var OWNER_EMAIL=CFG.OWNER_EMAIL||"blacksilvahd@gmail.com";
   var SALON_LOCATION="Black Silva Hairdresser, Badstuestræde 16, Copenhagen";
   var SITE_URL=(location.origin+location.pathname).replace(/[#?].*$/,'');  /* used for the "cancel" link in emails */
   var CANCEL_CUTOFF_HOURS=12;  /* online cancellation closes this many hours before the appointment */
@@ -1949,7 +2057,7 @@ function start(){
      containing live secret patterns). When the site moves to your host,
      replace the prompt path with a tiny endpoint that creates the intent
      server-side and remove STRIPE_SK from the browser entirely. */
-  var STRIPE_PK="pk_test_51Tehd89zA9loGnwbtxNMyu8hOfQgXuSwYE2YQLuh9Ke3iV4hpXaapb4rErdjvTogW7uImsfj6jzPfnxMFMeXdf1h00rJr8RNru";
+  var STRIPE_PK=CFG.STRIPE_PK||"pk_test_51Tehd89zA9loGnwbtxNMyu8hOfQgXuSwYE2YQLuh9Ke3iV4hpXaapb4rErdjvTogW7uImsfj6jzPfnxMFMeXdf1h00rJr8RNru";
   function getStripeSecret(){
     try{ var k=localStorage.getItem('bs_stripe_sk');
       if(k && /^sk_test_/.test(k)) return k;
@@ -2190,6 +2298,39 @@ function start(){
     showFind:function(){ BS.closeMenu(); var m=document.getElementById('modal-find'); if(m) m.classList.add('on'); },
     showContact:function(){ BS.closeMenu(); var m=document.getElementById('modal-contact'); if(m) m.classList.add('on'); },
     closeModal:function(id){ var m=document.getElementById(id); if(m) m.classList.remove('on'); },
+    /* ===== Vouchers (scratch card) + Redeem ===== */
+    showVouchers:function(){ BS.closeMenu();
+      var claimed=[]; try{ claimed=JSON.parse(localStorage.getItem('bs_vouchers_claimed')||'[]'); }catch(e){}
+      var next=null; for(var i=0;i<VOUCHER_CODES.length;i++){ if(claimed.indexOf(VOUCHER_CODES[i])<0){ next=VOUCHER_CODES[i]; break; } }
+      var wrap=document.getElementById('scratch-wrap'), acts=document.getElementById('vc-actions'), msg=document.getElementById('vc-msg');
+      if(msg){ msg.textContent=''; msg.className='cx-msg'; } if(acts) acts.style.display='none';
+      var m=document.getElementById('modal-vouchers'); if(m) m.classList.add('on');
+      if(!next){ window.__voucherCode=null; if(wrap) wrap.style.display='none'; if(msg){ msg.textContent='All 20% vouchers have been claimed on this device — thank you!'; msg.className='cx-msg info'; } return; }
+      window.__voucherCode=next; if(wrap) wrap.style.display=''; var cc=document.getElementById('scratch-code'); if(cc) cc.textContent=next;
+      setTimeout(bsScratchInit, 80); },
+    voucherCopy:function(){ var c=window.__voucherCode; if(!c) return; var msg=document.getElementById('vc-msg');
+      function fb(){ try{ var ta=document.createElement('textarea'); ta.value=c; ta.style.position='fixed'; ta.style.opacity=0; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); }catch(e){} }
+      if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(c).catch(fb); } else fb();
+      if(msg){ msg.textContent='Code copied ✓'; msg.className='cx-msg ok'; } },
+    voucherRedeem:function(){ var c=window.__voucherCode; if(!c) return; setPromo(c); BS.closeModal('modal-vouchers'); BS.redeemSuccess(c); },
+    showRedeem:function(){ BS.closeMenu();
+      var f=document.getElementById('rd-form'), d=document.getElementById('rd-done'), msg=document.getElementById('rd-msg'), inp=document.getElementById('rd-code');
+      if(f) f.style.display=''; if(d) d.style.display='none'; if(msg){ msg.textContent=''; msg.className='cx-msg'; } if(inp) inp.value='';
+      var p=getPromo(); /* if one is already active, show it */
+      var m=document.getElementById('modal-redeem'); if(m) m.classList.add('on');
+      if(p){ BS.redeemSuccess(p.code); } else if(inp){ setTimeout(function(){ inp.focus(); },120); } },
+    redeemApply:function(){ var inp=document.getElementById('rd-code'); var code=inp?inp.value:''; var msg=document.getElementById('rd-msg');
+      if(promoPct(code)<=0){ if(msg){ msg.textContent='That code isn\'t valid. Check it and try again.'; msg.className='cx-msg err'; } return; }
+      setPromo(code); BS.redeemSuccess(code); },
+    redeemSuccess:function(code){ code=normCode(code); var pct=promoPct(code);
+      var f=document.getElementById('rd-form'), d=document.getElementById('rd-done'), msg=document.getElementById('rd-msg');
+      if(f) f.style.display='none'; if(msg){ msg.textContent=''; msg.className='cx-msg'; }
+      var t=document.getElementById('rd-done-title'), s=document.getElementById('rd-done-sub');
+      if(t) t.textContent=(pct>=100?'Free visit unlocked!':pct+'% off applied');
+      if(s) s.innerHTML='Code <b>'+code+'</b> is active. '+(pct>=100?'Your next booking is on the house.':'You\'ll see '+pct+'% off your total at checkout.');
+      if(d) d.style.display='block';
+      var m=document.getElementById('modal-redeem'); if(m) m.classList.add('on');
+      if(typeof refreshConfirmSummary==='function') refreshConfirmSummary(); },
     /* ===== Cancel appointment: email → security code → confirm ===== */
     showCancel:function(token){ BS.closeMenu();
       /* a token from the email link carries the email + appointment time + code-hash (works on any device) */
@@ -2248,14 +2389,11 @@ function start(){
       BS.cancelMsg('',''); },
     /* Book Now → straight to the Confirm-booking review with sensible defaults */
     bookNow:function(){ BS.closeMenu();
-      if(!choice.haircut){ choice.haircut='gentleman'; }
-      var c=CUTS[choice.haircut]; choice.service=c.label; choice.fromPrice=c.from;
-      if(!Array.isArray(choice.addons)) choice.addons=[];
-      var today=startDay(new Date());
-      if(choice.dayIdx===null||typeof choice.dayIdx==='undefined'){ defaultDay(); }
-      if(!choice.time){ var _sl=slotsForDay(dateForIdx(choice.dayIdx)); choice.time=_sl[0]||''; }
-      if(!choice.stylist) choice.stylist='Eduard';
-      snapSeated(); buildConfirm(); showStep('confirm'); },
+      /* start the booking at Step 1 so the guest chooses Short / Long first */
+      enterFlow(); setDaylight();
+      cust={x:0,y:0,z:0.7,facing:Math.PI,state:'stand'};
+      bookCam={tx:0,ty:1.5,tz:0.3,zoom:1.15,frontMix:0.45,rightShift:0.0};
+      buildLength(); showStep('length'); },
     haircut:function(type){ var c=CUTS[type]; if(!c) return;
       choice.haircut=type; choice.service=c.label; choice.fromPrice=c.from; choice.addons=[];
       /* Long Hair → Elena always; Short Hair → guest picks (default Eduard) */
@@ -2501,7 +2639,7 @@ function start(){
     });
     document.addEventListener('keydown',function(e){ if(e.key==='Escape'){
       if(window.BS&&BS.closeMenu) BS.closeMenu();
-      ['modal-prices','modal-find','modal-contact','modal-cancel'].forEach(function(id){ var m=document.getElementById(id); if(m) m.classList.remove('on'); }); } });
+      ['modal-prices','modal-find','modal-contact','modal-cancel','modal-vouchers','modal-redeem'].forEach(function(id){ var m=document.getElementById(id); if(m) m.classList.remove('on'); }); } });
   })();
 </script>
 <script>

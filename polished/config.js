@@ -26,8 +26,11 @@
    ============================================================================ */
 window.BS_CONFIG = {
   STRIPE_PK   : '',   // pk_live_... (real) or pk_test_...  — publishable key only
-  RESEND_KEY  : '',   // re_...  (leave '' if BOOKING_API is set — the Worker emails)
-  RESEND_FROM : '',   // 'Black Silva <booking@your-domain.com>'
+  // ⚠️ RESEND_KEY here does NOT send emails on a live website — browsers block
+  //    direct calls to Resend (CORS). Emails are sent ONLY by the Worker. Put
+  //    your Resend key on the Worker instead:  wrangler secret put RESEND_API_KEY
+  RESEND_KEY  : '',   // leave '' — not used in the browser
+  RESEND_FROM : '',   // (optional)
   OWNER_EMAIL : '',   // 'you@your-domain.com'
-  BOOKING_API : ''    // 'https://blacksilva-mailer.<your-account>.workers.dev'  → enables live payments + emails
+  BOOKING_API : ''    // ← THE IMPORTANT ONE: your Worker URL. Enables emails + real payments.
 };

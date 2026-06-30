@@ -21,6 +21,8 @@ npm install                       # installs wrangler locally
 npx wrangler login                # opens the browser, log into Cloudflare (free)
 npx wrangler secret put RESEND_API_KEY
 # → paste your NEW Resend key when prompted (the old one was shared in chat — rotate it!)
+npx wrangler secret put STRIPE_SECRET
+# → paste your Stripe SECRET key: sk_live_... for REAL money, or sk_test_... to test
 npx wrangler deploy
 ```
 
@@ -32,20 +34,24 @@ https://blacksilva-mailer.<your-account>.workers.dev
 
 ## Connect it to the website
 
-Open `polished/index.html`, find this line near the booking code:
+Open **`config.js`** (next to `index.html`) and paste the Worker URL +
+your Stripe **publishable** key:
 
 ```js
-var BOOKING_API="";
+window.BS_CONFIG = {
+  STRIPE_PK   : 'pk_live_...',   // Stripe → Developers → API keys → Publishable key
+  BOOKING_API : 'https://blacksilva-mailer.<your-account>.workers.dev',
+  // RESEND_KEY left blank — the Worker sends the emails now
+};
 ```
 
-and paste the Worker URL:
+Re-upload `config.js`. From then on:
+* every confirmed booking emails you + the client automatically, and
+* **real card payments** go through the Worker (the Stripe secret never touches
+  the website). The amount is recomputed on the server, so it can't be tampered.
 
-```js
-var BOOKING_API="https://blacksilva-mailer.<your-account>.workers.dev";
-```
-
-Commit + push. From then on, every confirmed + paid booking emails both of you
-automatically.
+> Use matching modes: `pk_live_` ↔ `sk_live_` for real money, or
+> `pk_test_` ↔ `sk_test_` to test with card `4242 4242 4242 4242`.
 
 ---
 

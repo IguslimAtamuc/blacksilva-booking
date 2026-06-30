@@ -207,10 +207,54 @@ async function codeRedeem(request,env){
   return json({ ok:true, code:rec.code, issuedBy:rec.name||"", expiresAt:rec.expiresAt });
 }
 
+/* ============================================================
+ * Stripe — create a PaymentIntent server-side (REAL card payments)
+ *   POST /stripe/intent  { haircut, daysAhead, promo, service, email, name, when, stylist }
+ * The amount is computed HERE from the same price rules as the site, so a
+ * tampered browser can't change what it pays. The Stripe SECRET key lives only
+ * as a Worker secret:   wrangler secret put STRIPE_SECRET
+ * ============================================================ */
+const PRICE_STEPS = [500, 450, 400, 375];   // short hair, by tier
+const LONG_STEPS  = [650, 550, 450, 450];   // long hair, by tier
+const PROMOS = { "BSV20-7421":20, "BSV20-3856":20, "BSV20-9134":20, "BSV20-5208":20, "BSV20-6677":20, "NEWBLACK100":100 };
+function priceTier(d){ d = +d || 0; if (d < 7) return 0; if (d < 14) return 1; if (d < 21) return 2; return 3; }
+function calcAmount(haircut, daysAhead, promo){
+  const base = (haircut === "lady" ? LONG_STEPS : PRICE_STEPS)[priceTier(daysAhead)];
+  const pct = PROMOS[String(promo || "").toUpperCase().replace(/\s+/g, "")] || 0;
+  return Math.max(0, Math.round(base * (100 - pct) / 100));   // DKK (major units)
+}
+async function createIntent(request, env){
+  if (!env.STRIPE_SECRET) return json({ error: "STRIPE_SECRET secret is not set on the Worker." }, 500);
+  let p; try { p = await request.json(); } catch (e) { return json({ error: "invalid JSON" }, 400); }
+  const amount = calcAmount(p.haircut, p.daysAhead, p.promo);
+  if (amount <= 0) return json({ free: true, amount: 0 });        // 100%-off voucher → nothing to charge
+  const body = new URLSearchParams();
+  body.set("amount", String(amount * 100));                      // minor units (øre)
+  body.set("currency", "dkk");
+  body.set("automatic_payment_methods[enabled]", "true");
+  body.set("description", (p.service || "Haircut") + " — Black Silva");
+  if (p.email) body.set("receipt_email", p.email);
+  body.set("metadata[stylist]", p.stylist || "");
+  body.set("metadata[when]", p.when || "");
+  body.set("metadata[client]", p.name || "");
+  if (p.promo) body.set("metadata[promo]", String(p.promo));
+  const r = await fetch("https://api.stripe.com/v1/payment_intents", {
+    method: "POST",
+    headers: { "Authorization": "Bearer " + env.STRIPE_SECRET, "Content-Type": "application/x-www-form-urlencoded" },
+    body: body.toString(),
+  });
+  let d = {}; try { d = await r.json(); } catch (e) {}
+  if (!r.ok || !d.client_secret) return json({ error: (d && d.error && d.error.message) || "Stripe error" }, 502);
+  return json({ client_secret: d.client_secret, amount });
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     if (request.method === "OPTIONS") return new Response(null, { headers: cors() });
+
+    // ---- Stripe (real card payments) ----
+    if (url.pathname === "/stripe/intent" && request.method === "POST") return createIntent(request, env);
 
     // ---- Reviews API ----
     if (url.pathname === "/reviews" && request.method === "GET")  return listReviews(env);

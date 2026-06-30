@@ -5,6 +5,10 @@ compatibility_date = "2024-11-01"
 # The Resend API key is stored as a secret, NOT here:
 #   wrangler secret put RESEND_API_KEY
 
+# Stripe SECRET key for REAL card payments (sk_live_... — or sk_test_... to test).
+# Stored as a secret, NEVER in this file or the website:
+#   wrangler secret put STRIPE_SECRET
+
 # Reviews are stored in a KV namespace shared by all visitors. Create it once:
 #   npx wrangler kv namespace create REVIEWS
 # then paste the printed id below and uncomment the block.

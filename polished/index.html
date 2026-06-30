@@ -2069,6 +2069,17 @@ function start(){
   var stripe=null, stripeElements=null, stripePaymentElement=null, stripeClientSecret=null;
   function stripeAmountMinor(){ return grandTotal()*100; }
   function createStripePaymentIntent(){
+    /* LIVE path — the Cloudflare Worker holds the secret key and creates the
+       intent server-side (the secret never touches the browser). */
+    if(BOOKING_API){
+      return fetch(BOOKING_API.replace(/\/+$/,'')+'/stripe/intent',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({ haircut:choice.haircut, daysAhead:(choice.dayIdx||0), promo:(getPromo()&&getPromo().code)||'',
+          service:choice.service||'', email:choice.email||'', name:choice.name||'Guest',
+          when:(choice.dayLabel||'')+' '+(choice.time||''), stylist:choice.stylist||'' })})
+        .then(function(r){ return r.json(); })
+        .catch(function(){ return {error:{message:'Could not reach the payment server.'}}; });
+    }
+    /* SANDBOX fallback — uses a sk_test_ key kept only in this browser (testing) */
     var sk=getStripeSecret();
     if(!sk) return Promise.resolve({error:{message:'Stripe secret key not set. Open the console and run localStorage.setItem(\'bs_stripe_sk\',\'sk_test_…\') then retry.'}});
     var body=new URLSearchParams();
@@ -2087,7 +2098,9 @@ function start(){
   function buildStripe(){
     var h=grab()+backBtn('pay')+'<p class="bk">Payment</p><h3 class="serif">Pay with card</h3>';
     h+='<p class="bsub">Total <b>'+money(grandTotal())+'</b> · '+choice.service+(choice.addons.length?' + '+choice.addons.length+' extra'+(choice.addons.length>1?'s':''):'')+'</p>';
-    h+='<div class="stripe-test"><b>Sandbox mode</b> · use card <code>4242 4242 4242 4242</code>, any future date, any CVC, any ZIP.</div>';
+    h+= BOOKING_API
+      ? '<div class="stripe-test" style="border-color:#4ad27e;color:#7cdd9d;background:rgba(74,210,126,.08)">🔒 <b>Secure payment</b> · processed by Stripe. Your card details never touch this site.</div>'
+      : '<div class="stripe-test"><b>Sandbox mode</b> · use card <code>4242 4242 4242 4242</code>, any future date, any CVC, any ZIP.</div>';
     h+='<div id="stripe-element" class="stripe-mount"></div>';
     h+='<div class="stripe-err" id="stripe-err"></div>';
     h+='<button class="confirm-btn" id="stripe-pay-btn" onclick="BS.stripePay()" disabled><span class="cbcircle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span><span id="stripe-pay-lbl">Loading payment…</span></button>';

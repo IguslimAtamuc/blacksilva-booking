@@ -13,17 +13,21 @@
    • RESEND_FROM — the "From" address Resend is allowed to send from
                    (e.g. 'Black Silva <booking@your-domain.com>').
    • OWNER_EMAIL — where YOU receive the "new booking" notifications.
-   • BOOKING_API — leave '' unless you run the optional Cloudflare Worker.
+   • BOOKING_API — your Cloudflare Worker URL. Setting this turns on REAL card
+                   payments + automatic emails (see booking-mailer/README.md).
+                   When set, the Worker sends the emails, so you can leave
+                   RESEND_KEY blank here.
 
-   ⚠️ IMPORTANT — Stripe SECRET key (sk_live_…):
-   NEVER put the Stripe SECRET key in this file. Anyone could read it and take
-   money from your account. The secret key belongs on a server only. Tell me
-   when you want real card payments and I'll set up the tiny secure endpoint.
+   ⚠️ STRIPE: put ONLY the publishable key (pk_...) here — it is public/safe.
+   The Stripe SECRET key (sk_...) goes on the Worker, never in this file:
+       wrangler secret put STRIPE_SECRET
+   Use matching modes: pk_live_ with sk_live_ (real money), or pk_test_ with
+   sk_test_ (testing with card 4242 4242 4242 4242).
    ============================================================================ */
 window.BS_CONFIG = {
-  STRIPE_PK   : '',   // pk_live_... or pk_test_...  (leave '' to keep the built-in test key)
-  RESEND_KEY  : '',   // re_...                      (leave '' to keep the built-in test key)
+  STRIPE_PK   : '',   // pk_live_... (real) or pk_test_...  — publishable key only
+  RESEND_KEY  : '',   // re_...  (leave '' if BOOKING_API is set — the Worker emails)
   RESEND_FROM : '',   // 'Black Silva <booking@your-domain.com>'
   OWNER_EMAIL : '',   // 'you@your-domain.com'
-  BOOKING_API : ''    // optional Cloudflare Worker URL
+  BOOKING_API : ''    // 'https://blacksilva-mailer.<your-account>.workers.dev'  → enables live payments + emails
 };

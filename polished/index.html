@@ -727,6 +727,9 @@
   .nm-ladder{ margin-top:18px; border-top:1px solid rgba(232,196,120,.18); }
   .nm-ladder div{ display:flex; justify-content:space-between; align-items:center; padding:11px 2px; border-bottom:1px solid rgba(232,196,120,.12); font-size:13.5px; }
   .nm-ladder span{ color:rgba(244,236,220,.62); } .nm-ladder b{ color:#e8c478; font-size:16px; }
+  .pr-h{ margin-top:18px; font-family:var(--display); font-size:19px; font-weight:600; color:#f4ecdc; }
+  .pr-h span{ font-family:var(--body); font-size:12px; font-weight:500; color:rgba(244,236,220,.55); letter-spacing:.02em; }
+  .pr-note{ margin-top:12px; font-size:12.5px; line-height:1.5; color:rgba(244,236,220,.6); }
   .nm-hours{ margin-top:8px; }
   .nm-hours div{ display:flex; justify-content:space-between; align-items:center; padding:8px 2px; border-bottom:1px solid rgba(232,196,120,.1); font-size:13.5px; }
   .nm-hours div:last-child{ border-bottom:none; }
@@ -780,6 +783,18 @@
   #shoppage .shop-name{ margin-top:11px; font-weight:600; font-size:15px; }
   #shoppage .shop-price{ margin-top:2px; font-size:12.5px; color:rgba(244,236,220,.6); }
   #shoppage .shop-foot{ text-align:center; margin:30px 0 calc(34px + env(safe-area-inset-bottom)); font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:rgba(244,236,220,.4); }
+  #shoppage button.shop-card{ border:none; background:none; color:inherit; font:inherit; cursor:pointer; padding:0; display:block; width:100%; }
+  #shoppage button.shop-card:hover .shop-photo{ border-color:#d8b878; }
+  #shoppage .shop-card.soon{ opacity:.5; }
+  #shoppage .shop-photo.soon .ph{ color:rgba(244,236,220,.45); }
+  /* product detail */
+  #shoppage .shop-detail{ max-width:620px; margin:22px auto 0; padding:0 18px calc(40px + env(safe-area-inset-bottom)); }
+  #shoppage .sd-photo{ aspect-ratio:1/1; max-width:360px; margin:0 auto; border-radius:16px; overflow:hidden; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,.04); border:1px solid rgba(232,196,120,.18); }
+  #shoppage .sd-photo img{ width:100%; height:100%; object-fit:cover; }
+  #shoppage .sd-photo .ph{ font-size:10.5px; letter-spacing:.22em; text-transform:uppercase; color:rgba(244,236,220,.4); }
+  #shoppage .sd-name{ font-family:var(--display); font-weight:600; font-size:24px; margin:18px 0 0; text-align:center; }
+  #shoppage .sd-price{ text-align:center; margin-top:6px; font-size:16px; color:#e8c478; font-weight:700; }
+  #shoppage .sd-desc{ margin:18px auto 0; max-width:520px; font-size:14px; line-height:1.65; color:rgba(244,236,220,.78); }
   @media(max-width:760px){ .navmodal{ align-items:flex-end; padding:0; } .navmodal .nm-card{ width:100%; border-radius:24px 24px 0 0; padding:26px 20px calc(26px + env(safe-area-inset-bottom)); } }
   /* ===== cancel-appointment modal ===== */
   #modal-cancel{ z-index:140; }
@@ -814,11 +829,12 @@
 <!-- Shop page: opens over everything when SHOP is tapped -->
 <div id="shoppage">
   <div class="shop-head">
-    <button type="button" class="shop-back" onclick="bsCloseShop()" aria-label="Back">‹</button>
-    <div><p class="shop-k">Black Silva</p><h2 class="shop-title">Shop</h2></div>
+    <button type="button" class="shop-back" onclick="bsShopHeadBack()" aria-label="Back">‹</button>
+    <div><p class="shop-k">Black Silva</p><h2 class="shop-title" id="shop-title">Shop</h2></div>
   </div>
   <div class="shop-grid" id="shop-grid"></div>
-  <p class="shop-foot">More products coming soon</p>
+  <div class="shop-detail" id="shop-detail" style="display:none"></div>
+  <p class="shop-foot" id="shop-foot">More products coming soon</p>
 </div>
 <!-- product list lives in its own easy-to-edit file: shop/products.js -->
 <script src="shop/products.js"></script>
@@ -836,12 +852,33 @@
   function bsEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
   function bsImgFail(img){ if(img&&img.parentNode){ img.parentNode.innerHTML='<span class="ph">Add photo</span>'; } }
   function bsRenderShop(){ var g=document.getElementById('shop-grid'); if(!g) return;
-    g.innerHTML = SHOP_PRODUCTS.map(function(p){
-      /* if a photo file is set but missing, fall back to the "Add photo" placeholder */
+    g.innerHTML = SHOP_PRODUCTS.map(function(p,i){
+      if(p.soon){ return '<div class="shop-card soon"><div class="shop-photo soon"><span class="ph">Coming soon</span></div><div class="shop-name">Coming soon</div></div>'; }
       var photo = p.img ? '<img src="'+bsEsc(p.img)+'" alt="'+bsEsc(p.name)+'" onerror="bsImgFail(this)">' : '<span class="ph">Add photo</span>';
-      return '<div class="shop-card"><div class="shop-photo">'+photo+'</div><div class="shop-name">'+bsEsc(p.name)+'</div>'+(p.price?'<div class="shop-price">'+bsEsc(p.price)+'</div>':'')+'</div>';
+      return '<button type="button" class="shop-card" onclick="bsShopOpen('+i+')"><div class="shop-photo">'+photo+'</div><div class="shop-name">'+bsEsc(p.name)+'</div>'+(p.price?'<div class="shop-price">'+bsEsc(p.price)+'</div>':'')+'</button>';
     }).join('');
   }
+  function bsShopOpen(i){ var p=SHOP_PRODUCTS[i]; if(!p||p.soon) return;
+    var d=document.getElementById('shop-detail'); if(!d) return;
+    var photo = p.img ? '<img src="'+bsEsc(p.img)+'" alt="'+bsEsc(p.name)+'" onerror="bsImgFail(this)">' : '<span class="ph">Add photo</span>';
+    var desc = bsEsc(p.desc||'').replace(/\n/g,'<br>');
+    d.innerHTML = '<div class="sd-photo">'+photo+'</div>'
+      + '<h3 class="sd-name">'+bsEsc(p.name)+'</h3>'
+      + (p.price?'<div class="sd-price">'+bsEsc(p.price)+'</div>':'')
+      + (desc?'<p class="sd-desc">'+desc+'</p>':'');
+    document.getElementById('shop-grid').style.display='none';
+    var f=document.getElementById('shop-foot'); if(f) f.style.display='none';
+    d.style.display='block';
+    var t=document.getElementById('shop-title'); if(t) t.textContent='Product';
+    var sp=document.getElementById('shoppage'); if(sp) sp.scrollTop=0;
+  }
+  function bsShopBack(){ var d=document.getElementById('shop-detail'); if(d) d.style.display='none';
+    document.getElementById('shop-grid').style.display='';
+    var f=document.getElementById('shop-foot'); if(f) f.style.display='';
+    var t=document.getElementById('shop-title'); if(t) t.textContent='Shop';
+    var sp=document.getElementById('shoppage'); if(sp) sp.scrollTop=0;
+  }
+  function bsShopHeadBack(){ var d=document.getElementById('shop-detail'); if(d && d.style.display!=='none'){ bsShopBack(); } else { bsCloseShop(); } }
   /* lock the page until the guest picks a path */
   (function(){ try{ document.documentElement.style.overflow='hidden'; document.body.style.overflow='hidden'; }catch(e){} })();
   function bsCloseGate(){ var g=document.getElementById('entrygate'); if(g) g.classList.add('hide');
@@ -878,7 +915,6 @@
     <h1 data-fade>Black Silva<br><span class="thin">Hairdresser</span></h1>
     <p class="eyebrow hero-reveal" style="transition-delay:.02s">Copenhagen · Badstuestræde 16</p>
     <p class="tagline hero-reveal" style="transition-delay:.06s">Step out of the dark and into the chair. Scroll to walk into the studio.</p>
-    <div class="scrollcue hero-reveal" style="transition-delay:.1s"><span class="track"></span> Tap to walk in</div>
   </section>
   <section id="s1" class="panel"></section>
   <section id="s2" class="panel"></section>
@@ -986,15 +1022,21 @@
     <button class="nm-close" type="button" onclick="BS.closeModal('modal-prices')" aria-label="Close">&times;</button>
     <p class="nm-k">Dynamic pricing</p>
     <h3 class="serif">How our prices work</h3>
-    <p><b>Hi!</b> Please note that our pricing system is dynamic. What does that mean?</p>
-    <p>We offer you the best available price based on factors such as the duration of the haircut, holiday periods, and booking flow.</p>
-    <p><b>Basically, the earlier you book your appointment, the better the price can be!</b></p>
+    <p><b>Hi!</b> Our price depends on two things: your <b>hair length</b> and <b>how early you book</b>. The earlier you book, the better the price.</p>
+    <p class="pr-h">Short hair <span>(at / above the jawline)</span></p>
     <div class="nm-ladder">
-      <div><span>Booking this week</span><b>500 kr.</b></div>
-      <div><span>About 1 week ahead</span><b>450 kr.</b></div>
-      <div><span>About 2 weeks ahead</span><b>400 kr.</b></div>
-      <div><span>3+ weeks ahead</span><b>375 kr.</b></div>
+      <div><span>Booking this week</span><b>500 DKK</b></div>
+      <div><span>About 1 week ahead</span><b>450 DKK</b></div>
+      <div><span>About 2 weeks ahead</span><b>400 DKK</b></div>
+      <div><span>3+ weeks ahead</span><b>375 DKK</b></div>
     </div>
+    <p class="pr-h">Long hair <span>(past the jawline)</span></p>
+    <div class="nm-ladder">
+      <div><span>Booking this week</span><b>650 DKK</b></div>
+      <div><span>About 1 week ahead</span><b>550 DKK</b></div>
+      <div><span>2+ weeks ahead</span><b>450 DKK</b></div>
+    </div>
+    <p class="pr-note">Long hair includes one extra service (up to 3) and the time it needs. The price is the same whichever services you choose.</p>
     <button class="nm-cta" type="button" onclick="BS.closeModal('modal-prices'); BS.bookNow();">Book now</button>
   </div>
 </div>
@@ -1035,20 +1077,14 @@
     <button class="nm-close" type="button" onclick="BS.closeModal('modal-cancel')" aria-label="Close">&times;</button>
     <p class="nm-k">Manage booking</p>
     <h3 class="serif">Cancel appointment</h3>
-    <!-- step 1: email -->
-    <div id="cx-step1">
-      <p>Enter the email you used when booking. We'll send a 6-digit security code to confirm it's really you.</p>
+    <!-- form: email + the cancellation code from the booking email -->
+    <div id="cx-form">
+      <p>Enter the email you booked with and the <b>cancellation code</b> from your confirmation email. You can cancel up to <b>12 hours before</b> your appointment.</p>
       <label for="cx-email">Email used for the booking</label>
       <input id="cx-email" type="email" autocomplete="email" placeholder="you@email.com">
-      <button class="nm-cta" type="button" onclick="BS.cancelRequestCode()">Send security code</button>
-    </div>
-    <!-- step 2: code -->
-    <div id="cx-step2" style="display:none">
-      <p>We emailed a code to <b id="cx-email-echo"></b>. Enter it below to confirm the cancellation.</p>
-      <label for="cx-code">Security code</label>
+      <label for="cx-code">Cancellation code</label>
       <input id="cx-code" type="text" inputmode="numeric" maxlength="6" placeholder="••••••" autocomplete="one-time-code">
-      <button class="nm-cta" type="button" onclick="BS.cancelConfirm()">Confirm cancellation</button>
-      <button class="cx-link" type="button" onclick="BS.cancelBackToEmail()">‹ Use a different email</button>
+      <button class="nm-cta" type="button" onclick="BS.cancelConfirm()">Cancel my appointment</button>
     </div>
     <!-- done -->
     <div id="cx-done" style="display:none">
@@ -1595,7 +1631,9 @@ function start(){
     fadeMats.forEach(function(m){ m.opacity=0; m.visible=false; });
   }
   function bookingKey(email){ return 'bs_booking_'+String(email||'').trim().toLowerCase(); }
-  function saveBooking(){ try{ var data={haircut:choice.haircut,service:choice.service,fromPrice:choice.fromPrice,addons:choice.addons,stylist:choice.stylist,time:choice.time,name:choice.name,email:choice.email,dayLabel:choice.dayLabel,startISO:bookingStart().toISOString()}; localStorage.setItem(bookingKey(choice.email),JSON.stringify(data)); }catch(e){} }
+  function saveBooking(){ try{ if(!choice.cancelCode) choice.cancelCode=genCancelCode();
+    var data={haircut:choice.haircut,service:choice.service,fromPrice:choice.fromPrice,addons:choice.addons,stylist:choice.stylist,time:choice.time,name:choice.name,email:choice.email,dayLabel:choice.dayLabel,startISO:bookingStart().toISOString(),cancelCode:choice.cancelCode};
+    localStorage.setItem(bookingKey(choice.email),JSON.stringify(data)); }catch(e){} }
   function loadBooking(email){ try{ var s=localStorage.getItem(bookingKey(email)); return s?JSON.parse(s):null; }catch(e){ return null; } }
   function fastTrackConfirm(saved){
     choice.haircut=saved.haircut; choice.service=saved.service; choice.fromPrice=saved.fromPrice||0;
@@ -1627,20 +1665,22 @@ function start(){
 
   var CUTS={
     gentleman:{ key:'gentleman', label:'Short Hair', sub:'Max Jawline length', from:375, pickStylist:true },
-    lady:     { key:'lady',      label:'Long Hair',  sub:'Over Shoulder length', from:500, pickStylist:false, fixedStylist:'Elena' }
+    lady:     { key:'lady',      label:'Long Hair',  sub:'Over Shoulder length', from:450, pickStylist:false, fixedStylist:'Elena' }
   };
-  /* Services on offer per length. Pick up to MAX_SERVICES — price doesn't change. */
+  /* Services on offer per length. Short → pick up to 2 · Long → pick up to 3. */
   var SERVICE_LISTS={
-    gentleman:['Haircut','Hair Wash','Full Hair Consultation','Beard Trim','Eyebrows (male only)'],
-    lady:     ['Haircut','Hair Wash','Eyebrows','Full Hair Consultation']
+    gentleman:['Haircut','Hair Wash','Beard Trim','Eyebrows','Hair Consultation'],
+    lady:     ['Haircut','Hair Wash','Styling','Eyebrows','Hair Consultation']
   };
-  var MAX_SERVICES=2;
+  var MAX_BY_LEN={ gentleman:2, lady:3 };
+  function maxServices(){ return MAX_BY_LEN[choice.haircut] || 2; }
   /* legacy alias kept so other helpers (email payload, ICS, etc.) keep working */
   var SERVICE_ADDONS=SERVICE_LISTS;
   var ADDON_PRICE=0;                      /* services are included — no extra cost */
   function addonsTotal(){ return 0; }
   function grandTotal(){ return choice.price; }
-  var PRICE_STEPS=[500,450,400,375];
+  var PRICE_STEPS=[500,450,400,375];   /* SHORT hair, by tier (0=this week … 3=3+ weeks early) */
+  var LONG_STEPS =[650,550,450,450];   /* LONG hair: this week 650 → ~1 week 550 → 2+ weeks 450 */
   /* Opening hours, keyed by JS day (0=Sun … 6=Sat). null = closed. [openHour, closeHour] */
   var OPEN_HOURS={ 0:[11,17], 1:null, 2:null, 3:[14,20], 4:[11,17], 5:[11,17], 6:[11,17] };
   var DAY_NAMES=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
@@ -1651,10 +1691,8 @@ function start(){
   function bookingEndDate(today){ var e=new Date(today); e.setMonth(e.getMonth()+2); return e; }
   function priceTier(daysAhead){ if(daysAhead<7) return 0; if(daysAhead<14) return 1; if(daysAhead<21) return 2; return 3; }
   function priceForDay(daysAhead){ return PRICE_STEPS[priceTier(daysAhead)]; }
-  /* Long hair (past the jawline) costs more than the iconic short-hair price.
-     The premium matches the existing from-price gap (gentleman 375 vs lady 500). */
-  var LONG_PREMIUM=125;
-  function lenPrice(daysAhead){ return priceForDay(daysAhead) + (choice.haircut==='lady'?LONG_PREMIUM:0); }
+  /* length-aware price for a given day: Short uses PRICE_STEPS, Long uses LONG_STEPS */
+  function lenPrice(daysAhead){ var t=priceTier(daysAhead); return (choice.haircut==='lady'?LONG_STEPS:PRICE_STEPS)[t]; }
   /* ===== opening-hours helpers ===== */
   function dateForIdx(idx){ return addDays(startDay(new Date()), idx||0); }
   function isOpenDay(d){ return !!OPEN_HOURS[d.getDay()]; }
@@ -1688,10 +1726,10 @@ function start(){
       +'<div class="lp-stage">'
         +'<img class="hp-img" src="mannequin.webp" alt="Mannequin" draggable="false">'
         +'<button type="button" class="lp-zone short'+(sel==='gentleman'?' sel':'')+'" onclick="BS.pickLen(\'gentleman\')" aria-label="Short hair">'
-          +'<span class="lp-tag">Short</span><span class="lp-sub">At / above jawline · from 375 DKK</span></button>'
+          +'<span class="lp-tag">Short</span><span class="lp-sub">At / above jawline · 375–500 DKK</span></button>'
         +'<div class="lp-jaw"><span>JAWLINE</span></div>'
         +'<button type="button" class="lp-zone long'+(sel==='lady'?' sel':'')+'" onclick="BS.pickLen(\'lady\')" aria-label="Long hair">'
-          +'<span class="lp-tag">Long</span><span class="lp-sub">Past the jawline · from 500 DKK</span></button>'
+          +'<span class="lp-tag">Long</span><span class="lp-sub">Past the jawline · 450–650 DKK</span></button>'
       +'</div>'
     +'</div>';
     h+=dynamicInfo();
@@ -1735,7 +1773,7 @@ function start(){
   function addonText(){ return choice.addons.length ? choice.addons.join(', ') : 'None'; }
   function buildAddons(type){ var c=CUTS[type], list=SERVICE_LISTS[type]||[];
     var h=grab()+backBtn('chooser')+dots(1)+'<p class="bk">Step 1 · '+c.label+'</p><h3 class="serif">Choose your services</h3>';
-    h+='<p class="bsub">Pick up to <b>'+MAX_SERVICES+' services</b> &mdash; the price stays the same. We give you a full hour and shape the visit around exactly what <em>you</em> want, no matter your hair length or treatments :)</p>';
+    h+='<p class="bsub">Pick up to <b>'+maxServices()+' services</b> &mdash; the price is set by your hair length and how early you book, not by which services you pick. We give you a full hour and shape the visit around exactly what <em>you</em> want :)</p>';
     h+='<div class="svc-grid">';
     list.forEach(function(name){
       var on=choice.addons.indexOf(name)>=0;
@@ -1747,7 +1785,7 @@ function start(){
         +'</button>';
     });
     h+='</div>';
-    h+='<p class="svc-count" id="svc-count">'+choice.addons.length+'/'+MAX_SERVICES+' selected</p>';
+    h+='<p class="svc-count" id="svc-count">'+choice.addons.length+'/'+maxServices()+' selected</p>';
     h+=contBtn(choice.addons.length<1);
     document.getElementById('m-length').innerHTML=h; }
   function refreshCalendarPrice(){
@@ -1808,7 +1846,7 @@ function start(){
     if(choice.dayIdx===null||typeof choice.dayIdx==='undefined'){ defaultDay(); }
     if(!calMonthOffset) calMonthOffset=0;
     var h=grab()+backBtn('addons')+dots(2)+'<p class="bk">Step 2 · Date</p><h3 class="serif">Pick your day</h3>';
-    h+='<p class="bsub">Each day shows its price — book a month early and it stays at its best <b style="color:#d8b878">375 DKK</b>.</p>';
+    h+='<p class="bsub">Each day shows the price for your <b style="color:#d8b878">'+(CUTS[choice.haircut]?CUTS[choice.haircut].label.toLowerCase():'')+'</b> — book earlier for a better price.</p>';
     h+='<div class="cal-nav"><button class="cal-arrow" id="cal-prev" onclick="BS.calMonth(-1)" aria-label="Previous month">‹</button><b class="cal-title" id="cal-title"></b><button class="cal-arrow" id="cal-next" onclick="BS.calMonth(1)" aria-label="Next month">›</button></div>';
     h+='<div class="cal-dow"><i>Sun</i><i>Mon</i><i>Tue</i><i>Wed</i><i>Thu</i><i>Fri</i><i>Sat</i></div>';
     h+='<div class="cal-days" id="cal-grid"></div>';
@@ -1896,7 +1934,7 @@ function start(){
   var SALON_LOCATION="Black Silva Hairdresser, Badstuestræde 16, Copenhagen";
   var SITE_URL=(location.origin+location.pathname).replace(/[#?].*$/,'');  /* used for the "cancel" link in emails */
   var CANCEL_CUTOFF_HOURS=12;  /* online cancellation closes this many hours before the appointment */
-  function parseCancelHash(){ var h=location.hash||''; var q=h.indexOf('?'); if(q<0) return {}; try{ var p=new URLSearchParams(h.slice(q+1)); return { email:p.get('e')||'', t:p.get('t')||'' }; }catch(e){ return {}; } }
+  function parseCancelHash(){ var hs=location.hash||''; var q=hs.indexOf('?'); if(q<0) return {}; try{ var p=new URLSearchParams(hs.slice(q+1)); return { email:p.get('e')||'', t:p.get('t')||'', h:p.get('h')||'' }; }catch(e){ return {}; } }
   /* Stripe — sandbox/test integration.
      Publishable key is browser-safe. Secret key is held only in this browser
      via localStorage so it never lives in the repo (GitHub blocks pushes
@@ -2036,8 +2074,9 @@ function start(){
       '</div>'+
       '<div style="margin:14px 0 4px; padding:16px 20px; background:#fff7f5; border:1px solid #f3d9d2; border-radius:14px">'+
         '<p style="font-size:11px; letter-spacing:.3em; text-transform:uppercase; color:#b06a5a; margin:0">Need to cancel?</p>'+
-        '<p style="margin:8px 0 12px; font-size:13.5px; color:#444; line-height:1.55">You can cancel this appointment yourself up to <b>12 hours before</b> it starts — you\'ll get a one-time security code by email to confirm it\'s you.</p>'+
-        '<a href="'+SITE_URL+'#cancel?e='+encodeURIComponent(choice.email||'')+'&t='+encodeURIComponent(bookingStart().toISOString())+'" style="display:inline-block; padding:11px 18px; background:#b03a2e; color:#fff; text-decoration:none; border-radius:10px; font-weight:700; font-size:13px">Cancel appointment</a>'+
+        '<p style="margin:8px 0 10px; font-size:13.5px; color:#444; line-height:1.55">You can cancel this appointment yourself up to <b>12 hours before</b> it starts. Use this cancellation code together with your email on our website:</p>'+
+        '<p style="font-size:30px;letter-spacing:.26em;font-weight:700;font-family:\'Courier New\',monospace;color:#b03a2e;margin:6px 0 12px">'+escHtml(choice.cancelCode||'')+'</p>'+
+        '<a href="'+SITE_URL+'#cancel?e='+encodeURIComponent(choice.email||'')+'&t='+encodeURIComponent(bookingStart().toISOString())+'&h='+encodeURIComponent(hashCode(choice.cancelCode||''))+'" style="display:inline-block; padding:11px 18px; background:#b03a2e; color:#fff; text-decoration:none; border-radius:10px; font-weight:700; font-size:13px">Cancel appointment</a>'+
       '</div>';
     return '<div style="font-family:Arial,Helvetica,sans-serif;max-width:540px;margin:0 auto;color:#16161a">'+
       '<h2 style="font-family:Georgia,serif;font-weight:600;margin:0 0 4px">'+title+'</h2>'+
@@ -2069,6 +2108,8 @@ function start(){
       '<h2 style="font-family:Georgia,serif;font-weight:600;margin:0 0 10px">'+title+'</h2>'+bodyHtml+
       '<p style="color:#aaa;font-size:12px;margin-top:22px">Black Silva Hairdresser · '+escHtml(SALON_LOCATION)+'</p></div>'; }
   function genCancelCode(){ var n; try{ var a=new Uint32Array(1); crypto.getRandomValues(a); n=a[0]%1000000; }catch(e){ n=Math.floor(Math.random()*1000000); } return ('000000'+n).slice(-6); }
+  /* tiny non-secret hash so the cancel link can verify the typed code without exposing it */
+  function hashCode(s){ s=String(s||''); var h=5381; for(var i=0;i<s.length;i++){ h=((h<<5)+h+s.charCodeAt(i))>>>0; } return h.toString(36); }
   function sendBookingEmails(){
     var st=document.getElementById('mail-status'); if(st) st.innerHTML='<span class="ms-info">Sending confirmations…</span>';
     if(BOOKING_API){
@@ -2143,11 +2184,12 @@ function start(){
     closeModal:function(id){ var m=document.getElementById(id); if(m) m.classList.remove('on'); },
     /* ===== Cancel appointment: email → security code → confirm ===== */
     showCancel:function(token){ BS.closeMenu();
-      /* a token from the email link carries the email + appointment time (works on any device) */
-      if(token && token.email){ window.__cancelEmail=String(token.email).toLowerCase(); }
-      if(token && token.t){ var d=new Date(token.t); if(!isNaN(d)) window.__cancelStart=d.getTime(); }
-      var s1=document.getElementById('cx-step1'), s2=document.getElementById('cx-step2'), dn=document.getElementById('cx-done'), msg=document.getElementById('cx-msg');
-      if(s1) s1.style.display=''; if(s2) s2.style.display='none'; if(dn) dn.style.display='none'; if(msg){ msg.textContent=''; msg.className='cx-msg'; }
+      /* a token from the email link carries the email + appointment time + code-hash (works on any device) */
+      window.__cancelEmail = (token && token.email) ? String(token.email).toLowerCase() : null;
+      window.__cancelStart = (token && token.t && !isNaN(new Date(token.t))) ? new Date(token.t).getTime() : null;
+      window.__cancelHash  = (token && token.h) ? String(token.h) : null;
+      var fm=document.getElementById('cx-form'), dn=document.getElementById('cx-done'), msg=document.getElementById('cx-msg');
+      if(fm) fm.style.display=''; if(dn) dn.style.display='none'; if(msg){ msg.textContent=''; msg.className='cx-msg'; }
       var m=document.getElementById('modal-cancel'); if(m) m.classList.add('on');
       var e=document.getElementById('cx-email'); if(e){ var pre=(token&&token.email)||choice.email||''; if(pre) e.value=pre; setTimeout(function(){ e.focus(); },120); } },
     cancelMsg:function(text,kind){ var m=document.getElementById('cx-msg'); if(m){ m.textContent=text; m.className='cx-msg '+(kind||''); } },
@@ -2158,48 +2200,32 @@ function start(){
       var rec=loadBooking(email); if(rec && rec.startISO){ var d=new Date(rec.startISO); if(!isNaN(d)) return d; }
       return null;
     },
-    /* hours remaining before the appointment, or null if unknown */
     cancelHoursLeft:function(email){ var s=BS.cancelApptStart(email); return s? (s.getTime()-Date.now())/3600000 : null; },
-    cancelRequestCode:function(){
-      var e=document.getElementById('cx-email'); var email=e?e.value.trim():'';
+    /* checks the typed code against the local booking record OR the email-link hash */
+    cancelCodeOK:function(email,code){
+      email=String(email||'').toLowerCase(); code=String(code||'').trim();
+      var rec=loadBooking(email); if(rec && rec.cancelCode){ return code===String(rec.cancelCode); }
+      if(window.__cancelHash && window.__cancelEmail===email){ return hashCode(code)===window.__cancelHash; }
+      return null; /* can't verify on this device */
+    },
+    cancelConfirm:function(){
+      var ee=document.getElementById('cx-email'), ci=document.getElementById('cx-code');
+      var email=ee?ee.value.trim():'', code=ci?ci.value.trim():'';
       if(email.indexOf('@')<1 || email.length<5){ BS.cancelMsg('Please enter the email you booked with.','err'); return; }
+      if(code.length<4){ BS.cancelMsg('Please enter the cancellation code from your confirmation email.','err'); return; }
       var hrs=BS.cancelHoursLeft(email);
-      if(hrs===null){ BS.cancelMsg("We couldn't find that booking on this device. Please open the “Cancel appointment” link in your confirmation email — it lets you cancel from any device.",'err'); return; }
+      if(hrs===null){ BS.cancelMsg("We couldn't find that booking on this device. Please open the “Cancel appointment” link in your confirmation email — it works from any device.",'err'); return; }
       if(hrs < CANCEL_CUTOFF_HOURS){
-        var when=BS.cancelApptStart(email);
-        var whenTxt=when?when.toLocaleString('en-GB',{weekday:'short',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'';
+        var w0=BS.cancelApptStart(email), wt0=w0?w0.toLocaleString('en-GB',{weekday:'short',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'';
         if(hrs<=0) BS.cancelMsg('This appointment time has already passed, so it can no longer be cancelled online.','err');
-        else BS.cancelMsg('Online cancellation closes 12 hours before your appointment ('+whenTxt+'). For last-minute changes please message us on Instagram.','err');
+        else BS.cancelMsg('Online cancellation closes 12 hours before your appointment ('+wt0+'). For last-minute changes please message us on Instagram.','err');
         return;
       }
-      var code=genCancelCode();
-      try{ localStorage.setItem('bs_cancel', JSON.stringify({ email:email.toLowerCase(), code:code, exp:Date.now()+20*60000 })); }catch(_){}
-      BS.cancelMsg('Sending your security code…','info');
-      var html=simpleEmail('Cancel your appointment',
-        '<p style="color:#444;line-height:1.5">Use this security code to confirm cancelling your Black Silva appointment:</p>'+
-        '<p style="font-size:34px;letter-spacing:.3em;font-weight:700;font-family:\'Courier New\',monospace;color:#b03a2e;margin:14px 0">'+code+'</p>'+
-        '<p style="color:#777;font-size:13px">The code expires in 20 minutes. If you didn\'t request this, just ignore this email — nothing will change.</p>');
-      sendMail(email,'Your Black Silva cancellation code: '+code, html).then(function(ok){
-        var s1=document.getElementById('cx-step1'), s2=document.getElementById('cx-step2'), echo=document.getElementById('cx-email-echo');
-        if(echo) echo.textContent=email; if(s1) s1.style.display='none'; if(s2) s2.style.display='';
-        var ci=document.getElementById('cx-code'); if(ci) setTimeout(function(){ ci.focus(); },120);
-        if(ok) BS.cancelMsg('Code sent — check your inbox (and spam).','ok');
-        else BS.cancelMsg('We couldn\'t send the email automatically. Please contact us on Instagram to cancel.','err');
-      });
-    },
-    cancelBackToEmail:function(){ var s1=document.getElementById('cx-step1'), s2=document.getElementById('cx-step2');
-      if(s1) s1.style.display=''; if(s2) s2.style.display='none'; BS.cancelMsg('',''); },
-    cancelConfirm:function(){
-      var ci=document.getElementById('cx-code'); var code=ci?ci.value.trim():'';
-      var rec=null; try{ rec=JSON.parse(localStorage.getItem('bs_cancel')||'null'); }catch(_){}
-      if(!rec){ BS.cancelMsg('Please request a new code.','err'); return; }
-      if(Date.now()>rec.exp){ BS.cancelMsg('That code has expired — request a new one.','err'); return; }
-      if(code!==rec.code){ BS.cancelMsg('That code is not correct. Check your email and try again.','err'); return; }
-      /* re-check the 12-hour rule in case time elapsed since the code was requested */
-      var hrs=BS.cancelHoursLeft(rec.email);
-      if(hrs!==null && hrs < CANCEL_CUTOFF_HOURS){ BS.cancelMsg('The 12-hour cancellation window has now closed. Please contact us on Instagram.','err'); return; }
-      /* code OK → notify the salon + the guest, clear any local booking, show success */
-      var email=rec.email; var when=BS.cancelApptStart(email);
+      var ok=BS.cancelCodeOK(email,code);
+      if(ok===null){ BS.cancelMsg("We can't verify that code on this device. Please use the “Cancel appointment” link in your confirmation email.",'err'); return; }
+      if(!ok){ BS.cancelMsg('That cancellation code is not correct. Check your confirmation email and try again.','err'); return; }
+      /* code OK + ≥12h → notify the salon + the guest, clear local booking, show success */
+      var when=BS.cancelApptStart(email);
       var whenTxt=when?when.toLocaleString('en-GB',{weekday:'long',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'';
       var ownerHtml=simpleEmail('Appointment cancelled',
         '<p style="color:#444;line-height:1.5"><b>'+escHtml(email)+'</b> just cancelled their appointment through the website'+(whenTxt?(' (was '+escHtml(whenTxt)+')'):'')+'.</p>'+
@@ -2210,7 +2236,7 @@ function start(){
       sendMail(email,'Your Black Silva appointment is cancelled', guestHtml);
       try{ localStorage.removeItem(bookingKey(email)); localStorage.removeItem('bs_cancel'); }catch(_){}
       window.__cancelStart=null;
-      var s2=document.getElementById('cx-step2'), dn=document.getElementById('cx-done'); if(s2) s2.style.display='none'; if(dn) dn.style.display='block';
+      var fm=document.getElementById('cx-form'), dn=document.getElementById('cx-done'); if(fm) fm.style.display='none'; if(dn) dn.style.display='block';
       BS.cancelMsg('',''); },
     /* Book Now → straight to the Confirm-booking review with sensible defaults */
     bookNow:function(){ BS.closeMenu();
@@ -2238,16 +2264,16 @@ function start(){
       var i=choice.addons.indexOf(name);
       if(i>=0){ choice.addons.splice(i,1); }
       else{
-        if(choice.addons.length>=MAX_SERVICES) return; /* hit the cap */
+        if(choice.addons.length>=maxServices()) return; /* hit the cap */
         choice.addons.push(name);
       }
       /* refresh tick states + counter + cue text without rebuilding the sheet */
       document.querySelectorAll('.svc-card').forEach(function(c){
         var sel=choice.addons.indexOf(c.getAttribute('data-svc'))>=0;
         c.classList.toggle('on', sel);
-        c.classList.toggle('disabled', !sel && choice.addons.length>=MAX_SERVICES);
+        c.classList.toggle('disabled', !sel && choice.addons.length>=maxServices());
       });
-      var cnt=document.getElementById('svc-count'); if(cnt) cnt.textContent=choice.addons.length+'/'+MAX_SERVICES+' selected';
+      var cnt=document.getElementById('svc-count'); if(cnt) cnt.textContent=choice.addons.length+'/'+maxServices()+' selected';
       var btn=document.getElementById('cont-btn'); if(btn) btn.classList.toggle('disabled', choice.addons.length<1);
     },
     afterLength:function(){ buildCalendar(); showStep('calendar'); },

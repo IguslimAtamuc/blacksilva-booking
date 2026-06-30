@@ -30,7 +30,7 @@ window.SHOP_PRODUCTS = [
         + 'Not tested on animals. Free from paraffin, SLS, SLES, silicone and their derivatives.'
   },
   {
-    img: '',
+    img: 'shop/image2.jpg',
     name: 'Barba Italiana — Nabucco (250 ml)',
     price: '150 DKK',
     desc: 'Soothing shampoo for sensitive scalp.\n\n'

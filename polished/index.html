@@ -194,6 +194,10 @@
   .lp-zone.sel .lp-tag{ color:#7cdd9d; }
   .lp-jaw{ position:absolute; left:0; right:0; top:54%; height:0; border-top:2px solid #ff3b3b; box-shadow:0 0 12px rgba(255,59,59,.6); pointer-events:none; z-index:3; }
   .lp-jaw span{ position:absolute; right:8px; top:-9px; font-size:9px; font-weight:800; letter-spacing:.24em; color:#fff; background:#ff3b3b; padding:2px 7px; border-radius:5px; }
+  .lp-price{ text-align:center; margin-top:16px; }
+  .lp-price .lp-amt{ display:block; font-family:var(--display); font-weight:600; font-size:clamp(42px,12vw,66px); line-height:1; color:#d8b878; text-shadow:0 2px 24px rgba(216,184,120,.32); }
+  .lp-price .lp-amt small{ font-size:.34em; letter-spacing:.08em; color:#f4ecdc; }
+  .lp-price .lp-plab{ display:block; margin-top:5px; font-size:10.5px; letter-spacing:.2em; text-transform:uppercase; color:rgba(244,236,220,.55); }
   @media(max-width:760px){ .lp-stage{ height:min(48vh,82vw); } .lp-tag{ font-size:20px; } .lp-sub{ font-size:9px; } }
   .cal-nav{ margin-top:14px; display:flex; align-items:center; justify-content:space-between; gap:10px; }
   .cal-arrow{ width:36px; height:36px; border-radius:50%; border:1px solid rgba(0,0,0,.14); background:rgba(255,255,255,.6); color:var(--ink); font-size:20px; line-height:1; cursor:pointer; padding:0 2px 2px 0; }
@@ -1726,16 +1730,20 @@ function start(){
       +'<div class="lp-stage">'
         +'<img class="hp-img" src="mannequin.webp" alt="Mannequin" draggable="false">'
         +'<button type="button" class="lp-zone short'+(sel==='gentleman'?' sel':'')+'" onclick="BS.pickLen(\'gentleman\')" aria-label="Short hair">'
-          +'<span class="lp-tag">Short</span><span class="lp-sub">At / above jawline · 375–500 DKK</span></button>'
+          +'<span class="lp-tag">Short</span><span class="lp-sub">At / above the jawline</span></button>'
         +'<div class="lp-jaw"><span>JAWLINE</span></div>'
         +'<button type="button" class="lp-zone long'+(sel==='lady'?' sel':'')+'" onclick="BS.pickLen(\'lady\')" aria-label="Long hair">'
-          +'<span class="lp-tag">Long</span><span class="lp-sub">Past the jawline · 450–650 DKK</span></button>'
+          +'<span class="lp-tag">Long</span><span class="lp-sub">Past the jawline</span></button>'
       +'</div>'
     +'</div>';
+    h+='<div class="lp-price" id="lp-price"'+(sel?'':' style="display:none"')+'>'+(sel?lpPriceHTML(sel):'')+'</div>';
     h+=dynamicInfo();
     h+=contBtn(!sel, sel? ('Continue with '+(sel==='lady'?'Long':'Short')+' hair') : 'Tap Short or Long');
     document.getElementById('m-length').innerHTML=h;
   }
+  /* big gold price-range shown when a length is picked (like the 375 DKK slide) */
+  function lpPriceHTML(type){ var r=(type==='lady')?'450–650':'375–500', lab=(type==='lady')?'Long hair':'Short hair';
+    return '<span class="lp-amt">'+r+' <small>DKK</small></span><span class="lp-plab">'+lab+' · price by how early you book</span>'; }
   /* wire up the drag interaction + render the current value */
   function hpRender(){
     var t=choice.hairT, frac=hpLineFrac(t), cm=hpCm(t), cat=hpCategory(t);
@@ -2259,6 +2267,7 @@ function start(){
       choice.haircut=type; choice.service=c.label; choice.fromPrice=c.from; choice.addons=[];
       choice.stylist = c.fixedStylist ? c.fixedStylist : 'Eduard';
       document.querySelectorAll('.lp-zone').forEach(function(z){ z.classList.toggle('sel', z.classList.contains(type==='gentleman'?'short':'long')); });
+      var pr=document.getElementById('lp-price'); if(pr){ pr.style.display=''; pr.innerHTML=lpPriceHTML(type); }
       var btn=document.getElementById('cont-btn'); if(btn){ btn.classList.remove('disabled'); btn.textContent='Continue with '+(type==='lady'?'Long':'Short')+' hair'; } },
     toggleAddon:function(el,name){
       var i=choice.addons.indexOf(name);
@@ -2661,13 +2670,22 @@ function start(){
       if(y>c) return (d-y)/(d-c);
       return 1;
     }
+    var heroEl=document.getElementById('hero');
     function update(){
       var vh=innerHeight, y=window.scrollY||window.pageYOffset||0;
+      /* fade the hero (title/tagline) fully OUT by 0.10vh so it never overlaps the price slide */
+      if(heroEl){ var ho=1-Math.min(1,(y/vh)/0.10); heroEl.style.opacity=ho.toFixed(3); heroEl.style.pointerEvents=ho<0.05?'none':''; }
+      /* compute every overlay's opacity, then show ONLY the most-visible one (no two texts overlap) */
+      var ops=[], maxOp=0;
       hf.forEach(function(el){
         var a=parseFloat(el.dataset.fadein)*vh, b=parseFloat(el.dataset.peakin)*vh,
             c=parseFloat(el.dataset.peakout)*vh, d=parseFloat(el.dataset.fadeout)*vh;
-        var op=shape(y,a,b,c,d);
+        var op=shape(y,a,b,c,d); ops.push(op); if(op>maxOp) maxOp=op;
+      });
+      hf.forEach(function(el,i){
+        var op=(ops[i]>=maxOp && maxOp>0.02)?ops[i]:0;   /* winner-takes-all */
         el.style.opacity=op.toFixed(3);
+        el.style.visibility=op>0.02?'visible':'hidden';
         el.classList.toggle('active', op>0.1);
       });
     }

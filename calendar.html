@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta name="robots" content="noindex, nofollow"/>
+<title>Black Silva — Booking calendar (staff)</title>
+<!--
+  STAFF-ONLY CALENDAR DASHBOARD  ·  safe to host publicly (GitHub Pages)
+  ---------------------------------------------------------------------
+  This page contains NO secrets. It reads the salon's bookings from the
+  Cloudflare Worker admin endpoint, which is protected by an ADMIN_TOKEN
+  that lives ONLY as a Worker secret. The token is typed at login and kept
+  in this browser (sessionStorage, or localStorage if "remember" is ticked).
+  It is never written into this file or committed to git.
+-->
+<style>
+  :root{
+    --bg:#0c0a08; --panel:#141210; --panel2:#1b1815; --line:rgba(216,184,120,.16);
+    --ink:#f4ecdc; --mut:#a99f8b; --dim:#7d7566; --gold:#d8b878; --gold2:#e8c478;
+    --green:#4ad27e; --greenbg:rgba(74,210,126,.12); --red:#ff6b6b; --redbg:rgba(255,107,107,.10);
+    --pink:#e58fb0;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
+  a{ color:var(--gold2); }
+  .wrap{ max-width:1080px; margin:0 auto; padding:22px 18px 60px; }
+
+  /* ---- login ---- */
+  #login{ min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
+  .card{ background:var(--panel); border:1px solid var(--line); border-radius:18px;
+    box-shadow:0 30px 90px rgba(0,0,0,.55); padding:30px 26px; width:100%; max-width:400px; }
+  .brandrow{ display:flex; align-items:center; gap:10px; margin-bottom:6px; }
+  .dot{ width:10px; height:10px; border-radius:50%;
+    background:linear-gradient(140deg,#fff,#9aa0a6 60%,#3a3d42); box-shadow:0 0 14px rgba(255,255,255,.4); }
+  .brandrow b{ font-family:Georgia,serif; font-weight:600; letter-spacing:.02em; }
+  .card h1{ font-family:Georgia,serif; font-weight:600; font-size:21px; margin:14px 0 4px; }
+  .card p.sub{ color:var(--mut); font-size:13.5px; line-height:1.5; margin:0 0 18px; }
+  label.fld{ display:block; font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--dim); margin:0 0 6px; }
+  input[type=password],input[type=text]{ width:100%; padding:13px 14px; border-radius:11px;
+    border:1px solid var(--line); background:var(--panel2); color:var(--ink); font-size:15px; outline:none; }
+  input:focus{ border-color:var(--gold); }
+  .remember{ display:flex; align-items:center; gap:8px; margin:14px 0 4px; color:var(--mut); font-size:13px; }
+  .btn{ display:inline-flex; align-items:center; justify-content:center; gap:8px; width:100%;
+    margin-top:16px; padding:13px 16px; border:none; border-radius:11px; cursor:pointer;
+    background:var(--gold); color:#1a1208; font-weight:700; font-size:15px; }
+  .btn:hover{ filter:brightness(1.05); }
+  .btn.sm{ width:auto; padding:9px 14px; font-size:13px; }
+  .btn.ghost{ background:transparent; color:var(--ink); border:1px solid var(--line); }
+  .err{ color:var(--red); font-size:13px; margin-top:12px; min-height:16px; }
+
+  /* ---- app ---- */
+  #app{ display:none; }
+  .top{ display:flex; flex-wrap:wrap; align-items:center; gap:12px; margin-bottom:16px; }
+  .top .title{ display:flex; align-items:center; gap:10px; margin-right:auto; }
+  .top .title b{ font-family:Georgia,serif; font-weight:600; font-size:19px; }
+  .updated{ color:var(--dim); font-size:12px; }
+  .controls{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:18px; }
+  .seg{ display:inline-flex; background:var(--panel); border:1px solid var(--line); border-radius:10px; overflow:hidden; }
+  .seg button{ border:none; background:transparent; color:var(--mut); padding:8px 13px; font-size:13px; cursor:pointer; }
+  .seg button.on{ background:var(--gold); color:#1a1208; font-weight:700; }
+  .toggle{ display:inline-flex; align-items:center; gap:7px; color:var(--mut); font-size:13px;
+    background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:7px 12px; cursor:pointer; }
+
+  .stats{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:22px; }
+  .stat{ background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:14px 16px; }
+  .stat .n{ font-family:Georgia,serif; font-size:26px; font-weight:600; }
+  .stat .l{ color:var(--dim); font-size:11px; letter-spacing:.12em; text-transform:uppercase; margin-top:2px; }
+  .stat.g .n{ color:var(--green); } .stat.r .n{ color:var(--red); } .stat.a .n{ color:var(--gold2); }
+
+  .day{ background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:16px 16px 6px; margin-bottom:14px; }
+  .day.closed{ opacity:.5; }
+  .day > h3{ margin:0 0 12px; font-family:Georgia,serif; font-weight:600; font-size:16px; display:flex; align-items:center; gap:10px; }
+  .day > h3 .cl{ font-family:inherit; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--dim); font-weight:400; }
+  .styblock{ margin:0 0 12px; }
+  .styhead{ display:flex; align-items:center; gap:8px; margin:0 0 8px; }
+  .badge{ font-size:11px; letter-spacing:.1em; text-transform:uppercase; padding:3px 9px; border-radius:999px; font-weight:700; }
+  .badge.eduard{ background:rgba(120,130,150,.18); color:#c3ccdd; }
+  .badge.elena{ background:rgba(229,143,176,.16); color:var(--pink); }
+  .slots{ display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:8px; }
+  .slot{ border-radius:11px; padding:10px 12px; border:1px solid var(--line); background:var(--panel2); }
+  .slot.free{ border-color:rgba(74,210,126,.35); background:var(--greenbg); }
+  .slot.free .st{ color:var(--green); }
+  .slot .st{ font-weight:700; font-size:14px; display:flex; justify-content:space-between; align-items:center; }
+  .slot .tag{ font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--dim); }
+  .slot.booked{ border-color:var(--gold); background:linear-gradient(180deg,rgba(216,184,120,.10),rgba(216,184,120,.04)); }
+  .slot.booked .nm{ margin-top:5px; font-size:13.5px; color:var(--ink); font-weight:600; }
+  .slot.booked .meta{ margin-top:3px; font-size:12px; color:var(--mut); line-height:1.5; word-break:break-word; }
+  .slot.booked .meta a{ color:var(--gold2); text-decoration:none; }
+  .empty{ color:var(--dim); font-size:13px; padding:2px 2px 10px; }
+
+  .section-h{ font-family:Georgia,serif; font-weight:600; font-size:17px; margin:26px 0 12px; display:flex; align-items:center; gap:10px; }
+  table{ width:100%; border-collapse:collapse; background:var(--panel); border:1px solid var(--line); border-radius:14px; overflow:hidden; }
+  th,td{ text-align:left; padding:11px 13px; font-size:13px; border-bottom:1px solid rgba(216,184,120,.08); }
+  th{ color:var(--dim); font-size:11px; letter-spacing:.1em; text-transform:uppercase; font-weight:600; }
+  tr:last-child td{ border-bottom:none; }
+  td.can{ color:var(--red); }
+  .pill{ font-size:11px; padding:2px 8px; border-radius:999px; }
+  .pill.c{ background:var(--redbg); color:var(--red); }
+  .note{ color:var(--dim); font-size:12px; margin-top:8px; line-height:1.5; }
+  .center{ text-align:center; padding:40px 0; color:var(--mut); }
+  @media(max-width:640px){ .stats{ grid-template-columns:repeat(2,1fr); } .slots{ grid-template-columns:1fr 1fr; } }
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN ============ -->
+<div id="login">
+  <form class="card" onsubmit="return doLogin(event)">
+    <div class="brandrow"><span class="dot"></span><b>Black Silva</b></div>
+    <h1>Booking calendar</h1>
+    <p class="sub">Staff access. Enter the calendar password to view bookings, free slots and cancellations. The password is never stored on this page.</p>
+    <label class="fld" for="tok">Calendar password</label>
+    <input id="tok" type="password" autocomplete="current-password" placeholder="••••••••••" />
+    <label class="remember"><input id="rem" type="checkbox" /> Remember on this device</label>
+    <button class="btn" type="submit">Unlock calendar</button>
+    <div class="err" id="loginErr"></div>
+  </form>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="app"><div class="wrap">
+  <div class="top">
+    <div class="title"><span class="dot"></span><b>Booking calendar</b></div>
+    <span class="updated" id="updated"></span>
+    <button class="btn sm ghost" onclick="load()">↻ Refresh</button>
+    <button class="btn sm ghost" onclick="logout()">Log out</button>
+  </div>
+
+  <div class="controls">
+    <div class="seg" id="segStylist">
+      <button data-v="all" class="on" onclick="setStylist('all')">Both</button>
+      <button data-v="Eduard" onclick="setStylist('Eduard')">Eduard</button>
+      <button data-v="Elena" onclick="setStylist('Elena')">Elena</button>
+    </div>
+    <div class="seg" id="segRange">
+      <button data-v="7" onclick="setRange(7)">7 days</button>
+      <button data-v="14" class="on" onclick="setRange(14)">14 days</button>
+      <button data-v="30" onclick="setRange(30)">30 days</button>
+    </div>
+    <label class="toggle"><input id="showFree" type="checkbox" checked onchange="render()"/> Show free slots</label>
+    <label class="toggle"><input id="showClosed" type="checkbox" onchange="render()"/> Show closed days</label>
+  </div>
+
+  <div class="stats" id="stats"></div>
+  <div id="calendar"></div>
+
+  <div class="section-h">Cancellation history</div>
+  <div id="cancels"></div>
+
+  <p class="note">Times shown in the salon's local time (Copenhagen). History is kept for ~200 days. This page reads data only — it can't change or delete bookings.</p>
+</div></div>
+
+<script>
+/* ---- public config (safe, non-secret) ---- */
+var BOOKING_API = "https://blacksilva-mailer.blacksilvahd.workers.dev";
+
+/* ---- opening hours — identical to the booking site ---- */
+var OPEN_HOURS  = { 0:[11,17], 1:null, 2:null, 3:[14,20], 4:[11,17], 5:[11,17], 6:[11,17] }; /* Eduard */
+var ELENA_HOURS = { 0:[11,17], 5:[11,17], 6:[11,17] };                                       /* Elena: Fri/Sat/Sun */
+var STYLISTS = ["Eduard","Elena"];
+var DAY_NAMES = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+var MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+function hoursFor(dow, stylist){ return stylist==="Elena" ? (ELENA_HOURS[dow]||null) : OPEN_HOURS[dow]; }
+function pad2(n){ return (n<10?"0":"")+n; }
+function slotHours(dow, stylist){ var h=hoursFor(dow,stylist); if(!h) return []; var out=[]; for(var s=h[0]; s<=h[1]-1; s++) out.push(s); return out; }
+function slug(s){ return String(s||"").toLowerCase().replace(/[^a-z]/g,""); }
+function dkey(d){ return d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate()); }
+
+/* ---- state ---- */
+var STATE = { token:"", stylist:"all", range:14, bookings:[] };
+
+/* ---- auth token storage (never in the file) ---- */
+function getToken(){ try{ return sessionStorage.getItem("bs_admin") || localStorage.getItem("bs_admin") || ""; }catch(e){ return ""; } }
+function saveToken(t, persist){ try{ sessionStorage.setItem("bs_admin", t); if(persist) localStorage.setItem("bs_admin", t); else localStorage.removeItem("bs_admin"); }catch(e){} }
+function clearToken(){ try{ sessionStorage.removeItem("bs_admin"); localStorage.removeItem("bs_admin"); }catch(e){} }
+
+function show(el, on){ document.getElementById(el).style.display = on ? "" : "none"; }
+
+async function fetchBookings(token){
+  var r = await fetch(BOOKING_API.replace(/\/+$/,"")+"/admin/bookings", {
+    method:"GET", headers:{ "Authorization":"Bearer "+token }
+  });
+  if(r.status===401) throw new Error("unauthorized");
+  if(r.status===503) throw new Error("The admin API is not enabled yet (ADMIN_TOKEN secret is not set on the Worker).");
+  if(!r.ok) throw new Error("Server error ("+r.status+")");
+  var d = await r.json();
+  return (d && d.bookings) ? d.bookings : [];
+}
+
+async function doLogin(ev){
+  ev.preventDefault();
+  var t = document.getElementById("tok").value.trim();
+  var persist = document.getElementById("rem").checked;
+  var errEl = document.getElementById("loginErr");
+  errEl.textContent = "";
+  if(!t){ errEl.textContent = "Enter the calendar password."; return false; }
+  try{
+    var list = await fetchBookings(t);
+    STATE.token = t; STATE.bookings = list; saveToken(t, persist);
+    show("login", false); document.getElementById("app").style.display="block";
+    render(); stampUpdated();
+  }catch(e){
+    errEl.textContent = e.message==="unauthorized" ? "Wrong password." : e.message;
+  }
+  return false;
+}
+
+async function load(){
+  if(!STATE.token) return;
+  try{
+    STATE.bookings = await fetchBookings(STATE.token);
+    render(); stampUpdated();
+  }catch(e){
+    if(e.message==="unauthorized"){ logout(); }
+    else alert(e.message);
+  }
+}
+
+function logout(){ clearToken(); STATE.token=""; STATE.bookings=[];
+  document.getElementById("app").style.display="none"; show("login", true);
+  document.getElementById("tok").value=""; document.getElementById("loginErr").textContent="";
+}
+
+function stampUpdated(){ document.getElementById("updated").textContent = "Updated "+new Date().toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}); }
+
+function setStylist(v){ STATE.stylist=v; seg("segStylist",v); render(); }
+function setRange(v){ STATE.range=v; seg("segRange",String(v)); render(); }
+function seg(id,v){ var g=document.getElementById(id); [].forEach.call(g.children,function(b){ b.classList.toggle("on", b.getAttribute("data-v")===v); }); }
+
+/* ---- index confirmed bookings by date|slug|hour ; collect cancellations ---- */
+function indexBookings(){
+  var map = {}, cancels = [], confirmedFuture = 0, now = Date.now();
+  STATE.bookings.forEach(function(b){
+    if(!b || !b.startISO) return;
+    if(b.status==="cancelled"){ cancels.push(b); return; }
+    var d = new Date(b.startISO); if(isNaN(d)) return;
+    var k = dkey(d)+"|"+slug(b.stylist)+"|"+d.getHours();
+    map[k] = b;
+    if(d.getTime() >= now) confirmedFuture++;
+  });
+  cancels.sort(function(a,b){ return (b.cancelledAt||0)-(a.cancelledAt||0); });
+  return { map:map, cancels:cancels, confirmedFuture:confirmedFuture };
+}
+
+function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function money(b){ return (b.amount!=null && b.amount!=="") ? (b.amount+" "+(b.currency||"DKK")) : ""; }
+
+function slotCard(hour, b){
+  var t = pad2(hour)+":00";
+  if(!b){
+    return '<div class="slot free"><div class="st">'+t+' <span class="tag">Free</span></div></div>';
+  }
+  var extra = [];
+  if(b.phone) extra.push('<a href="tel:'+esc(b.phone)+'">'+esc(b.phone)+'</a>');
+  if(b.email) extra.push('<a href="mailto:'+esc(b.email)+'">'+esc(b.email)+'</a>');
+  var line2 = [];
+  if(b.service) line2.push(esc(b.service));
+  if(money(b)) line2.push(esc(money(b)));
+  if(b.promo) line2.push('promo '+esc(b.promo));
+  return '<div class="slot booked"><div class="st">'+t+' <span class="tag">Booked</span></div>'+
+    '<div class="nm">'+esc(b.name||"Guest")+'</div>'+
+    (line2.length?'<div class="meta">'+line2.join(" · ")+'</div>':'')+
+    (extra.length?'<div class="meta">'+extra.join(" · ")+'</div>':'')+
+  '</div>';
+}
+
+function render(){
+  var idx = indexBookings();
+  var showFree = document.getElementById("showFree").checked;
+  var showClosed = document.getElementById("showClosed").checked;
+  var stylistsToShow = STATE.stylist==="all" ? STYLISTS : [STATE.stylist];
+
+  /* ---- stats ---- */
+  var today = new Date(); today.setHours(0,0,0,0);
+  var freeCount=0, bookedInRange=0;
+  for(var i=0;i<STATE.range;i++){
+    var d=new Date(today.getTime()+i*86400000);
+    stylistsToShow.forEach(function(st){
+      slotHours(d.getDay(), st).forEach(function(h){
+        var k=dkey(d)+"|"+slug(st)+"|"+h;
+        if(idx.map[k]) bookedInRange++; else freeCount++;
+      });
+    });
+  }
+  document.getElementById("stats").innerHTML =
+    stat(idx.confirmedFuture, "Upcoming bookings", "a") +
+    stat(bookedInRange, "Booked · next "+STATE.range+"d", "") +
+    stat(freeCount, "Free slots · next "+STATE.range+"d", "g") +
+    stat(idx.cancels.length, "Cancellations", "r");
+
+  /* ---- calendar ---- */
+  var html="", used={};
+  for(var j=0;j<STATE.range;j++){
+    var day=new Date(today.getTime()+j*86400000);
+    var dow=day.getDay();
+    var anyOpen = stylistsToShow.some(function(st){ return !!hoursFor(dow,st); });
+    if(!anyOpen && !showClosed) continue;
+    var head='<h3>'+DAY_NAMES[dow]+' '+day.getDate()+' '+MONTHS[day.getMonth()]+
+      (j===0?' <span class="cl">Today</span>':'')+(!anyOpen?' <span class="cl">Closed</span>':'')+'</h3>';
+    var body="";
+    stylistsToShow.forEach(function(st){
+      var hrs=slotHours(dow, st);
+      var slotsHtml="";
+      hrs.forEach(function(h){
+        var k=dkey(day)+"|"+slug(st)+"|"+h; var b=idx.map[k];
+        if(b) used[k]=true;
+        if(b) slotsHtml+=slotCard(h,b);
+        else if(showFree) slotsHtml+=slotCard(h,null);
+      });
+      /* off-schedule bookings for this stylist/day (e.g. legacy slots) */
+      STATE.bookings.forEach(function(b){
+        if(!b||b.status==="cancelled"||!b.startISO) return;
+        if(slug(b.stylist)!==slug(st)) return;
+        var bd=new Date(b.startISO); if(isNaN(bd)||dkey(bd)!==dkey(day)) return;
+        var kk=dkey(bd)+"|"+slug(st)+"|"+bd.getHours();
+        if(hrs.indexOf(bd.getHours())>=0) return; /* already shown */
+        if(used[kk]) return; used[kk]=true;
+        slotsHtml+=slotCard(bd.getHours(), b);
+      });
+      if(slotsHtml){
+        body+='<div class="styblock"><div class="styhead"><span class="badge '+slug(st)+'">'+esc(st)+'</span></div>'+
+          '<div class="slots">'+slotsHtml+'</div></div>';
+      } else if(STATE.stylist!=="all" && hrs.length===0){
+        body+='<div class="empty">'+esc(st)+' — closed this day.</div>';
+      }
+    });
+    if(!body && anyOpen) body='<div class="empty">No open slots.</div>';
+    if(!body) continue;
+    html+='<div class="day'+(!anyOpen?' closed':'')+'">'+head+body+'</div>';
+  }
+  document.getElementById("calendar").innerHTML = html || '<div class="center">Nothing to show in this range.</div>';
+
+  /* ---- cancellations ---- */
+  if(idx.cancels.length){
+    var rows = idx.cancels.slice(0,200).map(function(b){
+      var when = b.startISO ? new Date(b.startISO).toLocaleString("en-GB",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}) : "—";
+      var at = b.cancelledAt ? new Date(b.cancelledAt).toLocaleString("en-GB",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}) : "—";
+      return '<tr><td>'+esc(b.name||"—")+'</td><td>'+esc(b.email||"—")+'</td><td>'+esc(b.stylist||"—")+'</td><td>'+esc(when)+'</td><td class="can">'+esc(at)+'</td></tr>';
+    }).join("");
+    document.getElementById("cancels").innerHTML =
+      '<table><thead><tr><th>Client</th><th>Email</th><th>Stylist</th><th>Appointment</th><th>Cancelled</th></tr></thead><tbody>'+rows+'</tbody></table>';
+  } else {
+    document.getElementById("cancels").innerHTML = '<div class="empty">No cancellations recorded.</div>';
+  }
+}
+
+function stat(n,l,cls){ return '<div class="stat '+(cls||"")+'"><div class="n">'+n+'</div><div class="l">'+l+'</div></div>'; }
+
+/* ---- auto-login if a token is already stored ---- */
+(function(){
+  var t=getToken();
+  if(!t){ show("login", true); return; }
+  STATE.token=t;
+  fetchBookings(t).then(function(list){
+    STATE.bookings=list; show("login", false); document.getElementById("app").style.display="block"; render(); stampUpdated();
+  }).catch(function(){ clearToken(); show("login", true); });
+})();
+</script>
+</body>
+</html>

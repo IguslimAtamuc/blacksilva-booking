@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Black Silva - Booking (bold preview)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;600;700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   BLACK SILVA - Booking redesign, BOLD editorial pass (PREVIEW)
+   Overhaul: dark poster aesthetic, oversized display type, grain,
+   spring motion, magnetic CTA, spotlight cards, momentum day strip.
+   Real brand imagery (booking-assets/*). Not wired to live backend.
+   Shape lock: cards 18px, chips 12px, buttons full-pill. One accent: gold.
+   ============================================================ */
+:root{
+  --bg:#141009; --bg2:#1d1810; --panel:rgba(236,226,205,.045); --panelSolid:#1d1810;
+  --bone:#ece2cd; --bone2:#9c9074; --gold:#d8a24a; --gold2:#ecc178; --ink:#17120a;
+  --line:rgba(236,226,205,.12); --line2:rgba(236,226,205,.07); --ok:#8fbf6a; --bad:#d98a6a;
+  --disp:'Big Shoulders Display',Impact,sans-serif; --ui:'Manrope',-apple-system,Segoe UI,Roboto,sans-serif;
+  --r:18px; --rc:12px; --rp:999px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+html{overflow-x:hidden}
+body{font-family:var(--ui);font-size:15px;line-height:1.5;color:var(--bone);background:var(--bg);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+/* film grain, fixed, cheap */
+body::after{content:'';position:fixed;inset:0;z-index:80;pointer-events:none;opacity:.05;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.stage{max-width:1240px;margin:0 auto;min-height:100dvh;display:grid;grid-template-columns:minmax(340px,42fr) 58fr}
+
+/* ---------- POSTER (left) ---------- */
+.poster{position:sticky;top:0;height:100dvh;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;padding:34px 30px;background:#0d0a06}
+.poster .bgimg{position:absolute;inset:0;background:#0d0a06 center/cover no-repeat;background-image:url('booking-assets/hero-night.jpg');transform:scale(1.04);filter:saturate(.9)}
+.poster .grad{position:absolute;inset:0;background:linear-gradient(180deg,rgba(13,10,6,.55) 0%,rgba(13,10,6,.2) 34%,rgba(13,10,6,.86) 100%)}
+.poster>*{position:relative;z-index:2}
+.pbrand{font-family:var(--disp);font-weight:800;font-size:clamp(40px,4.6vw,62px);line-height:.86;letter-spacing:.01em;color:#fff;text-transform:uppercase}
+.pbrand .amp{color:var(--gold)}
+.pkick{margin-top:12px;font-size:11px;letter-spacing:.34em;text-transform:uppercase;color:var(--gold2);font-weight:700}
+.paddr{font-size:12.5px;color:rgba(236,226,205,.7);margin-top:auto;padding-top:20px;line-height:1.6}
+/* live order card on the poster */
+.order{margin-top:16px;border:1px solid rgba(236,226,205,.16);border-radius:var(--r);background:rgba(15,11,6,.5);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);padding:16px 18px}
+.ol{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;padding:5px 0;color:rgba(236,226,205,.62)}
+.ol b{color:#fff;font-weight:650;text-align:right;letter-spacing:.01em}
+.ol.tot{margin-top:9px;padding-top:12px;border-top:1px solid rgba(236,226,205,.14);align-items:baseline}
+.ol.tot b{font-family:var(--disp);font-size:34px;font-weight:800;color:var(--gold2);line-height:1}
+.ptrack{display:flex;gap:5px;margin-top:16px}
+.ptrack i{height:3px;flex:1;border-radius:3px;background:rgba(236,226,205,.16);transition:background .4s}
+.ptrack i.on{background:var(--gold)}
+
+/* ---------- CONTENT (right) ---------- */
+.main{position:relative;background:linear-gradient(180deg,#181309,#141009)}
+.chrome{position:sticky;top:0;z-index:30;display:flex;align-items:baseline;gap:14px;padding:20px 46px;background:rgba(20,16,9,.72);backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);border-bottom:1px solid var(--line2)}
+.chrome .cn{font-family:var(--disp);font-weight:700;font-size:22px;letter-spacing:.02em;text-transform:uppercase}
+.chrome .cs{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--bone2);font-weight:700;margin-left:auto}
+.canvas{padding:40px 46px 52px;min-height:calc(100dvh - 64px)}
+.mprog{display:none}
+.step{display:none}
+.step.show{display:block}
+.kick{font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--gold);font-weight:800}
+.h{font-family:var(--disp);font-weight:800;font-size:clamp(44px,6vw,78px);line-height:.9;letter-spacing:.005em;text-transform:uppercase;margin:10px 0 4px;color:var(--bone)}
+.h .thin{color:var(--bone2)}
+.sub{color:var(--bone2);font-size:15px;max-width:52ch;margin:10px 0 30px}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.pick{position:relative;border:1px solid var(--line);border-radius:var(--r);background:var(--panel);overflow:hidden;cursor:pointer;text-align:left;color:var(--bone);
+  transition:transform .14s cubic-bezier(.16,1,.3,1),border-color .2s,background .2s;--mx:50%;--my:0%}
+.pick::before{content:'';position:absolute;inset:0;background:radial-gradient(340px circle at var(--mx) var(--my),rgba(216,162,74,.14),transparent 60%);opacity:0;transition:opacity .25s;pointer-events:none}
+.pick:hover::before{opacity:1}
+.pick:hover{border-color:rgba(216,162,74,.45);transform:translateY(-3px)}
+.pick:active{transform:scale(.985)}
+.pick.sel{border-color:var(--gold);background:rgba(216,162,74,.1)}
+.pick .tick{position:absolute;top:14px;right:14px;width:26px;height:26px;border-radius:50%;background:var(--gold);color:var(--ink);display:none;align-items:center;justify-content:center;font-size:14px;font-weight:800;z-index:3}
+.pick.sel .tick{display:flex}
+.pbody{padding:20px}
+.pthumb{height:120px;background:#0d0a06 center/cover no-repeat;filter:saturate(.92) contrast(1.02)}
+.pt{font-family:var(--disp);font-weight:700;font-size:30px;line-height:.96;text-transform:uppercase;letter-spacing:.01em}
+.pd{color:var(--bone2);font-size:13px;margin-top:5px}
+.pp{margin-top:14px;font-family:var(--disp);font-weight:700;font-size:26px;color:var(--gold2)}
+.pp span{font-family:var(--ui);color:var(--bone2);font-weight:500;font-size:12px}
+
+.addrow{margin:28px 0 12px;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--bone2);font-weight:800}
+.add{display:flex;align-items:center;gap:14px;padding:15px 17px;border:1px solid var(--line);border-radius:var(--rc);background:var(--panel);cursor:pointer;margin-bottom:10px;transition:transform .14s,border-color .2s}
+.add:hover{border-color:rgba(216,162,74,.4)}
+.add:active{transform:scale(.99)}
+.add.sel{border-color:var(--gold);background:rgba(216,162,74,.08)}
+.add .bx{width:23px;height:23px;border-radius:6px;border:1.6px solid rgba(236,226,205,.3);flex:none;display:flex;align-items:center;justify-content:center;color:var(--ink);font-size:12px;font-weight:800;transition:.15s}
+.add.sel .bx{background:var(--gold);border-color:var(--gold)}
+.add .an{flex:1;font-weight:600}
+.add .ap{font-family:var(--disp);font-weight:700;font-size:18px;color:var(--gold2)}
+
+.styl{display:flex;align-items:center;gap:16px}
+.styl .ph{width:64px;height:64px;border-radius:50%;flex:none;background:#0d0a06 center/cover no-repeat;border:1px solid rgba(216,162,74,.4)}
+.role{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);font-weight:800;margin-top:4px}
+
+.dwrap{position:relative}
+.days{display:flex;gap:12px;overflow-x:auto;padding:4px 2px 16px;scrollbar-width:none;cursor:grab;-webkit-mask-image:linear-gradient(90deg,transparent,#000 22px,#000 calc(100% - 22px),transparent);mask-image:linear-gradient(90deg,transparent,#000 22px,#000 calc(100% - 22px),transparent)}
+.days::-webkit-scrollbar{display:none}
+.days.grab{cursor:grabbing}
+.day{flex:none;min-width:84px;border:1px solid var(--line);border-radius:var(--rc);background:var(--panel);padding:13px 11px;text-align:center;cursor:pointer;transition:transform .14s,border-color .2s}
+.day:active{transform:scale(.97)}
+.day.sel{border-color:var(--gold);background:rgba(216,162,74,.1)}
+.day.closed{opacity:.32;pointer-events:none}
+.dw{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--bone2);font-weight:800}
+.dd{font-family:var(--disp);font-weight:800;font-size:32px;line-height:.94;margin:3px 0}
+.dm{font-size:10.5px;color:var(--bone2)}
+.tier{margin-top:8px;font-size:9px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:999px;display:inline-block}
+.tier.best{background:rgba(143,191,106,.16);color:#a7cf85}
+.tier.std{background:rgba(216,162,74,.16);color:var(--gold2)}
+.tier.peak{background:rgba(217,138,106,.18);color:#e2a488}
+.legend{display:flex;gap:18px;flex-wrap:wrap;font-size:12px;color:var(--bone2);margin-top:4px}
+.legend b{font-weight:800}
+
+.times{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:12px}
+.t{padding:16px 10px;border:1px solid var(--line);border-radius:var(--rc);background:var(--panel);text-align:center;cursor:pointer;font-family:var(--disp);font-weight:700;font-size:22px;transition:transform .14s,border-color .2s}
+.t:active{transform:scale(.97)}
+.t.sel{border-color:var(--gold);background:rgba(216,162,74,.12);color:var(--gold2)}
+.t.taken{opacity:.34;text-decoration:line-through;pointer-events:none}
+.t small{display:block;font-family:var(--ui);font-size:10px;font-weight:600;color:var(--bone2);margin-top:3px;text-transform:uppercase;letter-spacing:.08em}
+
+.rev{border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--panel)}
+.rr{display:flex;justify-content:space-between;gap:16px;padding:16px 20px;border-bottom:1px solid var(--line2);font-size:14.5px}
+.rr:last-child{border-bottom:none}
+.rk{color:var(--bone2);text-transform:uppercase;letter-spacing:.1em;font-size:12px;font-weight:700}
+.rv{font-weight:640;text-align:right}
+.rr.tot{background:rgba(216,162,74,.06)}
+.rr.tot .rv{font-family:var(--disp);font-weight:800;font-size:30px;color:var(--gold2)}
+.lock{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--bone2);margin-top:14px}
+.voucher{display:flex;gap:10px;margin-top:16px}
+.voucher input{flex:1}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--bone2);margin-bottom:7px}
+input[type=text],input[type=email]{width:100%;padding:15px 16px;border:1px solid var(--line);border-radius:var(--rc);background:rgba(236,226,205,.05);color:var(--bone);font-family:inherit;font-size:16px;transition:border-color .18s,box-shadow .18s}
+input::placeholder{color:var(--bone2)}
+input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 4px rgba(216,162,74,.16)}
+.assure{display:flex;gap:12px;border:1px solid var(--line);border-radius:var(--rc);padding:15px 17px;margin-top:6px;font-size:13px;color:var(--bone2);line-height:1.55;background:var(--panel)}
+.assure b{color:var(--bone)}
+
+.actions{display:flex;gap:14px;align-items:center;margin-top:34px}
+.btn{font-family:var(--ui);font-weight:800;font-size:13px;letter-spacing:.08em;text-transform:uppercase;border-radius:var(--rp);padding:16px 32px;cursor:pointer;border:none;transition:transform .12s cubic-bezier(.16,1,.3,1),background .2s}
+.btn-primary{background:var(--gold);color:var(--ink);box-shadow:0 10px 30px rgba(216,162,74,.26)}
+.btn-primary:hover{background:var(--gold2)}
+.btn-primary:disabled{opacity:.34;cursor:not-allowed;box-shadow:none}
+.btn-ghost{background:transparent;border:1px solid rgba(236,226,205,.28);color:var(--bone)}
+.btn-ghost:hover{border-color:var(--gold);color:var(--gold2)}
+.btn:active{transform:scale(.96)}
+.spacer{flex:1}
+.hint{font-size:12.5px;color:var(--bone2)}
+.done-badge{width:88px;height:88px;border-radius:50%;background:var(--gold);color:var(--ink);display:flex;align-items:center;justify-content:center;font-size:44px;margin-bottom:22px;box-shadow:0 16px 40px rgba(216,162,74,.3)}
+.calbtns{display:flex;gap:12px;flex-wrap:wrap;margin-top:22px}
+.calbtn{display:inline-flex;align-items:center;gap:9px;border:1px solid rgba(236,226,205,.28);border-radius:var(--rp);padding:13px 22px;font-weight:700;font-size:13px;background:transparent;color:var(--bone);cursor:pointer;transition:transform .12s,border-color .2s}
+.calbtn:active{transform:scale(.97)}
+.calbtn:hover{border-color:var(--gold)}
+.flag{position:fixed;top:0;right:0;background:var(--gold);color:var(--ink);font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;padding:6px 14px;border-radius:0 0 0 12px;z-index:90}
+
+/* ---------- MOBILE BOTTOM ACTION BAR (thumb zone) ---------- */
+.mbar{display:none}
+@media(max-width:860px){
+  .stage{grid-template-columns:1fr}
+  .poster{position:relative;height:auto;min-height:118px;padding:calc(16px + env(safe-area-inset-top)) 20px 16px;flex-direction:row;align-items:center;justify-content:space-between}
+  .poster .pbrand{font-size:30px}
+  .poster .pkick{margin-top:6px}
+  .order{display:none}
+  .paddr{display:none}
+  .chrome{position:sticky;top:0;flex-wrap:wrap;align-items:center;padding:calc(12px + env(safe-area-inset-top)) 18px 11px}
+  .chrome .cn{font-size:18px}
+  .mprog{display:flex;gap:5px;width:100%;order:3;margin-top:11px}
+  .mprog i{height:3px;flex:1;border-radius:3px;background:rgba(236,226,205,.16);transition:background .4s}
+  .mprog i.on{background:var(--gold)}
+  .days{-webkit-mask-image:none;mask-image:none;scroll-padding:0 2px}
+  .canvas{padding:22px 18px 120px}
+  .grid2{grid-template-columns:1fr;gap:13px}
+  .h{font-size:clamp(38px,11vw,50px)}
+  .sub{font-size:14.5px;margin-bottom:22px}
+  .pthumb{height:150px}
+  .times{grid-template-columns:repeat(3,1fr);gap:10px}
+  .actions{display:none}          /* replaced by the fixed bottom bar */
+  .mbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:75;align-items:center;gap:12px;
+    padding:11px 16px calc(11px + env(safe-area-inset-bottom));
+    background:rgba(20,16,9,.9);backdrop-filter:blur(22px) saturate(160%);-webkit-backdrop-filter:blur(22px) saturate(160%);
+    border-top:1px solid var(--line)}
+  .mback{width:48px;height:50px;flex:none;border-radius:14px;border:1px solid rgba(236,226,205,.25);background:transparent;color:var(--bone);font-size:26px;line-height:1;display:none;align-items:center;justify-content:center;cursor:pointer}
+  .mtot{display:flex;flex-direction:column;line-height:1.05;min-width:76px}
+  .mtot small{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--bone2);font-weight:800}
+  .mtot b{font-family:var(--disp);font-weight:800;font-size:27px;color:var(--gold2)}
+  .mnext{flex:1;font-family:var(--ui);font-weight:800;font-size:14px;letter-spacing:.06em;text-transform:uppercase;border:none;border-radius:var(--rp);padding:17px 16px;background:var(--gold);color:var(--ink);cursor:pointer}
+  .mnext:disabled{opacity:.4}
+  .mnext:active{transform:scale(.97)}
+}
+@media(max-width:860px) and (prefers-reduced-transparency: reduce){ .mbar{background:var(--panelSolid);backdrop-filter:none;-webkit-backdrop-filter:none} }
+@media(max-width:400px){ .times{grid-template-columns:repeat(2,1fr)} }
+@media (prefers-reduced-transparency: reduce){
+  .chrome,.order{background:var(--panelSolid);backdrop-filter:none;-webkit-backdrop-filter:none}
+  .days{-webkit-mask-image:none;mask-image:none}
+}
+@media (prefers-reduced-motion: reduce){
+  .poster .bgimg{transform:none}
+  *{scroll-behavior:auto !important}
+}
+</style>
+</head>
+<body>
+<div class="flag">Bold preview</div>
+<div class="stage">
+
+  <aside class="poster">
+    <div class="bgimg" id="bgimg"></div><div class="grad"></div>
+    <div>
+      <div class="pbrand">Black<br>Silva<span class="amp">.</span></div>
+      <div class="pkick">Frisor &amp; Barber</div>
+    </div>
+    <div>
+      <div class="order">
+        <div class="ol"><span>Service</span><b id="s-serv">-</b></div>
+        <div class="ol"><span>Extras</span><b id="s-add">-</b></div>
+        <div class="ol"><span>Stylist</span><b id="s-styl">-</b></div>
+        <div class="ol"><span>When</span><b id="s-when">-</b></div>
+        <div class="ol tot"><span>From</span><b id="s-total">0 kr</b></div>
+        <div class="ptrack" id="ptrack"></div>
+      </div>
+      <div class="paddr">Badstuestraede 16, 1209 Kobenhavn K<br>The earlier you book, the better the price.</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="chrome"><div class="cn" id="chrome-t">Your cut</div><div class="cs" id="chrome-s">01 / 06</div><div class="mprog" id="mprog"></div></div>
+    <div class="canvas">
+
+      <section class="step show" data-step="cut">
+        <div class="kick">Start here</div>
+        <h2 class="h">What are<br>we <span class="thin">cutting?</span></h2>
+        <p class="sub">Pick your length, then add anything extra. The price is set by length and how early you book, never by the add-ons alone.</p>
+        <div class="grid2">
+          <button class="pick spot" data-len="Short hair" data-price="375" onclick="pickLen(this)">
+            <div class="tick">✓</div><div class="pthumb" style="background-image:url('booking-assets/cutting.jpg')"></div>
+            <div class="pbody"><div class="pt">Short<br>hair</div><div class="pd">Men's grooming, fades, scissor work</div><div class="pp">375 kr <span>/ 60 min</span></div></div>
+          </button>
+          <button class="pick spot" data-len="Long hair" data-price="450" onclick="pickLen(this)">
+            <div class="tick">✓</div><div class="pthumb" style="background-image:url('booking-assets/salon-real.jpg')"></div>
+            <div class="pbody"><div class="pt">Long<br>hair</div><div class="pd">Cut &amp; styling for medium to long</div><div class="pp">450 kr <span>/ 60 min</span></div></div>
+          </button>
+        </div>
+        <div class="addrow">Add to your visit</div>
+        <div class="add" data-add="Beard trim" data-price="150" onclick="toggleAdd(this)"><div class="bx">✓</div><div class="an">Beard trim &amp; shape</div><div class="ap">+150</div></div>
+        <div class="add" data-add="Wash &amp; style" data-price="100" onclick="toggleAdd(this)"><div class="bx">✓</div><div class="an">Wash &amp; blow-dry style</div><div class="ap">+100</div></div>
+        <div class="add" data-add="Hot towel" data-price="75" onclick="toggleAdd(this)"><div class="bx">✓</div><div class="an">Hot towel finish</div><div class="ap">+75</div></div>
+        <div class="actions"><span class="hint" id="cut-hint">Choose a length to continue.</span><span class="spacer"></span>
+          <button class="btn btn-primary mag" id="cut-next" disabled onclick="go('stylist')">Continue</button></div>
+      </section>
+
+      <section class="step" data-step="stylist">
+        <div class="kick">Step 02</div>
+        <h2 class="h">Who cuts<br>your <span class="thin">hair?</span></h2>
+        <p class="sub">Pick who you'd like, then we'll show their calendar and free times.</p>
+        <div class="grid2">
+          <button class="pick spot" data-styl="Eduard" onclick="pickStyl(this)"><div class="tick">✓</div>
+            <div class="pbody"><div class="styl"><div class="ph" style="background-image:url('booking-assets/eduard.jpg')"></div><div><div class="pt" style="font-size:28px">Eduard</div><div class="role">Men's grooming</div></div></div>
+            <div class="pd" style="margin-top:14px">Sharp fades, classic scissor work and beard shaping.</div></div></button>
+          <button class="pick spot" data-styl="Elena" onclick="pickStyl(this)"><div class="tick">✓</div>
+            <div class="pbody"><div class="styl"><div class="ph" style="background-image:url('booking-assets/elena.jpg')"></div><div><div class="pt" style="font-size:28px">Elena</div><div class="role">Women's styling</div></div></div>
+            <div class="pd" style="margin-top:14px">Cuts and styling for medium and long hair, with a consultation.</div></div></button>
+        </div>
+        <div class="actions"><button class="btn btn-ghost" onclick="go('cut')">Back</button><span class="spacer"></span>
+          <button class="btn btn-primary mag" id="styl-next" disabled onclick="go('date')">Continue</button></div>
+      </section>
+
+      <section class="step" data-step="date">
+        <div class="kick">Step 03</div>
+        <h2 class="h">Pick <span class="thin">your day</span></h2>
+        <p class="sub">Drag to browse. Earlier days are the best price, weekends and evenings are premium and fill fast.</p>
+        <div class="dwrap"><div class="days" id="days"></div></div>
+        <div class="legend"><span><b style="color:#a7cf85">Best price</b> book early</span><span><b style="color:#e9c178">Standard</b></span><span><b style="color:#e2a488">Peak</b> weekends &amp; evenings</span></div>
+        <div class="actions"><button class="btn btn-ghost" onclick="go('stylist')">Back</button><span class="spacer"></span>
+          <button class="btn btn-primary mag" id="date-next" disabled onclick="go('time')">Continue</button></div>
+      </section>
+
+      <section class="step" data-step="time">
+        <div class="kick">Step 04</div>
+        <h2 class="h">Choose <span class="thin">a time</span></h2>
+        <p class="sub">Free times for your day. Faded slots are already booked.</p>
+        <div class="times" id="times"></div>
+        <div class="actions"><button class="btn btn-ghost" onclick="go('date')">Back</button><span class="spacer"></span>
+          <button class="btn btn-primary mag" id="time-next" disabled onclick="go('confirm')">Continue</button></div>
+      </section>
+
+      <section class="step" data-step="confirm">
+        <div class="kick">Step 05</div>
+        <h2 class="h">Confirm <span class="thin">it</span></h2>
+        <p class="sub">This is what you chose. To change anything, go back a step.</p>
+        <div class="rev">
+          <div class="rr"><span class="rk">Service</span><span class="rv" id="c-serv">-</span></div>
+          <div class="rr"><span class="rk">Extras</span><span class="rv" id="c-add">-</span></div>
+          <div class="rr"><span class="rk">Stylist</span><span class="rv" id="c-styl">-</span></div>
+          <div class="rr"><span class="rk">When</span><span class="rv" id="c-when">-</span></div>
+          <div class="rr tot"><span class="rk">Total</span><span class="rv" id="c-total">-</span></div>
+        </div>
+        <div class="lock">🔒 Locked in. Services, length, stylist and time change only with Back.</div>
+        <div class="voucher"><input type="text" id="promo" placeholder="Voucher code (optional)"><button class="btn btn-ghost" onclick="applyPromo()">Apply</button></div>
+        <div class="hint" id="promo-msg" style="margin-top:8px"></div>
+        <div class="actions"><button class="btn btn-ghost" onclick="go('time')">Back</button><span class="spacer"></span>
+          <button class="btn btn-primary mag" onclick="go('details')">Looks right</button></div>
+      </section>
+
+      <section class="step" data-step="details">
+        <div class="kick">Step 06</div>
+        <h2 class="h">Your <span class="thin">details</span></h2>
+        <p class="sub">We send your confirmation and a secure payment link here.</p>
+        <div class="field"><label for="nm">Full name</label><input type="text" id="nm" placeholder="Frederik Holm"></div>
+        <div class="field"><label for="em">Email</label><input type="email" id="em" placeholder="you@example.com"></div>
+        <div class="assure"><div>🔐</div><div>Your card is <b>verified securely by Stripe</b> and the amount is <b>reserved, not charged now</b>. We take payment about <b>12 hours before</b> your appointment. Cancel at least 12h before and you pay nothing.</div></div>
+        <div class="actions"><button class="btn btn-ghost" onclick="go('confirm')">Back</button><span class="spacer"></span>
+          <button class="btn btn-primary mag" onclick="go('done')">Get my payment link</button></div>
+      </section>
+
+      <section class="step" data-step="done">
+        <div class="done-badge">✓</div>
+        <h2 class="h">You're <span class="thin">in.</span></h2>
+        <p class="sub" id="done-sub">We've emailed your confirmation and secure card link. See you soon at Badstuestraede 16.</p>
+        <div class="rev">
+          <div class="rr"><span class="rk">Stylist</span><span class="rv" id="d-styl">-</span></div>
+          <div class="rr"><span class="rk">When</span><span class="rv" id="d-when">-</span></div>
+          <div class="rr tot"><span class="rk">Total</span><span class="rv" id="d-total">-</span></div>
+        </div>
+        <div class="calbtns"><button class="calbtn">&nbsp; Add to Apple Calendar</button><button class="calbtn">📅 Add to Google Calendar</button></div>
+        <div class="actions"><button class="btn btn-ghost" onclick="restart()">Start over</button></div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<div class="mbar">
+  <button class="mback" id="mback" aria-label="Back" onclick="mBack()">&#8249;</button>
+  <div class="mtot"><small>From</small><b id="m-total">0 kr</b></div>
+  <button class="mnext" id="mnext" onclick="mNext()">Continue</button>
+</div>
+
+<script>
+var REDUCED=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+function haptic(ms){try{if(navigator.vibrate)navigator.vibrate(ms);}catch(e){}}
+/* rAF spring (critically damped default) */
+function springTo(from,to,opts,onUpdate,onDone){opts=opts||{};var response=opts.response||.4,bounce=opts.bounce||0,v=opts.velocity||0;
+  if(REDUCED){onUpdate(to);if(onDone)onDone();return{cancel:function(){}};}
+  var zeta=1-Math.max(0,Math.min(.9,bounce)),omega=(2*Math.PI)/response,x=from,last=performance.now(),raf=0,alive=true;
+  function f(now){if(!alive)return;var dt=Math.min(.032,(now-last)/1000);last=now;var a=-2*zeta*omega*v-omega*omega*(x-to);v+=a*dt;x+=v*dt;
+    if(Math.abs(x-to)<.4&&Math.abs(v)<.6){x=to;onUpdate(x);alive=false;if(onDone)onDone();return;}onUpdate(x);raf=requestAnimationFrame(f);}
+  raf=requestAnimationFrame(f);return{cancel:function(){alive=false;cancelAnimationFrame(raf);}};}
+
+var STEPS=['cut','stylist','date','time','confirm','details','done'];
+var LBL={cut:'Your cut',stylist:'Stylist',date:'Your day',time:'Time',confirm:'Confirm',details:'Details',done:'Done'};
+var state={len:null,price:0,addons:[],addPrice:0,styl:null,day:null,time:null};
+var cur='cut',anim=null,displayTotal=0,totalAnim=null;
+
+(function(){var t=document.getElementById('ptrack'),m=document.getElementById('mprog');for(var i=0;i<6;i++){var on=(i===0?' class="on"':'');t.innerHTML+='<i'+on+'></i>';if(m)m.innerHTML+='<i'+on+'></i>';}})();
+function pad2(n){return(n<10?'0':'')+n;}
+function money(n){return Math.round(n).toLocaleString('da-DK')+' kr';}
+function total(){return(state.price||0)+(state.addPrice||0);}
+function animTotal(){var to=total();if(totalAnim)totalAnim.cancel();var el=document.getElementById('s-total'),em=document.getElementById('m-total');
+  totalAnim=springTo(displayTotal,to,{response:.5},function(v){displayTotal=v;var s=money(v);el.textContent=s;if(em)em.textContent=s;});}
+/* mobile bottom-bar wiring */
+var NEXT={cut:'stylist',stylist:'date',date:'time',time:'confirm',confirm:'details',details:'done'};
+var PREV={stylist:'cut',date:'stylist',time:'date',confirm:'time',details:'confirm',done:'details'};
+function stepValid(s){return s==='cut'?!!state.len:s==='stylist'?!!state.styl:s==='date'?!!state.day:s==='time'?!!state.time:true;}
+function mNext(){if(cur==='done'){restart();return;}if(!stepValid(cur))return;if(NEXT[cur])go(NEXT[cur]);}
+function mBack(){if(PREV[cur])go(PREV[cur]);}
+function updateMbar(){var nb=document.getElementById('mnext'),bk=document.getElementById('mback');if(!nb)return;
+  if(cur==='done'){nb.textContent='Start over';nb.disabled=false;bk.style.display='none';return;}
+  var L={cut:'Continue',stylist:'Continue',date:'Continue',time:'Continue',confirm:'Looks right',details:'Get link'};
+  nb.textContent=L[cur]||'Continue';nb.disabled=!stepValid(cur);bk.style.display=(cur==='cut')?'none':'flex';}
+function renderSummary(){
+  document.getElementById('s-serv').textContent=state.len||'-';
+  document.getElementById('s-add').textContent=state.addons.length?state.addons.join(', '):'-';
+  document.getElementById('s-styl').textContent=state.styl||'-';
+  document.getElementById('s-when').textContent=state.day?(state.day+(state.time?(' · '+state.time):'')):'-';
+  animTotal();updateMbar();}
+function renderTrack(){var i=STEPS.indexOf(cur);['.ptrack','.mprog'].forEach(function(sel){var host=document.querySelector(sel);if(!host)return;host.querySelectorAll('i').forEach(function(el,k){el.classList.toggle('on',k<=Math.min(5,i));});});}
+
+function go(step){var fwd=STEPS.indexOf(step)>=STEPS.indexOf(cur),prev=document.querySelector('.step.show'),next=document.querySelector('.step[data-step="'+step+'"]');
+  cur=step;document.getElementById('chrome-t').textContent=LBL[step];
+  document.getElementById('chrome-s').textContent=step==='done'?'DONE':(pad2(STEPS.indexOf(step)+1)+' / 06');
+  if(step==='confirm')fillConfirm();if(step==='done'){fillDone();haptic(16);}
+  renderTrack();updateMbar();
+  if(anim)anim.cancel();if(prev&&prev!==next)prev.classList.remove('show');next.classList.add('show');
+  window.scrollTo({top:0,behavior:REDUCED?'auto':'smooth'});
+  var dir=fwd?34:-34;
+  anim=springTo(0,1,{response:.46,bounce:0},function(t){var x=(1-t)*dir,y=(1-t)*10,o=Math.min(1,t*1.2),b=(1-t)*6;
+    next.style.transform='translate('+x.toFixed(2)+'px,'+y.toFixed(2)+'px)';next.style.opacity=o.toFixed(3);next.style.filter=b>.3?('blur('+b.toFixed(2)+'px)'):'none';},
+    function(){next.style.transform='';next.style.opacity='';next.style.filter='';});}
+
+function popTick(card){var t=card.querySelector('.tick');if(!t||REDUCED)return;springTo(0,1,{response:.3,bounce:.4},function(v){t.style.transform='scale('+(0.3+0.7*v).toFixed(3)+')';},function(){t.style.transform='';});}
+function pickLen(el){document.querySelectorAll('[data-len]').forEach(function(c){c.classList.remove('sel');});el.classList.add('sel');
+  state.len=el.getAttribute('data-len');state.price=+el.getAttribute('data-price');
+  document.getElementById('cut-next').disabled=false;document.getElementById('cut-hint').textContent='Nice. Add extras or continue.';
+  document.getElementById('bgimg').style.backgroundImage="url('booking-assets/"+(state.price>400?'salon-real':'cutting')+".jpg')";
+  popTick(el);haptic(8);renderSummary();}
+function toggleAdd(el){el.classList.toggle('sel');var name=el.getAttribute('data-add').replace('&amp;','&'),price=+el.getAttribute('data-price');
+  var i=state.addons.indexOf(name);if(i>=0){state.addons.splice(i,1);state.addPrice-=price;}else{state.addons.push(name);state.addPrice+=price;haptic(6);}renderSummary();}
+function pickStyl(el){document.querySelectorAll('[data-styl]').forEach(function(c){c.classList.remove('sel');});el.classList.add('sel');
+  state.styl=el.getAttribute('data-styl');document.getElementById('styl-next').disabled=false;
+  document.getElementById('bgimg').style.backgroundImage="url('booking-assets/"+(state.styl==='Elena'?'elena':'eduard')+".jpg')";
+  popTick(el);haptic(8);renderSummary();}
+
+/* spotlight cursor tracking */
+document.addEventListener('pointermove',function(e){var c=e.target.closest?e.target.closest('.spot'):null;if(!c)return;var r=c.getBoundingClientRect();
+  c.style.setProperty('--mx',(e.clientX-r.left)+'px');c.style.setProperty('--my',(e.clientY-r.top)+'px');});
+/* magnetic primary buttons (fine pointers only - never on touch) */
+if(window.matchMedia && matchMedia('(pointer:fine)').matches)
+document.querySelectorAll('.mag').forEach(function(b){
+  b.addEventListener('pointermove',function(e){if(REDUCED)return;var r=b.getBoundingClientRect();var mx=(e.clientX-r.left-r.width/2)/r.width,my=(e.clientY-r.top-r.height/2)/r.height;
+    b.style.transform='translate('+(mx*10).toFixed(1)+'px,'+(my*7).toFixed(1)+'px)';});
+  b.addEventListener('pointerleave',function(){b.style.transform='';});});
+
+/* day strip momentum + rubber-band */
+(function(){var names=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],open={0:1,3:1,4:1,5:1,6:1};
+  var host=document.getElementById('days'),d=new Date(),added=0;
+  for(var k=0;k<20&&added<12;k++){var day=new Date(d.getTime()+k*86400000),wd=day.getDay();if(!open[wd])continue;added++;
+    var tier=(wd===6||wd===5)?'peak':(added<=2?'best':'std'),tl=tier==='peak'?'Peak':(tier==='best'?'Best':'Std');
+    var lbl=names[wd]+' '+day.getDate()+' '+months[day.getMonth()],el=document.createElement('button');el.className='day';el.setAttribute('data-day',lbl);
+    el.innerHTML='<div class="dw">'+names[wd]+'</div><div class="dd">'+day.getDate()+'</div><div class="dm">'+months[day.getMonth()]+'</div><div class="tier '+tier+'">'+tl+'</div>';
+    el.addEventListener('click',function(){document.querySelectorAll('.day').forEach(function(c){c.classList.remove('sel');});this.classList.add('sel');
+      state.day=this.getAttribute('data-day');document.getElementById('date-next').disabled=false;haptic(8);renderSummary();});
+    host.appendChild(el);}
+  var down=false,moved=false,sx=0,ss=0,vx=0,lx=0,lt=0,mom=null,pid=null;
+  function mx(){return host.scrollWidth-host.clientWidth;}function project(v,dr){dr=dr||.996;return(v/1000)*dr/(1-dr);}
+  host.addEventListener('pointerdown',function(e){down=true;moved=false;pid=e.pointerId;host.classList.add('grab');sx=e.clientX;ss=host.scrollLeft;lx=e.clientX;lt=performance.now();vx=0;if(mom)mom.cancel();});
+  host.addEventListener('pointermove',function(e){if(!down)return;var dx=e.clientX-sx;if(Math.abs(dx)>6&&!moved){moved=true;try{host.setPointerCapture(pid);}catch(_){}}var target=ss-dx,m=mx();
+    if(target<0)target*=.32;else if(target>m)target=m+(target-m)*.32;host.scrollLeft=target;var now=performance.now(),dt=now-lt;if(dt>0){vx=(e.clientX-lx)/dt*1000;lx=e.clientX;lt=now;}});
+  function rel(){if(!down)return;down=false;host.classList.remove('grab');var m=mx(),c=host.scrollLeft,dest=c-project(vx);if(dest<0)dest=0;if(dest>m)dest=m;
+    mom=springTo(c,dest,{response:.5,bounce:.18,velocity:-vx},function(x){host.scrollLeft=x;});}
+  host.addEventListener('pointerup',rel);host.addEventListener('pointercancel',rel);
+  host.addEventListener('click',function(e){if(moved){e.stopPropagation();e.preventDefault();}},true);})();
+
+/* time chips */
+(function(){var slots=['11:00','12:00','13:00','14:00','15:00','16:00'],taken={'12:00':1,'15:00':1},host=document.getElementById('times');
+  slots.forEach(function(t){var el=document.createElement('div');el.className='t'+(taken[t]?' taken':'');el.innerHTML=t+(taken[t]?'<small>booked</small>':'<small>60 min</small>');
+    if(!taken[t])el.addEventListener('click',function(){document.querySelectorAll('.t').forEach(function(c){c.classList.remove('sel');});this.classList.add('sel');state.time=t;document.getElementById('time-next').disabled=false;haptic(8);renderSummary();});
+    host.appendChild(el);});})();
+
+function fillConfirm(){document.getElementById('c-serv').textContent=state.len||'-';document.getElementById('c-add').textContent=state.addons.length?state.addons.join(', '):'None';
+  document.getElementById('c-styl').textContent=state.styl||'-';document.getElementById('c-when').textContent=(state.day||'-')+(state.time?(' · '+state.time):'');document.getElementById('c-total').textContent=money(total());}
+function applyPromo(){var v=document.getElementById('promo').value.trim(),m=document.getElementById('promo-msg');
+  if(!v){m.textContent='Enter a code first.';m.style.color='var(--bad)';return;}m.textContent='Sample preview: real codes are checked live at booking.';m.style.color='var(--ok)';haptic(6);}
+function fillDone(){document.getElementById('d-styl').textContent=state.styl||'-';document.getElementById('d-when').textContent=(state.day||'-')+(state.time?(' · '+state.time):'');document.getElementById('d-total').textContent=money(total());
+  var nm=(document.getElementById('nm').value||'').trim();if(nm)document.getElementById('done-sub').textContent='Thanks '+nm+'. We’ve emailed your confirmation and secure card link. See you at Badstuestraede 16.';}
+function restart(){state={len:null,price:0,addons:[],addPrice:0,styl:null,day:null,time:null};displayTotal=0;
+  document.querySelectorAll('.sel').forEach(function(e){e.classList.remove('sel');});['cut-next','styl-next','date-next','time-next'].forEach(function(id){document.getElementById(id).disabled=true;});
+  document.getElementById('promo').value='';document.getElementById('promo-msg').textContent='';document.getElementById('nm').value='';document.getElementById('em').value='';
+  document.getElementById('bgimg').style.backgroundImage="url('booking-assets/hero-night.jpg')";renderSummary();go('cut');}
+renderSummary();renderTrack();updateMbar();
+</script>
+</body>
+</html>

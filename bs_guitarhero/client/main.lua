@@ -33,9 +33,10 @@ end
 -- ---------------------------------------------------------------------------
 
 local state = {
-    playing = false,   -- animatia de chitara e activa
-    inGame  = false,   -- NUI-ul de joc e deschis
-    prop    = nil,
+    playing  = false,  -- animatia de chitara e activa
+    inGame   = false,  -- NUI-ul de joc e deschis
+    prop     = nil,
+    animMode = nil,    -- 'emote' | 'scenario' | 'anim' | 'none'
 }
 
 -- ---------------------------------------------------------------------------
@@ -91,38 +92,81 @@ local function removeGuitarProp()
     state.prop = nil
 end
 
-local function startGuitarAnim()
-    if not Config.PlayAnimation then return true end
+-- Resursele de emote-uri pe care le cunoastem. Daca una ruleaza, animatia de
+-- chitara e luata de la ea -- e cea pe care o vezi la `/e guitar` si are deja
+-- prop-ul pozitionat corect in mana.
+local EMOTE_RESOURCES = {
+    'dpemotes', 'rpemotes', 'rpemotes-reborn', 'dpemotes-reborn',
+    'nc-emotes', 'scully_emotemenu',
+}
 
-    if Config.ForwardGuitarToEmoteScript and Config.EmoteForwardCommand then
-        ExecuteCommand(('%s %s'):format(Config.EmoteForwardCommand, Config.EmoteKeyword))
+local function findEmoteResource()
+    if Config.Animation.emoteResource then
+        return Config.Animation.emoteResource
+    end
+    for _, res in ipairs(EMOTE_RESOURCES) do
+        if GetResourceState(res) == 'started' then return res end
+    end
+    return nil
+end
+
+local function startEmoteAnim()
+    if not findEmoteResource() then return false end
+    ExecuteCommand(('%s %s'):format(Config.EmoteForwardCommand or 'emote', Config.EmoteKeyword))
+    state.animMode = 'emote'
+    return true
+end
+
+local function startScenarioAnim()
+    local scenario = Config.Animation.scenario
+    if not scenario then return false end
+    TaskStartScenarioInPlace(PlayerPedId(), scenario, 0, true)
+    state.animMode = 'scenario'
+    return true
+end
+
+local function startOwnAnim()
+    local ped = PlayerPedId()
+    local a   = Config.Animation
+    if not loadDict(a.dict) then return false end
+    TaskPlayAnim(ped, a.dict, a.clip, 4.0, -4.0, -1, a.flag or 1, 0.0, false, false, false)
+    RemoveAnimDict(a.dict)
+    attachGuitarProp(ped)
+    state.animMode = 'anim'
+    return true
+end
+
+local function startGuitarAnim()
+    if not Config.PlayAnimation then
+        state.animMode = 'none'
         return true
     end
 
-    local ped = PlayerPedId()
-    local a   = Config.Animation
+    -- Ordinea de incercare, in functie de modul cerut. Daca modul preferat nu e
+    -- disponibil (de exemplu nu ai nicio resursa de emote-uri), coborim la
+    -- urmatorul, ca sa ramai mereu cu o chitara in mana.
+    local mode  = Config.Animation.mode or 'emote'
+    local chain =
+        mode == 'anim'     and { startOwnAnim, startScenarioAnim, startEmoteAnim } or
+        mode == 'scenario' and { startScenarioAnim, startEmoteAnim, startOwnAnim } or
+                               { startEmoteAnim, startScenarioAnim, startOwnAnim }
 
-    if loadDict(a.dict) then
-        TaskPlayAnim(ped, a.dict, a.clip, 4.0, -4.0, -1, a.flag or 1, 0.0, false, false, false)
-        RemoveAnimDict(a.dict)
-    elseif a.fallbackScenario then
-        TaskStartScenarioInPlace(ped, a.fallbackScenario, 0, true)
-    else
-        return false
+    for _, fn in ipairs(chain) do
+        if fn() then return true end
     end
-
-    attachGuitarProp(ped)
-    return true
+    return false
 end
 
 local function stopGuitarAnim()
     local ped = PlayerPedId()
-    if Config.ForwardGuitarToEmoteScript then
-        ExecuteCommand('e c') -- comanda standard de "cancel emote" din dpemotes/rpemotes
+    if state.animMode == 'emote' then
+        -- `c` e argumentul de anulare din dpemotes / rpemotes; el sterge si prop-ul
+        ExecuteCommand(('%s c'):format(Config.EmoteForwardCommand or 'emote'))
     else
         ClearPedTasks(ped)
     end
     removeGuitarProp()
+    state.animMode = nil
 end
 
 -- ---------------------------------------------------------------------------
@@ -243,6 +287,31 @@ CreateThread(function()
         end, false)
         TriggerEvent('chat:addSuggestion', '/' .. Config.StandaloneCommand,
             ('Porneste Rhythm Highway (%s - %s)'):format(Config.Song.title, Config.Song.artist), {})
+    end
+
+    -- Reglaj live al prop-ului, folositor doar la Config.Animation.mode = 'anim'.
+    if Config.Animation.tuneCommand then
+        RegisterCommand(Config.Animation.tuneCommand, function(_, args)
+            local a = Config.Animation
+            local n = {}
+            for i = 1, 6 do n[i] = tonumber(args[i]) end
+            a.propPos = vector3(n[1] or a.propPos.x, n[2] or a.propPos.y, n[3] or a.propPos.z)
+            a.propRot = vector3(n[4] or a.propRot.x, n[5] or a.propRot.y, n[6] or a.propRot.z)
+
+            if state.prop and DoesEntityExist(state.prop) then
+                local ped = PlayerPedId()
+                AttachEntityToEntity(state.prop, ped, GetPedBoneIndex(ped, a.propBone),
+                    a.propPos.x, a.propPos.y, a.propPos.z,
+                    a.propRot.x, a.propRot.y, a.propRot.z,
+                    true, true, false, true, 1, true)
+            end
+
+            print(('[bs_guitarhero] propPos = vector3(%.3f, %.3f, %.3f)  propRot = vector3(%.1f, %.1f, %.1f)')
+                :format(a.propPos.x, a.propPos.y, a.propPos.z, a.propRot.x, a.propRot.y, a.propRot.z))
+        end, false)
+        TriggerEvent('chat:addSuggestion', '/' .. Config.Animation.tuneCommand,
+            'Regleaza pozitia chitarei (doar la Config.Animation.mode = \'anim\')',
+            {{ name = 'x y z rx ry rz', help = 'ex: 0.11 -0.02 -0.05 0 0 0' }})
     end
 end)
 

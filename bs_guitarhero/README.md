@@ -44,7 +44,30 @@ ensure bs_guitarhero
 **Daca notele nu par sincronizate cu sunetul**, regleaza din `[` si `]` in timpul
 melodiei. Valoarea ramane salvata local, deci se regleaza o singura data.
 
-## 3. HUD-ul
+## 3. Animatia de chitara
+
+Implicit animatia e luata **de la resursa ta de emote-uri** — adica exact ce vezi
+cand dai `/e guitar` normal, cu chitara tinuta corect in mana. Noi doar pornim
+`/emote guitar` la ea si o anulam cu `/emote c` la final.
+
+`Config.Animation.mode`:
+
+| mod | ce face |
+|---|---|
+| `'emote'` (implicit) | ia animatia de la `dpemotes` / `rpemotes` / etc. |
+| `'scenario'` | scenariul `WORLD_HUMAN_MUSICIAN` din GTA — jocul spawneaza singur chitara |
+| `'anim'` | dictionarul si prop-ul din config, atasate de noi |
+
+Daca modul ales nu e disponibil (de exemplu n-ai nicio resursa de emote-uri) se
+coboara automat la urmatorul, deci ramai mereu cu o chitara in mana.
+
+Resursele de emote-uri sunt detectate singure. Daca folosesti alta decat cele
+cunoscute, pune-i numele in `Config.Animation.emoteResource`.
+
+Doar la `mode = 'anim'`: `/guitarprop x y z rx ry rz` muta prop-ul pe loc si scrie
+valorile in consola (F8), ca sa le poti copia in config.
+
+## 4. HUD-ul
 
 Layout-ul, culorile, geometria (perspectiva 860px / `rotateX(58deg)`), hexagoanele
 receptoare si constantele de timing sunt cele din designul
@@ -58,6 +81,15 @@ acelasi stil de chip — jocul n-are nivele de dificultate.
 Nimic din pagina nu deseneaza un fundal opac: ~90% din suprafata e complet
 transparenta, restul sunt elementele HUD-ului.
 
+Doua abateri de la design, ambele pentru ca browserul din FiveM (CEF) nu le
+randeaza corect:
+
+* haloul receptorilor se stinge in nuanta benzii cu alpha 0, nu in `rgba(0,0,0,0)`
+  — CEF interpoleaza gradientul prin negru si iesea un chenar intunecat in jurul
+  fiecarui hexagon;
+* `backdrop-filter: blur()` de pe hexagoane e scos — in CEF poate fi randat ca
+  dreptunghi opac peste conturul hexagonal.
+
 Reglabil din `Config.Hud`:
 
 | camp | ce face |
@@ -68,7 +100,7 @@ Reglabil din `Config.Hud`:
 | `opacity` | transparenta intregului HUD |
 | `hints` | randul cu ESC / P / calibrare / volum |
 
-## 4. Cum functioneaza sincronizarea
+## 5. Cum functioneaza sincronizarea
 
 Chart-ul e generat **din tab-ul Guitar Pro**, nu scris de mana, si aliniat pe
 inregistrare masurand-o:
@@ -97,7 +129,7 @@ Ceasul jocului nu e un timer separat: e derivat direct din `audio.currentTime`.
 Cand melodia incetineste (penalizare), notele incetinesc odata cu ea si raman
 sincronizate — fara nicio corectie manuala.
 
-## 5. De unde vin notele
+## 6. De unde vin notele
 
 Partea ta e **chitara ritmica distorsionata** — pista *Richard Kruspe-Bernstein,
 Guitar 1*, cea completa (Guitar 2 o dubleaza, dar tace in breakdown).
@@ -130,7 +162,7 @@ Cum se imparte pe sectiuni:
 Riff-ul principal chiar e format din doua acorduri, deci in verse joci pe doua
 culoare; refrenul si breakdown-ul deschid toate patru.
 
-## 6. Incetinire si esec
+## 7. Incetinire si esec
 
 Bara **ROCK METER** porneste de la 65%.
 
@@ -145,7 +177,7 @@ La **0%** melodia esueaza.
 Ai nevoie de aproximativ **62% acuratete** ca sa supravietuiesti pana la final.
 Se regleaza din `Config.Meter`.
 
-## 7. Recompense (ESX)
+## 8. Recompense (ESX)
 
 Se platesc **doar de pe server**, dupa validare:
 
@@ -157,7 +189,7 @@ Se platesc **doar de pe server**, dupa validare:
 
 Formula: `base + bonus × acuratete (+ fullCombo)`.
 
-## 8. Integrare din alte resurse
+## 9. Integrare din alte resurse
 
 ```lua
 -- client
@@ -169,7 +201,7 @@ local activ = exports['bs_guitarhero']:IsPlaying()
 TriggerClientEvent('bs_guitarhero:start', src)
 ```
 
-## 9. Alta melodie
+## 10. Alta melodie
 
 1. Pune fisierul in `html/audio/`. Daca are intro de taiat:
    `python3 tools/trim_mp3.py sursa.mp3 iesire.mp3 <start_sec> [<end_sec>]`
@@ -188,7 +220,7 @@ Formatul chart-ului:
 `t` = secunda in mp3, `l` = culoar 0–3 (`← ↓ ↑ →`), `d` = durata (peste 0.42 s se
 deseneaza coada; se joaca tot prin apasare simpla), `s` = subdiviziune.
 
-## 10. De stiut
+## 11. De stiut
 
 * HUD-ul ia focus de tastatura cat timp joci (`SetNuiFocus`), deci nu te poti
   misca in acest timp — sagetile merg in joc, nu in GTA. Jocul iese singur daca
@@ -200,7 +232,7 @@ deseneaza coada; se joaca tot prin apasare simpla), `s` = subdiviziune.
   ca ai dreptul sa le distribui pe serverul tau. Fonturile sunt OFL, se pot
   redistribui liber.
 
-## 11. Structura
+## 12. Structura
 
 ```
 bs_guitarhero/

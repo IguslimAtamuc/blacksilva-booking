@@ -24,19 +24,36 @@ Config.StandaloneCommand = 'guitarhero'
 
 Config.PlayAnimation = true
 
--- Daca e true, animatia NU e jucata de noi ci lasam resursa de emote-uri
--- sa ruleze `/emote guitar`.
-Config.ForwardGuitarToEmoteScript = false
-
 Config.Animation = {
-    dict      = 'amb@world_human_musician@guitar@male@base',
-    clip      = 'base',
-    flag      = 1,              -- 1 = loop
-    prop      = 'prop_acc_guitar_01',
-    propBone  = 28422,
-    propPos   = vector3(0.11, -0.02, -0.05),
-    propRot   = vector3(0.0, 0.0, 0.0),
-    fallbackScenario = 'WORLD_HUMAN_MUSICIAN',
+    -- De unde vine animatia de chitara:
+    --   'emote'    - o ia de la resursa ta de emote-uri (`/emote guitar`). Asta e
+    --                exact animatia si prop-ul pe care le vezi cand dai `/e guitar`
+    --                normal, deci chitara e tinuta corect in mana. IMPLICIT.
+    --   'scenario' - scenariul din GTA. Jocul spawneaza singur chitara.
+    --   'anim'     - dictionarul si prop-ul de mai jos, atasate de noi.
+    -- Daca modul ales nu e disponibil se coboara automat la urmatorul, ca sa
+    -- ramai mereu cu o chitara in mana.
+    mode = 'emote',
+
+    -- Lasa nil ca sa detectam singuri (dpemotes, rpemotes, etc.).
+    -- Pune numele resursei daca folosesti alta si vrei sa fortezi modul 'emote'.
+    emoteResource = nil,
+
+    -- pentru mode = 'scenario'
+    scenario = 'WORLD_HUMAN_MUSICIAN',
+
+    -- pentru mode = 'anim'
+    dict     = 'amb@world_human_musician@guitar@male@base',
+    clip     = 'base',
+    flag     = 1,               -- 1 = loop
+    prop     = 'prop_acc_guitar_01',
+    propBone = 28422,           -- 28422 = mana dreapta
+    propPos  = vector3(0.11, -0.02, -0.05),
+    propRot  = vector3(0.0, 0.0, 0.0),
+
+    -- Comanda `/guitarprop x y z rx ry rz` pentru reglat prop-ul in joc, la mode
+    -- = 'anim'. Scrie valorile in consola (F8) ca sa le poti copia aici.
+    tuneCommand = 'guitarprop',
 }
 
 -- ==========================================================================

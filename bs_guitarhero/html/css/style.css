@@ -9,6 +9,7 @@
   --string:#79d6ff; --stringGlow:#79d6ff66;
   --surface:hsl(98 70% 50% / .084);
   --hit:hsl(98 95% 60%); --hitGlow:hsl(98 95% 60% / .74);
+  --hitGlow0:hsl(98 95% 60% / 0);
   --face:hsl(98 95% 52%); --faceTop:hsl(98 98% 72%);
   --edge:hsl(98 100% 84% / .9);
   --tail:hsl(98 92% 48% / .55); --tailTop:hsl(98 96% 66% / .8);
@@ -18,6 +19,7 @@
   --string:#9cc4ff; --stringGlow:#9cc4ff66;
   --surface:hsl(77.33 70% 50% / .084);
   --hit:hsl(77.33 95% 60%); --hitGlow:hsl(77.33 95% 60% / .74);
+  --hitGlow0:hsl(77.33 95% 60% / 0);
   --face:hsl(77.33 95% 52%); --faceTop:hsl(77.33 98% 72%);
   --edge:hsl(77.33 100% 84% / .9);
   --tail:hsl(77.33 92% 48% / .55); --tailTop:hsl(77.33 96% 66% / .8);
@@ -27,6 +29,7 @@
   --string:#bfb4ff; --stringGlow:#bfb4ff66;
   --surface:hsl(56.67 70% 50% / .084);
   --hit:hsl(56.67 95% 60%); --hitGlow:hsl(56.67 95% 60% / .74);
+  --hitGlow0:hsl(56.67 95% 60% / 0);
   --face:hsl(56.67 95% 52%); --faceTop:hsl(56.67 98% 72%);
   --edge:hsl(56.67 100% 84% / .9);
   --tail:hsl(56.67 92% 48% / .55); --tailTop:hsl(56.67 96% 66% / .8);
@@ -36,6 +39,7 @@
   --string:#e0a9f0; --stringGlow:#e0a9f066;
   --surface:hsl(36 70% 50% / .084);
   --hit:hsl(36 95% 60%); --hitGlow:hsl(36 95% 60% / .74);
+  --hitGlow0:hsl(36 95% 60% / 0);
   --face:hsl(36 95% 52%); --faceTop:hsl(36 98% 72%);
   --edge:hsl(36 100% 84% / .9);
   --tail:hsl(36 92% 48% / .55); --tailTop:hsl(36 96% 66% / .8);
@@ -65,6 +69,7 @@ html,body{
 .hidden{display:none !important}
 
 #root{position:fixed;inset:0;pointer-events:none;background:transparent}
+audio{display:none}
 
 .stage{
   position:absolute;inset:0;
@@ -244,7 +249,9 @@ html,body{
 }
 .rec .glow{
   position:absolute;inset:-14px;opacity:0;
-  background:radial-gradient(circle,var(--hitGlow) 0%,rgba(0,0,0,0) 70%);
+  /* stopul final trebuie sa fie aceeasi nuanta cu alpha 0. Cu rgba(0,0,0,0)
+     CEF interpoleaza prin negru si iese un chenar intunecat in jurul hexagonului. */
+  background:radial-gradient(circle,var(--hitGlow) 0%,var(--hitGlow0) 70%);
   will-change:opacity;
 }
 .rec .ring{
@@ -255,7 +262,7 @@ html,body{
 .rec .core{
   position:absolute;inset:3px;
   clip-path:polygon(50% 0,100% 26%,100% 74%,50% 100%,0 74%,0 26%);
-  background:rgba(10,12,18,.62);backdrop-filter:blur(3px);
+  background:rgba(10,12,18,.62);
 }
 .rec .fill{
   position:absolute;inset:3px;

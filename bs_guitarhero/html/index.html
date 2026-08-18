@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rhythm Highway HUD</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="root" class="hidden">
+
+  <canvas id="highway"></canvas>
+
+  <!-- ================= HUD ================= -->
+  <div class="hud">
+
+    <header class="hud-top">
+      <div class="track-card">
+        <div class="track-eyebrow">NOW PLAYING</div>
+        <div class="track-title" id="songTitle">Faint</div>
+        <div class="track-meta">
+          <span id="songArtist">Linkin Park</span>
+          <span class="dot"></span>
+          <span id="songAlbum">Meteora</span>
+        </div>
+        <div class="section-chip" id="sectionChip">INTRO</div>
+      </div>
+
+      <div class="score-card">
+        <div class="score-eyebrow">SCORE</div>
+        <div class="score-value" id="scoreValue">0</div>
+        <div class="score-sub">
+          <span class="mult" id="multValue">x1</span>
+          <span class="acc" id="accValue">100.0%</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="meter-rail">
+      <div class="meter-label">ROCK<br>METER</div>
+      <div class="meter-shell">
+        <div class="meter-zone-fail"></div>
+        <div class="meter-fill" id="meterFill"></div>
+        <div class="meter-tick" id="meterSlowTick"></div>
+      </div>
+      <div class="meter-readout" id="meterReadout">55%</div>
+    </div>
+
+    <div class="rate-badge hidden" id="rateBadge">
+      <span class="rate-icon"></span><span id="rateText">x1.00 SPEED</span>
+    </div>
+
+    <div class="combo-stack" id="comboStack">
+      <div class="combo-value" id="comboValue">0</div>
+      <div class="combo-label">STREAK</div>
+    </div>
+
+    <div class="judge-flash" id="judgeFlash"></div>
+
+    <footer class="hud-bottom">
+      <div class="keys" id="keysRow"></div>
+      <div class="hints">
+        <span><kbd>ESC</kbd> iesi</span>
+        <span><kbd>P</kbd> pauza</span>
+        <span><kbd>[</kbd><kbd>]</kbd> calibrare <b id="offsetText">0 ms</b></span>
+        <span><kbd>-</kbd><kbd>+</kbd> volum <b id="volText">55%</b></span>
+      </div>
+    </footer>
+
+    <div class="progress-rail"><div class="progress-fill" id="progressFill"></div></div>
+  </div>
+
+  <!-- ================= OVERLAYS ================= -->
+  <div class="overlay" id="overlay">
+
+    <!-- READY -->
+    <div class="panel" id="panelReady">
+      <div class="panel-kicker">RHYTHM HIGHWAY</div>
+      <h1 class="panel-title">FAINT</h1>
+      <div class="panel-sub">Linkin Park &mdash; Meteora &middot; 135 BPM &middot; <span id="readyNotes">0</span> note</div>
+
+      <div class="diff-row" id="diffRow"></div>
+
+      <div class="panel-keys" id="readyKeys"></div>
+
+      <div class="panel-cta">Apasa <kbd>SPACE</kbd> ca sa incepi &middot; <kbd>&#8592;</kbd><kbd>&#8594;</kbd> dificultate &middot; <kbd>ESC</kbd> iesi</div>
+    </div>
+
+    <!-- COUNTDOWN -->
+    <div class="countdown" id="countdown"></div>
+
+    <!-- PAUSE -->
+    <div class="panel" id="panelPause">
+      <div class="panel-kicker">PAUZA</div>
+      <h1 class="panel-title">PAUSED</h1>
+      <div class="panel-cta">Apasa <kbd>P</kbd> ca sa continui &middot; <kbd>ESC</kbd> ca sa renunti</div>
+    </div>
+
+    <!-- RESULTS -->
+    <div class="panel panel-wide" id="panelResults">
+      <div class="panel-kicker" id="resKicker">SONG COMPLETE</div>
+      <h1 class="panel-title" id="resTitle">FAINT</h1>
+      <div class="stars" id="resStars"></div>
+
+      <div class="res-grid">
+        <div class="res-cell"><span class="res-k">SCOR</span><span class="res-v" id="resScore">0</span></div>
+        <div class="res-cell"><span class="res-k">ACURATETE</span><span class="res-v" id="resAcc">0%</span></div>
+        <div class="res-cell"><span class="res-k">STREAK MAX</span><span class="res-v" id="resCombo">0</span></div>
+        <div class="res-cell"><span class="res-k">NOTE</span><span class="res-v" id="resNotes">0/0</span></div>
+      </div>
+
+      <div class="res-breakdown" id="resBreak"></div>
+      <div class="panel-cta">Apasa <kbd>SPACE</kbd> pentru inca o tura &middot; <kbd>ESC</kbd> ca sa lasi chitara jos</div>
+    </div>
+
+    <!-- LOADING -->
+    <div class="panel" id="panelLoading">
+      <div class="panel-kicker">SE INCARCA</div>
+      <h1 class="panel-title">BUFFERING&hellip;</h1>
+      <div class="loadbar"><div class="loadbar-fill" id="loadFill"></div></div>
+    </div>
+
+  </div>
+
+  <div class="fail-veil" id="failVeil"></div>
+  <div class="scanlines"></div>
+</div>
+
+<audio id="track" preload="auto"></audio>
+<script src="js/game.js"></script>
+</body>
+</html>

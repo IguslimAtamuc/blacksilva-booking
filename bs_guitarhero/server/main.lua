@@ -19,33 +19,15 @@ CreateThread(function()
     end
 end)
 
--- sesiuni active: [src] = { songId, difficulty, startedAt }
+-- sesiuni active: [src] = { songId, startedAt }
 local sessions = {}
 -- ultima plata: [identifier] = os.time()
 local lastReward = {}
 
-local function difficultyMultiplier(id)
-    local m = Config.Rewards.difficultyMult or {}
-    return tonumber(m[id]) or 1.0
-end
-
-local function isKnownDifficulty(id)
-    for _, d in ipairs(Config.Difficulties) do
-        if d.id == id then return true end
-    end
-    return false
-end
-
-RegisterNetEvent('bs_guitarhero:begin', function(songId, difficulty)
+RegisterNetEvent('bs_guitarhero:begin', function(songId)
     local src = source
     if songId ~= Config.Song.id then return end
-    if not isKnownDifficulty(difficulty) then difficulty = Config.DefaultDifficulty end
-
-    sessions[src] = {
-        songId     = songId,
-        difficulty = difficulty,
-        startedAt  = os.time(),
-    }
+    sessions[src] = { songId = songId, startedAt = os.time() }
 end)
 
 RegisterNetEvent('bs_guitarhero:abort', function()
@@ -112,15 +94,14 @@ RegisterNetEvent('bs_guitarhero:finish', function(payload)
     if notesHit == notesTotal then
         amount = amount + (Config.Rewards.fullCombo or 0)
     end
-    amount = math.floor(amount * difficultyMultiplier(session.difficulty))
     if amount <= 0 then return end
 
     lastReward[identifier] = now
     xPlayer.addAccountMoney(Config.Rewards.account or 'money', amount)
     TriggerClientEvent('esx:showNotification', src, Config.Locale.reward:format(amount))
 
-    print(('[bs_guitarhero] %s a terminat %s (%s) - scor %d, acuratete %.1f%%, plata $%d')
-        :format(GetPlayerName(src) or src, session.songId, session.difficulty, score, accuracy * 100, amount))
+    print(('[bs_guitarhero] %s a terminat %s - scor %d, acuratete %.1f%%, plata $%d')
+        :format(GetPlayerName(src) or src, session.songId, score, accuracy * 100, amount))
 end)
 
 AddEventHandler('playerDropped', function()

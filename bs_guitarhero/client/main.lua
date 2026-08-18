@@ -33,10 +33,9 @@ end
 -- ---------------------------------------------------------------------------
 
 local state = {
-    playing   = false,   -- animatia de chitara e activa
-    inGame    = false,   -- NUI-ul de joc e deschis
-    prop      = nil,
-    difficulty= Config.DefaultDifficulty,
+    playing = false,   -- animatia de chitara e activa
+    inGame  = false,   -- NUI-ul de joc e deschis
+    prop    = nil,
 }
 
 -- ---------------------------------------------------------------------------
@@ -132,15 +131,11 @@ end
 
 local function buildPayload()
     return {
-        song        = Config.Song,
-        keys        = Config.Keys,
-        altKeys     = Config.AltKeys,
-        difficulties= Config.Difficulties,
-        difficulty  = state.difficulty,
-        meter       = Config.Meter,
-        travel      = Config.NoteTravelSeconds,
-        offsetMs    = Config.AudioOffsetMs,
-        volume      = Config.Volume,
+        song     = Config.Song,
+        hud      = Config.Hud,
+        meter    = Config.Meter,
+        offsetMs = Config.AudioOffsetMs,
+        volume   = Config.Volume,
     }
 end
 
@@ -181,7 +176,7 @@ function StopGuitarHero(silent)
     if not silent then notify(Config.Locale.stopped) end
 end
 
-function StartGuitarHero(difficulty)
+function StartGuitarHero()
     if state.playing then
         notify(Config.Locale.already_playing)
         return
@@ -193,14 +188,13 @@ function StartGuitarHero(difficulty)
         return
     end
 
-    if difficulty then state.difficulty = difficulty end
-
     if not startGuitarAnim() then
         notify(Config.Locale.dead)
         return
     end
 
     state.playing = true
+    TriggerServerEvent('bs_guitarhero:begin', Config.Song.id)
     openGame()
     notify(Config.Locale.started)
 end
@@ -209,7 +203,7 @@ exports('StartGuitarHero', StartGuitarHero)
 exports('StopGuitarHero',  StopGuitarHero)
 exports('IsPlaying', function() return state.playing end)
 
-RegisterNetEvent('bs_guitarhero:start', function(difficulty) StartGuitarHero(difficulty) end)
+RegisterNetEvent('bs_guitarhero:start', function() StartGuitarHero() end)
 RegisterNetEvent('bs_guitarhero:stop',  function() StopGuitarHero() end)
 
 -- ---------------------------------------------------------------------------
@@ -220,7 +214,7 @@ local function handleEmoteCommand(_, args, _)
     local first = args[1] and tostring(args[1]):lower() or nil
 
     if first == Config.EmoteKeyword then
-        StartGuitarHero(args[2])
+        StartGuitarHero()
         return
     end
 
@@ -244,12 +238,11 @@ CreateThread(function()
     end
 
     if Config.StandaloneCommand then
-        RegisterCommand(Config.StandaloneCommand, function(_, args)
-            StartGuitarHero(args[1])
+        RegisterCommand(Config.StandaloneCommand, function()
+            StartGuitarHero()
         end, false)
         TriggerEvent('chat:addSuggestion', '/' .. Config.StandaloneCommand,
-            'Porneste Rhythm Highway (Faint - Linkin Park)',
-            {{ name = 'dificultate', help = 'easy | normal | hard | expert' }})
+            ('Porneste Rhythm Highway (%s - %s)'):format(Config.Song.title, Config.Song.artist), {})
     end
 end)
 
@@ -263,7 +256,7 @@ RegisterNUICallback('exit', function(_, cb)
 end)
 
 RegisterNUICallback('finished', function(data, cb)
-    -- data: { failed, score, accuracy, maxCombo, notesHit, notesTotal, difficulty }
+    -- data: { failed, score, accuracy, maxCombo, notesHit, notesTotal }
     TriggerServerEvent('bs_guitarhero:finish', {
         songId     = Config.Song.id,
         failed     = data.failed and true or false,
@@ -272,7 +265,6 @@ RegisterNUICallback('finished', function(data, cb)
         maxCombo   = tonumber(data.maxCombo) or 0,
         notesHit   = tonumber(data.notesHit) or 0,
         notesTotal = tonumber(data.notesTotal) or 0,
-        difficulty = tostring(data.difficulty or state.difficulty),
     })
 
     if data.failed then
@@ -286,16 +278,10 @@ RegisterNUICallback('finished', function(data, cb)
     cb('ok')
 end)
 
-RegisterNUICallback('setDifficulty', function(data, cb)
-    if data and data.difficulty then state.difficulty = tostring(data.difficulty) end
-    cb('ok')
-end)
-
 -- NUI-ul anunta ca a inceput efectiv o runda (si la retry) -> deschidem o sesiune
 -- noua pe server, ca validarea de timp sa fie corecta.
-RegisterNUICallback('runStarted', function(data, cb)
-    if data and data.difficulty then state.difficulty = tostring(data.difficulty) end
-    TriggerServerEvent('bs_guitarhero:begin', Config.Song.id, state.difficulty)
+RegisterNUICallback('runStarted', function(_, cb)
+    TriggerServerEvent('bs_guitarhero:begin', Config.Song.id)
     cb('ok')
 end)
 

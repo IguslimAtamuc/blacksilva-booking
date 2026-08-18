@@ -4,7 +4,7 @@ lua54 'yes'
 
 name        'bs_guitarhero'
 author      'BlackSilva'
-description 'Rhythm Highway HUD - joc de ritm sincronizat cu melodia, pornit din emote-ul de chitara (ESX)'
+description 'Rhythm Highway HUD - minijoc de ritm overlay, sincronizat pe melodie, pornit din /e guitar (ESX)'
 version     '1.0.0'
 
 shared_script 'config.lua'
@@ -17,7 +17,9 @@ ui_page 'html/index.html'
 files {
     'html/index.html',
     'html/css/style.css',
+    'html/css/fonts.css',
+    'html/fonts/*.woff2',
     'html/js/game.js',
-    'html/data/faint.json',
-    'html/audio/faint.mp3',
+    'html/data/ichwill.json',
+    'html/audio/ichwill.mp3',
 }

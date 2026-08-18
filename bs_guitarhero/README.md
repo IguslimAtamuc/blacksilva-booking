@@ -1,7 +1,14 @@
 # bs_guitarhero — Rhythm Highway HUD
 
-Minijoc de ritm pentru **FiveM / ESX**, sincronizat pe *Ich Will — Rammstein* (Mutter).
-`/e guitar` porneste animatia de chitara, apoi direct **3 · 2 · 1** si melodia.
+Minijoc de ritm pentru **FiveM / ESX**. `/e guitar` porneste animatia de chitara,
+apoi direct **3 · 2 · 1** si melodia.
+
+Melodii incluse:
+
+| id | melodie |
+|---|---|
+| `ichwill` | Ich Will — Rammstein |
+| `pahare` | O Mie De Pahare — White Mahala |
 
 HUD-ul e un **overlay complet transparent** — se vede jocul si personajul prin el.
 Se joaca din **cele 4 sageti**: `←` `↓` `↑` `→`.
@@ -28,9 +35,13 @@ ensure bs_guitarhero
 
 | Comanda | Efect |
 |---|---|
-| `/e guitar` | animatie de chitara + minijoc, pornire directa |
-| `/guitarhero` | acelasi lucru, fara resursa de emote-uri |
+| `/e guitar` | animatie de chitara + minijoc, cu o melodie la intamplare |
+| `/e guitar pahare` | o melodie anume (vezi id-urile de mai sus) |
+| `/guitarhero [id]` | acelasi lucru, fara resursa de emote-uri |
 | `/e <orice altceva>` | pleaca normal la `dpemotes` / `rpemotes` |
+
+`Config.SongPick = 'first'` face ca `/e guitar` sa porneasca mereu prima melodie
+din lista in loc de una la intamplare.
 
 | Tasta | Actiune |
 |---|---|
@@ -102,8 +113,17 @@ Reglabil din `Config.Hud`:
 
 ## 5. Cum functioneaza sincronizarea
 
-Chart-ul e generat **din tab-ul Guitar Pro**, nu scris de mana, si aliniat pe
-inregistrare masurand-o:
+Ceasul jocului nu e un timer separat: e derivat direct din `audio.currentTime`.
+Cand melodia incetineste (penalizare), notele incetinesc odata cu ea si raman
+sincronizate — fara nicio corectie manuala.
+
+Cele doua melodii sunt facute prin metode diferite, pentru ca sunt inregistrari
+diferite.
+
+### Ich Will — din tab, tempo fix
+
+Chart-ul e generat **din tab-ul Guitar Pro** si aliniat pe inregistrare
+masurand-o:
 
 | | |
 |---|---|
@@ -125,11 +145,34 @@ inregistrare, nu ghicita:
 Amandoua cad exact unde le pune tab-ul la 127.99 BPM. Ultima masura se termina la
 209.7 s, iar fisierul are 211.7 s.
 
-Ceasul jocului nu e un timer separat: e derivat direct din `audio.currentTime`.
-Cand melodia incetineste (penalizare), notele incetinesc odata cu ea si raman
-sincronizate — fara nicio corectie manuala.
+### O Mie De Pahare — din audio, tempo variabil
 
-## 6. De unde vin notele
+Aici n-a existat tab Guitar Pro, doar o foaie de acorduri fara timpi. Si, mai
+important, **piesa nu are tempo constant**: variaza intre **116 si 144 BPM**,
+accelerand spre final. Chiar foaia de acorduri o spune — *„speed up, slow down,
+speed up"*.
+
+Cu o grila fixa notele ies din sincron dupa vreo 30 de secunde. Verificat pe
+felii de 20 s, o grila fixa cade pe evenimentele din audio doar in **4 din 9**
+felii, cu deriva de 222 ms pe 80 de secunde.
+
+Asa ca bataile vin din **beat tracking cu programare dinamica**
+(`tools/beat_track.py`), care urmareste tempo-ul in loc sa-l presupuna. Aceeasi
+verificare da **9 din 9** felii, cu raport 1.8–3.4x. Chart-ul memoreaza lista de
+batai reale, iar liniile de masura din HUD merg pe ele, nu pe o grila.
+
+Notele cad pe optimile pe care se aude efectiv o lovitura, deci densitatea
+urmeaza energia piesei (1.4–2.9 note/s dupa sectiune). Sunt 409 note.
+
+**Ce nu e exact aici:** culoarele nu sunt acordurile reale. Am incercat sa scot
+progresia din audio in trei feluri (chromagram, registrul de bas, si Viterbi pe
+grila corecta) — cam jumatate din masuri ies sigure, cealalta jumatate e
+ghiceala, pentru ca mixul e prea incarcat. Culoarele urmeaza in schimb accentele
+de strumming si se rotesc pe fraze de 4 masuri. Ritmul e corect, doar sageata
+aleasa nu corespunde acordului. Daca apare un tab Guitar Pro pentru piesa,
+se poate reface exact ca la Ich Will.
+
+## 6. De unde vin notele (Ich Will)
 
 Partea ta e **chitara ritmica distorsionata** — pista *Richard Kruspe-Bernstein,
 Guitar 1*, cea completa (Guitar 2 o dubleaza, dar tace in breakdown).
@@ -205,8 +248,10 @@ TriggerClientEvent('bs_guitarhero:start', src)
 
 1. Pune fisierul in `html/audio/`. Daca are intro de taiat:
    `python3 tools/trim_mp3.py sursa.mp3 iesire.mp3 <start_sec> [<end_sec>]`
-2. Genereaza chart-ul: vezi `tools/README.md`.
-3. Actualizeaza `Config.Song` si `files{}` din `fxmanifest.lua`.
+2. Genereaza chart-ul: `tools/build_chart.py` daca ai tab Guitar Pro,
+   `tools/build_chart_audio.py` daca ai doar mp3. Vezi `tools/README.md`.
+3. Adauga o intrare in `Config.Songs` si doua linii in `files{}` din
+   `fxmanifest.lua`.
 
 Formatul chart-ului:
 
@@ -225,7 +270,7 @@ deseneaza coada; se joaca tot prin apasare simpla), `s` = subdiviziune.
 * HUD-ul ia focus de tastatura cat timp joci (`SetNuiFocus`), deci nu te poti
   misca in acest timp — sagetile merg in joc, nu in GTA. Jocul iese singur daca
   mori, urci in masina sau intri in ragdoll.
-* `html/audio/ichwill.mp3` (4.8 MB) se descarca o singura data de fiecare client.
+* Fisierele audio (4.8 MB + 3.9 MB) se descarca o singura data de fiecare client.
 * Melodia se aude **doar la jucatorul care canta**. Sincronizarea audio catre
   jucatorii din jur nu e inclusa.
 * Fisierul audio si tab-ul sunt materialul pe care l-ai furnizat tu; asigura-te
@@ -241,7 +286,9 @@ bs_guitarhero/
 ├── client/main.lua          animatie, comenzi, NUI, watchdog
 ├── server/main.lua          validare scor + recompense ESX
 ├── tools/
-│   ├── build_chart.py       chart din .gp4
+│   ├── build_chart.py       chart din tab Guitar Pro (tempo fix)
+│   ├── build_chart_audio.py chart doar din audio (tempo variabil)
+│   ├── beat_track.py        beat tracking pentru piese cu tempo variabil
 │   ├── trim_mp3.py          taiere mp3 fara re-encodare
 │   └── rammstein-ich_will.gp4
 └── html/
@@ -250,6 +297,6 @@ bs_guitarhero/
     ├── css/fonts.css
     ├── fonts/*.woff2        Chakra Petch + JetBrains Mono (OFL)
     ├── js/game.js           motorul de joc
-    ├── data/ichwill.json    chart generat din tab
-    └── audio/ichwill.mp3
+    ├── data/*.json          chart-uri
+    └── audio/*.mp3
 ```

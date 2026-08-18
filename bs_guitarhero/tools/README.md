@@ -40,3 +40,23 @@ python3 trim_mp3.py sursa.mp3 iesire.mp3 33.0 244.7
 Argumentele sunt secunda de start si (optional) secunda de final. Scriptul scrie
 in consola secunda exacta a primului cadru pastrat — aia e valoarea care se scade
 din `OFFSET` in `build_chart.py`.
+
+## build_chart_audio.py
+
+Chart doar din inregistrare, cand nu exista tab Guitar Pro. Folosit pentru
+*O Mie De Pahare*.
+
+Notele cad pe optimile pe care se aude efectiv o lovitura, iar bataile vin din
+`beat_track.py`, deci merg si pe piese cu tempo variabil. Culoarele urmeaza
+accentele si se rotesc pe fraze de 4 masuri — **nu** sunt acordurile reale.
+
+Constante de reglat in capul fisierului: `TRIM` (cat s-a taiat din original),
+`START` / `END`, si percentilele `FLOOR` / `OFFBEAT` care decid cat de dese ies
+notele.
+
+## beat_track.py
+
+Beat tracking cu programare dinamica (stil Ellis 2007). Il folosesti cand
+autocorelatia da un tempo care nu se lipeste de toata piesa — semn ca
+inregistrarea accelereaza sau incetineste. Scrie `beats3.npy`, lista de batai in
+secunde, pe care `build_chart_audio.py` o ia mai departe.

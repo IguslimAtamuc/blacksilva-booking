@@ -24,9 +24,14 @@ local sessions = {}
 -- ultima plata: [identifier] = os.time()
 local lastReward = {}
 
+local SONGS = {}
+CreateThread(function()
+    for _, sng in ipairs(Config.Songs) do SONGS[sng.id] = sng end
+end)
+
 RegisterNetEvent('bs_guitarhero:begin', function(songId)
     local src = source
-    if songId ~= Config.Song.id then return end
+    if type(songId) ~= 'string' or not SONGS[songId] then return end
     sessions[src] = { songId = songId, startedAt = os.time() }
 end)
 
@@ -71,8 +76,10 @@ RegisterNetEvent('bs_guitarhero:finish', function(payload)
     if failed then return end
 
     -- melodia trebuie sa fi rulat cel putin ~85% din durata reala
+    local song = SONGS[session.songId]
+    if not song then return end
     local elapsed = os.time() - session.startedAt
-    if elapsed < math.floor(Config.Song.duration * 0.85) then
+    if elapsed < math.floor(song.duration * 0.85) then
         print(('[bs_guitarhero] finish prea rapid de la %s (%ds)'):format(GetPlayerName(src) or src, elapsed))
         return
     end

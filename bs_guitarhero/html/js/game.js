@@ -59,7 +59,7 @@ var S = {
   offsetMs: 0, volume: 0.55,
   down: [0, 0, 0, 0], flash: [0, 0, 0, 0], missFlash: [0, 0, 0, 0],
   judgeAge: 99, sectionIdx: -1, leadStart: 0, lastCd: null,
-  H: 400, failAt: 0
+  H: 400, failAt: 0, bi: 0
 };
 
 /* ------------------------------------------------------------------- ceas */
@@ -102,7 +102,8 @@ function buildRecs() {
 function buildLines() {
   el.beats.innerHTML = '';
   lines = [];
-  var n = Math.ceil(LEAD / (60 / (chart.bpm || 128))) + 3;
+  // destule linii cat sa acopere LEAD chiar si la cel mai rapid tempo din piesa
+  var n = chart.beats ? 10 : Math.ceil(LEAD / (60 / (chart.bpm || 128))) + 3;
   for (var i = 0; i < n; i++) {
     var d = document.createElement('i');
     el.beats.appendChild(d);
@@ -175,7 +176,7 @@ function startRun() {
   S.counts = { PERFECT: 0, GOOD: 0, MISS: 0 };
   S.meter = cfg.meter.start;
   S.rate = 1; S.rateTarget = 1;
-  S.judgeAge = 99; S.sectionIdx = -1; S.lastCd = null;
+  S.judgeAge = 99; S.sectionIdx = -1; S.lastCd = null; S.bi = 0;
   S.down = [0, 0, 0, 0]; S.flash = [0, 0, 0, 0]; S.missFlash = [0, 0, 0, 0];
   S.lastNoteT = S.notes.length ? S.notes[S.notes.length - 1].t : 0;
   S.songEnd = Math.max(chart.songEnd || 0, S.lastNoteT) + END_PAD;
@@ -382,17 +383,35 @@ function render(dt) {
 
   /* --- linii de masura --- */
   if (chart && lines.length) {
-    var spb = 60 / (chart.bpm || 128);
-    var B0 = Math.floor((t - chart.offset) / spb);
-    for (var j = 0; j < lines.length; j++) {
-      var B = B0 + j;
-      var y = (1 - (chart.offset + B * spb - t) / LEAD) * H;
-      var ln = lines[j];
-      ln.style.transform = 'translate3d(0,' + y.toFixed(1) + 'px,0)';
-      var bar = ((B % 4) + 4) % 4 === 0;
-      if ((ln.dataset.bar === '1') !== bar) {
-        ln.dataset.bar = bar ? '1' : '0';
-        ln.classList.toggle('bar', bar);
+    if (chart.beats) {
+      /* Tempo variabil: liniile merg pe bataile masurate din inregistrare,
+         nu pe o grila fixa. Tinem un pointer care avanseaza cu timpul. */
+      var bs = chart.beats;
+      while (S.bi > 0 && bs[S.bi] > t) S.bi--;
+      while (S.bi < bs.length - 1 && bs[S.bi + 1] <= t) S.bi++;
+      for (var j = 0; j < lines.length; j++) {
+        var idx = S.bi + j, ln = lines[j];
+        if (idx >= bs.length) { ln.style.transform = 'translate3d(0,-9999px,0)'; continue; }
+        var y = (1 - (bs[idx] - t) / LEAD) * H;
+        ln.style.transform = 'translate3d(0,' + y.toFixed(1) + 'px,0)';
+        var bar = idx % 4 === 0;
+        if ((ln.dataset.bar === '1') !== bar) {
+          ln.dataset.bar = bar ? '1' : '0';
+          ln.classList.toggle('bar', bar);
+        }
+      }
+    } else {
+      var spb = 60 / (chart.bpm || 128);
+      var B0 = Math.floor((t - chart.offset) / spb);
+      for (var j2 = 0; j2 < lines.length; j2++) {
+        var B = B0 + j2, ln2 = lines[j2];
+        var y2 = (1 - (chart.offset + B * spb - t) / LEAD) * H;
+        ln2.style.transform = 'translate3d(0,' + y2.toFixed(1) + 'px,0)';
+        var bar2 = ((B % 4) + 4) % 4 === 0;
+        if ((ln2.dataset.bar === '1') !== bar2) {
+          ln2.dataset.bar = bar2 ? '1' : '0';
+          ln2.classList.toggle('bar', bar2);
+        }
       }
     }
   }

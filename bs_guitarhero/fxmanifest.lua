@@ -22,4 +22,6 @@ files {
     'html/js/game.js',
     'html/data/ichwill.json',
     'html/audio/ichwill.mp3',
+    'html/data/pahare.json',
+    'html/audio/pahare.mp3',
 }

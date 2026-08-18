@@ -60,22 +60,37 @@ Config.Animation = {
 --  MELODIE
 -- ==========================================================================
 
-Config.Song = {
-    id      = 'ichwill',
-    title   = 'Ich Will',
-    artist  = 'Rammstein',
-    album   = 'Mutter',
-    chart   = 'data/ichwill.json',
-    audio   = 'audio/ichwill.mp3',
-
-    -- Fisierul livrat e deja taiat (varianta de videoclip avea ~33 s de intro
-    -- de film inaintea melodiei), deci pornim de la 0. Daca pui alt fisier,
-    -- de aici sari peste inceputul lui.
-    startAt = 0.0,
-
-    -- Cat dureaza o runda completa, in secunde (folosit de server la validare).
-    duration = 211.7,
+-- Lista de melodii. `/e guitar` porneste una la intamplare (vezi Config.SongPick),
+-- iar `/e guitar <id>` porneste una anume.
+Config.Songs = {
+    {
+        id     = 'ichwill',
+        title  = 'Ich Will',
+        artist = 'Rammstein',
+        album  = 'Mutter',
+        chart  = 'data/ichwill.json',
+        audio  = 'audio/ichwill.mp3',
+        -- Fisierul livrat e deja taiat (varianta de videoclip avea ~33 s de intro
+        -- de film inaintea melodiei), deci pornim de la 0.
+        startAt  = 0.0,
+        duration = 211.7,
+    },
+    {
+        id     = 'pahare',
+        title  = 'O Mie De Pahare',
+        artist = 'White Mahala',
+        album  = '',
+        chart  = 'data/pahare.json',
+        audio  = 'audio/pahare.mp3',
+        -- Taiata la 28 s: intro-ul original nu avea aproape nimic de cantat.
+        startAt  = 0.0,
+        duration = 171.9,
+    },
 }
+
+-- 'random' = `/e guitar` alege una la intamplare
+-- 'first'  = `/e guitar` porneste mereu prima din lista
+Config.SongPick = 'random'
 
 -- ==========================================================================
 --  HUD (overlay peste joc)
@@ -141,7 +156,8 @@ Config.Locale = {
     already_playing = 'Deja canti la chitara.',
     need_on_foot    = 'Trebuie sa fii pe jos ca sa canti.',
     dead            = 'Nu poti canta acum.',
-    started         = 'Ich Will ~y~Rammstein~s~. Sagetile ~b~<- v ^ ->~s~ pe ritm.',
+    started         = '~y~%s~s~ - %s. Sagetile ~b~<- v ^ ->~s~ pe ritm.',
+    unknown_song    = 'Melodie necunoscuta. Disponibile: ~y~%s~s~',
     stopped         = 'Ai lasat chitara jos.',
     failed          = 'Ai ratat prea multe note. ~r~Melodia a esuat~s~.',
     completed       = 'Melodia s-a terminat! Scor: ~g~%s~s~ (%s%% acuratete)',

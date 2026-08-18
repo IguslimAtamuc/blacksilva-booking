@@ -37,7 +37,35 @@ local state = {
     inGame   = false,  -- NUI-ul de joc e deschis
     prop     = nil,
     animMode = nil,    -- 'emote' | 'scenario' | 'anim' | 'none'
+    song     = nil,    -- melodia care ruleaza acum
 }
+
+-- ---------------------------------------------------------------------------
+--  Melodii
+-- ---------------------------------------------------------------------------
+
+local function songById(id)
+    if not id then return nil end
+    id = tostring(id):lower()
+    for _, sng in ipairs(Config.Songs) do
+        if sng.id == id then return sng end
+    end
+    return nil
+end
+
+local function pickSong(id)
+    if id then return songById(id) end
+    if Config.SongPick == 'random' and #Config.Songs > 1 then
+        return Config.Songs[math.random(#Config.Songs)]
+    end
+    return Config.Songs[1]
+end
+
+local function songIds()
+    local t = {}
+    for _, sng in ipairs(Config.Songs) do t[#t + 1] = sng.id end
+    return table.concat(t, ', ')
+end
 
 -- ---------------------------------------------------------------------------
 --  Animatie + prop
@@ -175,7 +203,7 @@ end
 
 local function buildPayload()
     return {
-        song     = Config.Song,
+        song     = state.song,
         hud      = Config.Hud,
         meter    = Config.Meter,
         offsetMs = Config.AudioOffsetMs,
@@ -214,15 +242,22 @@ end
 function StopGuitarHero(silent)
     if not state.playing then return end
     state.playing = false
+    state.song = nil
     closeGame()
     stopGuitarAnim()
     TriggerServerEvent('bs_guitarhero:abort')
     if not silent then notify(Config.Locale.stopped) end
 end
 
-function StartGuitarHero()
+function StartGuitarHero(songId)
     if state.playing then
         notify(Config.Locale.already_playing)
+        return
+    end
+
+    local song = pickSong(songId)
+    if not song then
+        notify(Config.Locale.unknown_song:format(songIds()))
         return
     end
 
@@ -232,22 +267,24 @@ function StartGuitarHero()
         return
     end
 
+    state.song = song
+
     if not startGuitarAnim() then
         notify(Config.Locale.dead)
         return
     end
 
     state.playing = true
-    TriggerServerEvent('bs_guitarhero:begin', Config.Song.id)
+    TriggerServerEvent('bs_guitarhero:begin', song.id)
     openGame()
-    notify(Config.Locale.started)
+    notify(Config.Locale.started:format(song.title, song.artist))
 end
 
 exports('StartGuitarHero', StartGuitarHero)
 exports('StopGuitarHero',  StopGuitarHero)
 exports('IsPlaying', function() return state.playing end)
 
-RegisterNetEvent('bs_guitarhero:start', function() StartGuitarHero() end)
+RegisterNetEvent('bs_guitarhero:start', function(songId) StartGuitarHero(songId) end)
 RegisterNetEvent('bs_guitarhero:stop',  function() StopGuitarHero() end)
 
 -- ---------------------------------------------------------------------------
@@ -258,7 +295,7 @@ local function handleEmoteCommand(_, args, _)
     local first = args[1] and tostring(args[1]):lower() or nil
 
     if first == Config.EmoteKeyword then
-        StartGuitarHero()
+        StartGuitarHero(args[2])
         return
     end
 
@@ -269,6 +306,7 @@ local function handleEmoteCommand(_, args, _)
 end
 
 CreateThread(function()
+    math.randomseed(GetGameTimer() + GetPlayerServerId(PlayerId()))
     if Config.HijackEmoteCommand then
         RegisterCommand(Config.EmoteCommand, handleEmoteCommand, false)
         for _, alias in ipairs(Config.EmoteAliases or {}) do
@@ -278,15 +316,17 @@ CreateThread(function()
         end
         TriggerEvent('chat:addSuggestion', '/' .. Config.EmoteCommand,
             'Emote-uri. `' .. Config.EmoteKeyword .. '` porneste minijocul de chitara.',
-            {{ name = 'emote', help = 'numele emote-ului (ex: guitar)' }})
+            {{ name = 'emote', help = 'numele emote-ului (ex: guitar)' },
+             { name = 'melodie', help = 'optional: ' .. songIds() }})
     end
 
     if Config.StandaloneCommand then
-        RegisterCommand(Config.StandaloneCommand, function()
-            StartGuitarHero()
+        RegisterCommand(Config.StandaloneCommand, function(_, args)
+            StartGuitarHero(args[1])
         end, false)
         TriggerEvent('chat:addSuggestion', '/' .. Config.StandaloneCommand,
-            ('Porneste Rhythm Highway (%s - %s)'):format(Config.Song.title, Config.Song.artist), {})
+            'Porneste Rhythm Highway',
+            {{ name = 'melodie', help = 'optional: ' .. songIds() }})
     end
 
     -- Reglaj live al prop-ului, folositor doar la Config.Animation.mode = 'anim'.
@@ -327,7 +367,7 @@ end)
 RegisterNUICallback('finished', function(data, cb)
     -- data: { failed, score, accuracy, maxCombo, notesHit, notesTotal }
     TriggerServerEvent('bs_guitarhero:finish', {
-        songId     = Config.Song.id,
+        songId     = state.song and state.song.id or '',
         failed     = data.failed and true or false,
         score      = tonumber(data.score) or 0,
         accuracy   = tonumber(data.accuracy) or 0,
@@ -350,7 +390,7 @@ end)
 -- NUI-ul anunta ca a inceput efectiv o runda (si la retry) -> deschidem o sesiune
 -- noua pe server, ca validarea de timp sa fie corecta.
 RegisterNUICallback('runStarted', function(_, cb)
-    TriggerServerEvent('bs_guitarhero:begin', Config.Song.id)
+    if state.song then TriggerServerEvent('bs_guitarhero:begin', state.song.id) end
     cb('ok')
 end)
 

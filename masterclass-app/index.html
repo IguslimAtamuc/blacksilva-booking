@@ -447,6 +447,24 @@ a{color:#e6c877;text-decoration:none}a:hover{color:#f4e2b4}
               </div>
             </div>
           </sc-if>
+          <sc-if value="{{ bl.isGallery }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:8px">
+              <div style="display:flex;gap:6px;align-items:center;margin-bottom:10px">
+                <div onClick="{{ bl.prev }}" style="width:32px;height:32px;border-radius:10px;border:1px solid rgba(201,162,74,.3);display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#e6c877" stroke-width="2.5" stroke-linecap="round"><path d="M15 6l-6 6 6 6"></path></svg></div>
+                <div style="flex:1;text-align:center;font-size:12.5px;font-weight:700;color:#e6c877">{{ bl.caption }}</div>
+                <div onClick="{{ bl.next }}" style="width:32px;height:32px;border-radius:10px;border:1px solid rgba(201,162,74,.3);display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#e6c877" stroke-width="2.5" stroke-linecap="round"><path d="M9 6l6 6-6 6"></path></svg></div>
+              </div>
+              <div style="border-radius:16px;overflow:hidden;border:1px solid rgba(201,162,74,.2);background:#f6f2ea">
+                <img src="{{ bl.src }}" alt="" style="width:100%;display:block">
+              </div>
+              <div style="display:flex;justify-content:center;gap:5px;margin-top:10px">
+                <sc-for list="{{ bl.dots }}" as="dot" hint-placeholder-count="7">
+                  <div onClick="{{ dot.go }}" style="width:{{ dot.size }};height:{{ dot.size }};border-radius:50%;background:{{ dot.bg }};cursor:pointer"></div>
+                </sc-for>
+              </div>
+              <div style="text-align:center;font-size:10.5px;color:#75664f;margin-top:6px">{{ bl.counter }}</div>
+            </div>
+          </sc-if>
         </div>
       </sc-for>
     </div>
@@ -539,6 +557,17 @@ const STEPS = [
       { type: 'p', text: 'Giving a face "character" is about creating visual impact. It relies on sharp corners, distinct lines, and structured angles. This approach projects authority, dynamism, and strength—making it highly effective for clients in competitive business environments or high-impact, aggressive sports.' },
       { type: 'kv', label: 'Visual Impact', value: 'Bold, authoritative, and dynamic.' },
       { type: 'kv', label: 'Dominant Geometric Shape', value: 'The Square.' },
+      { type: 'h', text: '3. Face Shapes — Harmony vs Character' },
+      { type: 'p', text: 'Each face shape calls for a different balance of harmony and character. Swipe through the gallery below to see how short, medium and long styles change across both approaches for every face shape.' },
+      { type: 'gallery', images: [
+        { src: 'assets/face-oval.png', caption: 'Oval Face Shape' },
+        { src: 'assets/face-round.png', caption: 'Round Face Shape' },
+        { src: 'assets/face-square.png', caption: 'Square Face Shape' },
+        { src: 'assets/face-heart.png', caption: 'Heart Face Shape' },
+        { src: 'assets/face-diamond.png', caption: 'Diamond Face Shape' },
+        { src: 'assets/face-rectangle.png', caption: 'Rectangle Oblong Face Shape' },
+        { src: 'assets/face-triangle.png', caption: 'Triangle (Pear) Face Shape' },
+      ]},
     ] },
   { n: '02', title: 'Scissor Technique', kind: 'Practice', mins: '26 min', blurb: 'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.' },
   { n: '03', title: 'Gradients — Scale of Gray', kind: 'Theory', mins: '15 min', blurb: 'Duis aute irure dolor in reprehenderit in voluptate velit esse.' },
@@ -594,7 +623,7 @@ const INVOICES = [
 ];
 
 class Component extends DCLogic {
-  state = { tab: null, lesson: null, day: 2, lang: 0, subject: '', problem: '', tag: 0, posts: POSTS, dys: true, notif: true, booked: null, zoom: false, zoomLevel: 250, lens: null, doneCount: 0 };
+  state = { tab: null, lesson: null, day: 2, lang: 0, subject: '', problem: '', tag: 0, posts: POSTS, dys: true, notif: true, booked: null, zoom: false, zoomLevel: 250, lens: null, doneCount: 0, galleryIdx: 0 };
 
   videoRef = (el) => {
     if (!el) return;
@@ -670,7 +699,7 @@ class Component extends DCLogic {
           cardOpacity: isDone || isNow ? '1' : '.55',
           chipFg: isNow ? '#e6c877' : '#8d7a58',
           chipBorder: isNow ? 'rgba(230,200,119,.4)' : 'rgba(201,162,74,.22)',
-          open: () => this.setState({ lesson: s }),
+          open: () => this.setState({ lesson: s, galleryIdx: 0 }),
         };
       }),
 
@@ -754,15 +783,33 @@ class Component extends DCLogic {
       lesson: this.state.lesson || STEPS[0],
       lessonBlocks: (() => {
         const L = this.state.lesson || STEPS[0];
-        if (L.blocks) return L.blocks.map(b => ({
-          ...b,
-          isH: b.type === 'h', isP: b.type === 'p', isKv: b.type === 'kv',
-        }));
+        const gi = this.state.galleryIdx || 0;
+        const self = this;
+        if (L.blocks) return L.blocks.map(b => {
+          if (b.type === 'gallery') {
+            const imgs = b.images || [];
+            const idx = Math.min(gi, imgs.length - 1);
+            const cur = imgs[idx] || imgs[0];
+            return {
+              ...b, isH: false, isP: false, isKv: false, isGallery: true,
+              src: cur.src, caption: cur.caption,
+              counter: (idx + 1) + ' / ' + imgs.length,
+              prev: () => self.setState(s => ({ galleryIdx: (s.galleryIdx || 0) <= 0 ? imgs.length - 1 : (s.galleryIdx || 0) - 1 })),
+              next: () => self.setState(s => ({ galleryIdx: ((s.galleryIdx || 0) + 1) % imgs.length })),
+              dots: imgs.map((im, i) => ({
+                bg: i === idx ? '#e6c877' : 'rgba(201,162,74,.3)',
+                size: i === idx ? '8px' : '6px',
+                go: () => self.setState({ galleryIdx: i }),
+              })),
+            };
+          }
+          return { ...b, isH: b.type === 'h', isP: b.type === 'p', isKv: b.type === 'kv', isGallery: false };
+        });
         const paras = L.paras || [
           'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
           'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.',
         ];
-        return paras.map(text => ({ type: 'p', text, isH: false, isP: true, isKv: false }));
+        return paras.map(text => ({ type: 'p', text, isH: false, isP: true, isKv: false, isGallery: false }));
       })(),
       lensX: (this.state.lens ? this.state.lens.x : 0) + 'px',
       lensY: (this.state.lens ? this.state.lens.y : 0) + 'px',

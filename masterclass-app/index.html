@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics="">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&amp;family=Lexend:wght@400;500;600;700&amp;family=Pinyon+Script&amp;family=Lora:ital@1&amp;display=swap">
+<style>
+@font-face{font-family:'OpenDyslexic';font-style:normal;font-weight:400;font-display:swap;src:url(assets/OpenDyslexic-Regular.otf) format('opentype'),url(https://cdn.jsdelivr.net/npm/@fontsource/opendyslexic/files/opendyslexic-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'OpenDyslexic';font-style:normal;font-weight:700;font-display:swap;src:url(assets/OpenDyslexic-Bold.otf) format('opentype'),url(https://cdn.jsdelivr.net/npm/@fontsource/opendyslexic/files/opendyslexic-latin-700-normal.woff2) format('woff2')}
+@font-face{font-family:'OpenDyslexic';font-style:italic;font-weight:400;font-display:swap;src:url(assets/OpenDyslexic-Italic.otf) format('opentype')}
+html,body{margin:0;padding:0}
+body{background:#0a0908;font-family:'OpenDyslexic','Atkinson Hyperlegible','Lexend',Verdana,Tahoma,sans-serif;letter-spacing:.01em;-webkit-font-smoothing:antialiased}
+a{color:#e6c877;text-decoration:none}a:hover{color:#f4e2b4}
+::-webkit-scrollbar{width:0}
+@keyframes bsPulse{0%,100%{opacity:.45;transform:scale(1)}50%{opacity:.95;transform:scale(1.18)}}
+@keyframes bsIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes bsFlow{from{background-position:0 22px}to{background-position:0 0}}
+@keyframes bsRing{0%{box-shadow:0 0 0 0 rgba(230,200,119,.5)}100%{box-shadow:0 0 0 16px rgba(230,200,119,0)}}
+@keyframes bsSheen{from{transform:translateX(-120%)}to{transform:translateX(220%)}}
+</style>
+</helmet>
+<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px 20px;background:radial-gradient(120% 90% at 50% 0%,#221d16 0%,#100e0b 55%,#070605 100%)">
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+
+<div style="height:100%;display:flex;flex-direction:column;background:#0e0c0a;color:#f2ebdd;position:relative;overflow:hidden;font-family:{{ fontStack }};line-height:{{ lineH }};letter-spacing:{{ tracking }};word-spacing:{{ wordSpace }}">
+<div style="flex:1;overflow-y:auto;overflow-x:hidden;padding:0 0 110px">
+
+<sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
+<div style="animation:bsIn .3s ease both">
+  <div style="position:relative;height:452px">
+    <video src="assets/promo.mp4" ref="{{ videoRef }}" autoPlay="{{ true }}" muted="{{ true }}" defaultMuted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" style="width:100%;height:100%;object-fit:cover;display:block"></video>
+    <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,9,8,.72) 0%,rgba(10,9,8,.15) 42%,rgba(14,12,10,.97) 100%)"></div>
+    <div style="position:absolute;top:56px;left:20px;right:20px;display:flex;align-items:center;gap:10px">
+      <img src="assets/logo.jpg" alt="" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:1.5px solid #c9a24a">
+      <div style="flex:1;font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:#e6c877">Black Silva · Copenhagen</div>
+      <div style="padding:6px 11px;border-radius:99px;border:1px solid rgba(230,200,119,.4);font-size:10.5px;color:#e6c877">2 seats left</div>
+    </div>
+    <div style="position:absolute;left:20px;right:20px;bottom:22px">
+      <div style="font-size:32px;font-weight:700;line-height:1.15">Cut with a<br>system, not luck</div>
+      <p style="font-size:14px;line-height:1.75;color:#bfae8e;margin:12px 0 0">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore.</p>
+      <div style="display:flex;gap:9px;margin-top:16px">
+        <div onClick="{{ goClasses }}" style="flex:1;text-align:center;padding:14px;border-radius:15px;background:#e6c877;color:#1a1206;font-size:14px;font-weight:700;cursor:pointer;position:relative;overflow:hidden">
+          <span style="position:absolute;top:0;left:0;width:40%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);animation:bsSheen 3.4s ease-in-out infinite"></span>Book a seat
+        </div>
+        <div onClick="{{ goProgress }}" style="padding:14px 16px;border-radius:15px;border:1px solid rgba(230,200,119,.35);color:#e6c877;font-size:14px;cursor:pointer">Curriculum</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding:22px 20px 0;display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px">
+    <div style="border-radius:16px;background:#171412;border:1px solid rgba(201,162,74,.16);padding:13px 12px"><div style="font-size:21px;font-weight:700;color:#e6c877;line-height:1">10</div><div style="font-size:11px;color:#9a8768;margin-top:5px;line-height:1.4">Steps</div></div>
+    <div style="border-radius:16px;background:#171412;border:1px solid rgba(201,162,74,.16);padding:13px 12px"><div style="font-size:21px;font-weight:700;color:#e6c877;line-height:1">6</div><div style="font-size:11px;color:#9a8768;margin-top:5px;line-height:1.4">Per class</div></div>
+    <div style="border-radius:16px;background:#171412;border:1px solid rgba(201,162,74,.16);padding:13px 12px"><div style="font-size:21px;font-weight:700;color:#e6c877;line-height:1">1:1</div><div style="font-size:11px;color:#9a8768;margin-top:5px;line-height:1.4">Chair time</div></div>
+  </div>
+
+  <div style="padding:26px 20px 0">
+    <div style="font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#a08a5e">What you leave with</div>
+    <div style="margin-top:12px;display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;gap:12px;padding:14px;border-radius:16px;background:#171412;border:1px solid rgba(201,162,74,.14)">
+        <div style="width:34px;height:34px;border-radius:11px;background:#231c14;display:flex;align-items:center;justify-content:center;flex:none"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#e6c877" stroke-width="1.8" stroke-linecap="round"><path d="M4 12l5 5L20 6"></path></svg></div>
+        <div style="flex:1"><div style="font-size:14px;font-weight:700;line-height:1.4">A repeatable method</div><p style="font-size:12.5px;line-height:1.7;color:#94836a;margin:5px 0 0">Lorem ipsum dolor sit amet, consectetur adipiscing elit sed do eiusmod tempor.</p></div>
+      </div>
+      <div style="display:flex;gap:12px;padding:14px;border-radius:16px;background:#171412;border:1px solid rgba(201,162,74,.14)">
+        <div style="width:34px;height:34px;border-radius:11px;background:#231c14;display:flex;align-items:center;justify-content:center;flex:none"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#e6c877" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8"></circle><path d="M12 8v4l3 2"></path></svg></div>
+        <div style="flex:1"><div style="font-size:14px;font-weight:700;line-height:1.4">One full day, hands on</div><p style="font-size:12.5px;line-height:1.7;color:#94836a;margin:5px 0 0">Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi.</p></div>
+      </div>
+      <div style="display:flex;gap:12px;padding:14px;border-radius:16px;background:#171412;border:1px solid rgba(201,162,74,.14)">
+        <div style="width:34px;height:34px;border-radius:11px;background:#231c14;display:flex;align-items:center;justify-content:center;flex:none"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#e6c877" stroke-width="1.8" stroke-linecap="round"><path d="M12 3l2.5 5.5L20 9l-4 4 1 6-5-2.8L7 19l1-6-4-4 5.5-.5z"></path></svg></div>
+        <div style="flex:1"><div style="font-size:14px;font-weight:700;line-height:1.4">Certificate &amp; alumni chat</div><p style="font-size:12.5px;line-height:1.7;color:#94836a;margin:5px 0 0">Duis aute irure dolor in reprehenderit in voluptate velit esse cillum.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding:26px 20px 0">
+    <div style="font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#a08a5e">Pricing</div>
+    <div style="margin-top:12px;display:flex;flex-direction:column;gap:11px">
+      <div style="border-radius:20px;background:#171412;border:1px solid rgba(201,162,74,.16);padding:16px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline">
+          <div style="font-size:15px;font-weight:700">Single day</div>
+          <div style="font-size:20px;font-weight:700;color:#e6c877">€390</div>
+        </div>
+        <p style="font-size:12.5px;line-height:1.7;color:#94836a;margin:8px 0 0">One class, 6 seats, all ten steps. Lorem ipsum dolor sit amet consectetur.</p>
+        <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:6px">
+          <span style="font-size:11px;color:#c4b393;border:1px solid rgba(201,162,74,.22);padding:5px 9px;border-radius:99px">Tools provided</span>
+          <span style="font-size:11px;color:#c4b393;border:1px solid rgba(201,162,74,.22);padding:5px 9px;border-radius:99px">Lunch</span>
+        </div>
+      </div>
+      <div style="border-radius:20px;background:linear-gradient(135deg,#2b2216,#161210);border:1px solid rgba(230,200,119,.4);padding:16px;position:relative">
+        <div style="position:absolute;top:-9px;left:16px;font-size:10px;letter-spacing:.16em;text-transform:uppercase;background:#e6c877;color:#1a1206;padding:4px 9px;border-radius:6px;font-weight:700">Most chosen</div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:4px">
+          <div style="font-size:15px;font-weight:700">Masterclass Pro</div>
+          <div style="font-size:20px;font-weight:700;color:#e6c877">€690</div>
+        </div>
+        <p style="font-size:12.5px;line-height:1.7;color:#a3927a;margin:8px 0 0">Two days plus follow-up review. Sed ut perspiciatis unde omnis iste natus error.</p>
+        <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:6px">
+          <span style="font-size:11px;color:#e6c877;border:1px solid rgba(230,200,119,.35);padding:5px 9px;border-radius:99px">Starter kit</span>
+          <span style="font-size:11px;color:#e6c877;border:1px solid rgba(230,200,119,.35);padding:5px 9px;border-radius:99px">90 day chat</span>
+          <span style="font-size:11px;color:#e6c877;border:1px solid rgba(230,200,119,.35);padding:5px 9px;border-radius:99px">Certificate</span>
+        </div>
+        <div onClick="{{ goClasses }}" style="margin-top:14px;padding:13px;border-radius:13px;background:#e6c877;color:#1a1206;font-size:13.5px;font-weight:700;text-align:center;cursor:pointer">Pick a date</div>
+      </div>
+      <div style="border-radius:20px;background:#171412;border:1px solid rgba(201,162,74,.16);padding:16px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline">
+          <div style="font-size:15px;font-weight:700">Private 1:1</div>
+          <div style="font-size:20px;font-weight:700;color:#e6c877">€1.190</div>
+        </div>
+        <p style="font-size:12.5px;line-height:1.7;color:#94836a;margin:8px 0 0">Your chair, your pace. Neque porro quisquam est qui dolorem ipsum quia.</p>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding:26px 20px 0">
+    <div style="border-radius:20px;background:#171412;border:1px solid rgba(201,162,74,.16);padding:16px">
+      <div style="display:flex;gap:12px;align-items:center">
+        <img src="assets/faces.jpg" alt="" style="width:52px;height:52px;border-radius:14px;object-fit:cover;object-position:12% 40%;background:#f4eee2">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13.5px;font-weight:700;line-height:1.4">“Lorem ipsum dolor sit amet”</div>
+          <div style="font-size:11.5px;color:#8d7a58;margin-top:4px">Alumni, cohort 05</div>
+        </div>
+      </div>
+      <p style="font-size:13px;line-height:1.8;color:#a3927a;margin:12px 0 0">Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+      <div style="margin-top:12px;font-size:12px;color:#e6c877">★★★★★ 4.9 · 128 reviews</div>
+    </div>
+  </div>
+
+  <div style="padding:22px 20px 0">
+    <div style="border-radius:20px;padding:18px;background:linear-gradient(135deg,#211a12,#151210);border:1px solid rgba(201,162,74,.22);text-align:center">
+      <div style="font-size:16px;font-weight:700;line-height:1.4">Badstuestræde 16, Copenhagen</div>
+      <p style="font-size:13px;line-height:1.75;color:#a3927a;margin:8px 0 0">Six seats per class. Lorem ipsum dolor sit amet, consectetur adipiscing.</p>
+      <div onClick="{{ goClasses }}" style="margin-top:14px;padding:13px;border-radius:13px;background:#e6c877;color:#1a1206;font-size:13.5px;font-weight:700;cursor:pointer">See availability</div>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isProgress }}" hint-placeholder-val="{{ false }}">
+<div style="animation:bsIn .3s ease both">
+  <div style="padding:60px 20px 6px">
+    <div style="font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:#a08a5e">My progress</div>
+    <div style="font-size:26px;font-weight:700;line-height:1.2;margin-top:5px">Introduction + Ten Steps</div>
+    <div style="margin-top:14px;display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:16px;background:#171412;border:1px solid rgba(201,162,74,.16)">
+      <div style="font-size:22px;font-weight:700;color:#e6c877;line-height:1">{{ progressCount }}</div>
+      <div style="flex:1">
+        <div style="height:6px;border-radius:99px;background:rgba(201,162,74,.16);overflow:hidden"><div style="width:{{ progressPct }};height:100%;background:linear-gradient(90deg,#c9a24a,#e6c877)"></div></div>
+        <div style="font-size:11.5px;color:#8d7a58;margin-top:6px">{{ progressNote }}</div>
+      </div>
+    </div>
+  </div>
+  <div style="padding:14px 20px 0">
+    <sc-for list="{{ nodes }}" as="nd" hint-placeholder-count="11">
+      <div style="display:flex;gap:14px;align-items:stretch">
+        <div style="width:44px;flex:none;display:flex;flex-direction:column;align-items:center">
+          <div style="width:40px;height:40px;border-radius:50%;background:{{ nd.dotBg }};border:2px solid {{ nd.dotBorder }};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:{{ nd.dotFg }};animation:{{ nd.dotAnim }}">{{ nd.badge }}</div>
+          <div style="flex:1;width:4px;border-radius:99px;margin:5px 0;min-height:44px;background:{{ nd.lineBg }};background-size:100% 22px;animation:{{ nd.lineAnim }}"></div>
+        </div>
+        <div onClick="{{ nd.open }}" style="flex:1;min-width:0;margin-bottom:12px;padding:14px;border-radius:18px;background:{{ nd.cardBg }};border:1px solid {{ nd.cardBorder }};opacity:{{ nd.cardOpacity }};cursor:pointer">
+          <div style="display:flex;align-items:center;gap:7px">
+            <span style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:{{ nd.chipFg }};border:1px solid {{ nd.chipBorder }};padding:3px 6px;border-radius:5px">{{ nd.status }}</span>
+            <span style="font-size:11px;color:#8d7a58">{{ nd.mins }}</span>
+          </div>
+          <div style="font-size:15px;font-weight:700;line-height:1.35;margin-top:8px">{{ nd.n }} · {{ nd.title }}</div>
+          <p style="font-size:12.5px;line-height:1.7;color:#94836a;margin:5px 0 0">{{ nd.blurb }}</p>
+          <div style="height:5px;border-radius:99px;background:rgba(201,162,74,.14);margin-top:11px;overflow:hidden"><div style="height:100%;background:linear-gradient(90deg,#c9a24a,#e6c877);width:{{ nd.pct }}"></div></div>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+  <div style="padding:6px 20px 0">
+    <div style="border-radius:20px;padding:16px;background:linear-gradient(135deg,#211a12,#151210);border:1px solid rgba(201,162,74,.22);display:flex;gap:13px;align-items:center">
+      <img src="assets/logo.jpg" alt="" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:1px solid #c9a24a">
+      <div style="flex:1"><div style="font-size:14px;font-weight:700;line-height:1.4">Certificate at step 10</div><p style="font-size:12.5px;line-height:1.7;color:#a3927a;margin:5px 0 0">Lorem ipsum dolor sit amet consectetur adipiscing.</p></div>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isClasses }}" hint-placeholder-val="{{ false }}">
+<div style="animation:bsIn .3s ease both">
+  <div style="padding:60px 20px 0">
+    <div style="font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:#a08a5e">Classes</div>
+    <div style="font-size:26px;font-weight:700;line-height:1.2;margin-top:5px">Pick your day</div>
+    <p style="font-size:13px;line-height:1.75;color:#9a8768;margin:8px 0 0">Lorem ipsum dolor sit amet, consectetur adipiscing elit sed do eiusmod tempor.</p>
+  </div>
+  <div style="padding:16px 20px 0">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:11px">
+      <div style="font-size:14px;font-weight:700">September 2026</div>
+      <div style="display:flex;gap:7px">
+        <div style="width:30px;height:30px;border-radius:10px;border:1px solid rgba(201,162,74,.25);display:flex;align-items:center;justify-content:center;cursor:pointer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e6c877" stroke-width="2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"></path></svg></div>
+        <div style="width:30px;height:30px;border-radius:10px;border:1px solid rgba(201,162,74,.25);display:flex;align-items:center;justify-content:center;cursor:pointer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e6c877" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"></path></svg></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:7px">
+      <sc-for list="{{ days }}" as="d" hint-placeholder-count="5">
+        <div onClick="{{ d.pick }}" style="flex:1;border-radius:16px;background:{{ d.bg }};border:1px solid {{ d.border }};padding:11px 0;text-align:center;cursor:pointer;opacity:{{ d.opacity }}">
+          <div style="font-size:10px;letter-spacing:.1em;color:{{ d.subFg }}">{{ d.dow }}</div>
+          <div style="font-size:17px;font-weight:700;color:{{ d.fg }};margin-top:5px">{{ d.day }}</div>
+          <div style="font-size:9.5px;color:{{ d.subFg }};margin-top:5px">{{ d.seats }}</div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+  <div style="padding:18px 20px 0">
+    <div style="font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#a08a5e">{{ selectedDayLabel }}</div>
+    <div style="margin-top:12px;display:flex;flex-direction:column;gap:11px">
+      <sc-for list="{{ slots }}" as="sl" hint-placeholder-count="3">
+        <div style="border-radius:20px;background:#171412;border:1px solid {{ sl.border }};padding:15px">
+          <div style="display:flex;align-items:center;gap:11px">
+            <div style="width:46px;height:46px;border-radius:14px;background:#221c15;display:flex;flex-direction:column;align-items:center;justify-content:center;flex:none">
+              <div style="font-size:12.5px;font-weight:700;color:#e6c877">{{ sl.time }}</div>
+              <div style="font-size:9px;color:#8d7a58">{{ sl.dur }}</div>
+            </div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:14.5px;font-weight:700;line-height:1.4">{{ sl.title }}</div>
+              <div style="font-size:12px;color:#94836a;margin-top:4px;line-height:1.5">{{ sl.room }}</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:11px;color:{{ sl.availFg }}">{{ sl.avail }}</div>
+              <div style="font-size:11px;color:#8d7a58;margin-top:4px">{{ sl.price }}</div>
+            </div>
+          </div>
+          <div style="margin-top:13px;padding-top:13px;border-top:1px solid rgba(201,162,74,.12);display:flex;align-items:center;gap:10px">
+            <img src="assets/logo.jpg" alt="" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:1px solid rgba(201,162,74,.4)">
+            <div style="flex:1;min-width:0">
+              <div style="font-size:12.5px;line-height:1.4">With {{ sl.host }}</div>
+              <div style="font-size:11px;color:#8d7a58;margin-top:3px">{{ sl.hostRole }}</div>
+            </div>
+            <div style="display:flex;gap:-6px;align-items:center">
+              <span style="font-size:11px;color:#94836a">{{ sl.peers }}</span>
+            </div>
+          </div>
+          <div style="margin-top:12px;display:flex;gap:8px">
+            <div onClick="{{ sl.book }}" style="flex:1;text-align:center;padding:12px;border-radius:13px;background:{{ sl.ctaBg }};color:{{ sl.ctaFg }};font-size:13px;font-weight:700;cursor:pointer">{{ sl.cta }}</div>
+            <div style="padding:12px 14px;border-radius:13px;border:1px solid rgba(201,162,74,.25);color:#c4b393;font-size:13px;cursor:pointer">Details</div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+  <div style="padding:16px 20px 0">
+    <div style="border-radius:18px;background:#141110;border:1px dashed rgba(201,162,74,.25);padding:15px">
+      <div style="font-size:13.5px;font-weight:700">Waiting list</div>
+      <p style="font-size:12.5px;line-height:1.7;color:#94836a;margin:6px 0 0">Lorem ipsum dolor sit amet consectetur adipiscing elit, sed do eiusmod.</p>
+      <div style="margin-top:12px;padding:11px;border-radius:12px;border:1px solid rgba(201,162,74,.3);color:#e6c877;font-size:12.5px;text-align:center;cursor:pointer">Notify me</div>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isChat }}" hint-placeholder-val="{{ false }}">
+<div style="animation:bsIn .3s ease both">
+  <div style="padding:60px 20px 0">
+    <div style="font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:#a08a5e">Community</div>
+    <div style="font-size:26px;font-weight:700;line-height:1.2;margin-top:5px">Chat</div>
+  </div>
+  <div style="padding:14px 20px 0;display:flex;gap:7px;overflow-x:auto">
+    <sc-for list="{{ channels }}" as="ch" hint-placeholder-count="4">
+      <div onClick="{{ ch.pick }}" style="flex:none;padding:8px 13px;border-radius:99px;font-size:12px;background:{{ ch.bg }};color:{{ ch.fg }};border:1px solid rgba(201,162,74,.25);cursor:pointer">{{ ch.name }}</div>
+    </sc-for>
+  </div>
+  <div style="padding:8px 20px 0;font-size:11.5px;color:#75664f;line-height:1.6">{{ channelDesc }}</div>
+  <div style="padding:14px 20px 0;display:flex;flex-direction:column;gap:11px">
+    <sc-for list="{{ posts }}" as="p" hint-placeholder-count="3">
+      <div style="border-radius:18px;background:#171412;border:1px solid rgba(201,162,74,.14);overflow:hidden">
+        <div style="display:flex;align-items:center;gap:10px;padding:13px 14px 0">
+          <div style="width:30px;height:30px;border-radius:10px;background:#231c14;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:700;color:#e6c877;flex:none">{{ p.initials }}</div>
+          <div style="flex:1;min-width:0"><div style="font-size:12.5px;font-weight:700">{{ p.author }}</div><div style="font-size:10.5px;color:#75664f;margin-top:2px">{{ p.time }} · {{ p.tag }}</div></div>
+          <div style="font-size:10.5px;color:{{ p.stateFg }};border:1px solid {{ p.stateBorder }};padding:4px 8px;border-radius:6px">{{ p.state }}</div>
+        </div>
+        <div style="padding:12px 14px 14px">
+          <div style="border-left:2px solid #c9a24a;padding-left:11px">
+            <div style="font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:#a08a5e">Subject</div>
+            <div style="font-size:13.5px;font-weight:700;line-height:1.45;margin-top:3px">{{ p.subject }}</div>
+            <div style="font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:#a08a5e;margin-top:10px">Problem</div>
+            <p style="font-size:13px;line-height:1.75;margin:3px 0 0;color:#a4937a">{{ p.problem }}</p>
+          </div>
+          <div style="display:flex;gap:14px;margin-top:12px;font-size:11.5px;color:#8d7a58">
+            <span>{{ p.replies }} replies</span><span>{{ p.likes }} helpful</span>
+          </div>
+        </div>
+        <sc-if value="{{ p.hasAnswer }}" hint-placeholder-val="{{ true }}">
+          <div style="padding:12px 14px;background:#1d1811;border-top:1px solid rgba(201,162,74,.14);display:flex;gap:10px">
+            <img src="assets/logo.jpg" alt="" style="width:26px;height:26px;border-radius:50%;object-fit:cover;flex:none">
+            <div style="flex:1"><div style="font-size:11.5px;color:#e6c877;font-weight:700">Black Silva replied</div><p style="font-size:12.5px;line-height:1.7;color:#a4937a;margin:4px 0 0">{{ p.answer }}</p></div>
+          </div>
+        </sc-if>
+      </div>
+    </sc-for>
+  </div>
+  <div style="padding:18px 20px 0">
+    <div style="border-radius:20px;background:#141110;border:1px solid rgba(201,162,74,.22);padding:16px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="font-size:13.5px;font-weight:700;flex:1">Ask in this channel</div>
+        <div style="font-size:10.5px;color:#8d7a58">Format required</div>
+      </div>
+      <p style="font-size:12px;line-height:1.7;color:#75664f;margin:7px 0 0">Free typing is off. Fill both fields — subject first, then the problem.</p>
+      <div style="margin-top:13px">
+        <div style="font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:#a08a5e">1 · Subject</div>
+        <input value="{{ subject }}" onChange="{{ onSubject }}" placeholder="e.g. Fade blending on tight curls" style="width:100%;box-sizing:border-box;margin-top:6px;padding:12px 13px;border-radius:12px;background:#0e0c0a;border:1px solid rgba(201,162,74,.25);color:#f2ebdd;font-family:inherit;font-size:13px;outline:none">
+        <div style="font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:#a08a5e;margin-top:13px">2 · Problem</div>
+        <textarea value="{{ problem }}" onChange="{{ onProblem }}" rows="3" placeholder="What happened, what you tried, what you expected" style="width:100%;box-sizing:border-box;margin-top:6px;padding:12px 13px;border-radius:12px;background:#0e0c0a;border:1px solid rgba(201,162,74,.25);color:#f2ebdd;font-family:inherit;font-size:13px;line-height:1.6;resize:none;outline:none"></textarea>
+        <div style="display:flex;gap:7px;margin-top:11px;flex-wrap:wrap">
+          <sc-for list="{{ tags }}" as="tg" hint-placeholder-count="3">
+            <div onClick="{{ tg.pick }}" style="padding:7px 11px;border-radius:99px;font-size:11.5px;background:{{ tg.bg }};color:{{ tg.fg }};border:1px solid rgba(201,162,74,.25);cursor:pointer">{{ tg.name }}</div>
+          </sc-for>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:13px">
+          <div onClick="{{ submitPost }}" style="flex:1;text-align:center;padding:13px;border-radius:13px;background:{{ postBg }};color:{{ postFg }};font-size:13px;font-weight:700;cursor:pointer">Post question</div>
+          <div style="font-size:11px;color:#75664f;width:96px;line-height:1.5">{{ hint }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isProfile }}" hint-placeholder-val="{{ false }}">
+<div style="animation:bsIn .3s ease both">
+  <div style="padding:60px 20px 0;display:flex;gap:14px;align-items:center">
+    <img src="assets/portrait.jpg" alt="" style="width:64px;height:64px;border-radius:20px;object-fit:cover;border:1px solid rgba(201,162,74,.35)">
+    <div style="flex:1;min-width:0">
+      <div style="font-size:19px;font-weight:700;line-height:1.3">Lorem Ipsum</div>
+      <div style="font-size:12.5px;color:#94836a;margin-top:4px;line-height:1.5">Cohort 07 · member since 2026</div>
+    </div>
+    <div style="padding:7px 11px;border-radius:99px;border:1px solid rgba(230,200,119,.35);font-size:10.5px;color:#e6c877">Pro</div>
+  </div>
+
+  <div style="padding:18px 20px 0;display:grid;grid-template-columns:1fr 1fr;gap:9px">
+    <div style="border-radius:16px;background:#171412;border:1px solid rgba(201,162,74,.16);padding:14px"><div style="font-size:21px;font-weight:700;color:#e6c877;line-height:1">7</div><div style="font-size:11.5px;color:#9a8768;margin-top:6px;line-height:1.4">Lessons attended</div></div>
+    <div style="border-radius:16px;background:#171412;border:1px solid rgba(201,162,74,.16);padding:14px"><div style="font-size:21px;font-weight:700;color:#e6c877;line-height:1">18h</div><div style="font-size:11.5px;color:#9a8768;margin-top:6px;line-height:1.4">Chair time logged</div></div>
+    <div style="border-radius:16px;background:#171412;border:1px solid rgba(201,162,74,.16);padding:14px"><div style="font-size:21px;font-weight:700;color:#e6c877;line-height:1">{{ progressCount }}</div><div style="font-size:11.5px;color:#9a8768;margin-top:6px;line-height:1.4">Steps signed off</div></div>
+    <div style="border-radius:16px;background:#171412;border:1px solid rgba(201,162,74,.16);padding:14px"><div style="font-size:21px;font-weight:700;color:#e6c877;line-height:1">2</div><div style="font-size:11.5px;color:#9a8768;margin-top:6px;line-height:1.4">Open questions</div></div>
+  </div>
+
+  <div style="padding:20px 20px 0">
+    <div style="font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#a08a5e">App language</div>
+    <div style="margin-top:11px;display:flex;flex-direction:column;gap:8px">
+      <sc-for list="{{ languages }}" as="lg" hint-placeholder-count="4">
+        <div onClick="{{ lg.pick }}" style="display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:15px;background:#171412;border:1px solid {{ lg.border }};cursor:pointer">
+          <div style="font-size:16px">{{ lg.flag }}</div>
+          <div style="flex:1;min-width:0"><div style="font-size:13.5px;line-height:1.4">{{ lg.name }}</div><div style="font-size:11px;color:#75664f;margin-top:3px">{{ lg.native }}</div></div>
+          <div style="width:20px;height:20px;border-radius:50%;border:1px solid {{ lg.dotBorder }};background:{{ lg.dotBg }};display:flex;align-items:center;justify-content:center;font-size:11px;color:#1a1206;font-weight:700">{{ lg.tick }}</div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="padding:22px 20px 0">
+    <div style="display:flex;align-items:baseline;justify-content:space-between">
+      <div style="font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#a08a5e">Invoices</div>
+      <div style="font-size:11.5px;color:#e6c877">{{ unpaidLabel }}</div>
+    </div>
+    <div style="margin-top:11px;border-radius:18px;background:#171412;border:1px solid rgba(201,162,74,.16);overflow:hidden">
+      <sc-for list="{{ invoices }}" as="iv" hint-placeholder-count="4">
+        <div style="display:flex;align-items:center;gap:12px;padding:14px;border-bottom:1px solid rgba(201,162,74,.1)">
+          <div style="width:32px;height:32px;border-radius:10px;background:#231c14;display:flex;align-items:center;justify-content:center;flex:none"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#e6c877" stroke-width="1.7"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"></path><path d="M9 8h6M9 12h6"></path></svg></div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13.5px;line-height:1.4">{{ iv.title }}</div>
+            <div style="font-size:11px;color:#75664f;margin-top:3px">{{ iv.date }} · {{ iv.no }}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:13.5px;font-weight:700;color:#e6c877">{{ iv.amount }}</div>
+            <div style="font-size:10.5px;margin-top:4px;padding:3px 7px;border-radius:6px;color:{{ iv.stFg }};border:1px solid {{ iv.stBorder }}">{{ iv.status }}</div>
+          </div>
+        </div>
+      </sc-for>
+      <div style="padding:13px 14px;font-size:12.5px;color:#e6c877;cursor:pointer">Download all receipts</div>
+    </div>
+  </div>
+
+  <div style="padding:22px 20px 0">
+    <div style="font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#a08a5e">Preferences</div>
+    <div style="margin-top:11px;border-radius:18px;background:#171412;border:1px solid rgba(201,162,74,.16);overflow:hidden">
+      <div onClick="{{ toggleDys }}" style="display:flex;align-items:center;gap:12px;padding:14px;border-bottom:1px solid rgba(201,162,74,.1);cursor:pointer">
+        <div style="width:32px;height:32px;border-radius:10px;background:#231c14;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#e6c877;flex:none">Aa</div>
+        <div style="flex:1"><div style="font-size:13.5px">Dyslexia-friendly text</div><div style="font-size:11px;color:#75664f;margin-top:3px">{{ dysLabel }}</div></div>
+        <div style="width:44px;height:26px;border-radius:99px;background:{{ dysTrack }};padding:3px;display:flex;justify-content:{{ dysAlign }}"><div style="width:20px;height:20px;border-radius:50%;background:#fff"></div></div>
+      </div>
+      <div onClick="{{ toggleNotif }}" style="display:flex;align-items:center;gap:12px;padding:14px;border-bottom:1px solid rgba(201,162,74,.1);cursor:pointer">
+        <div style="width:32px;height:32px;border-radius:10px;background:#231c14;display:flex;align-items:center;justify-content:center;flex:none"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#e6c877" stroke-width="1.7" stroke-linecap="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8"></path><path d="M10.3 20a2 2 0 0 0 3.4 0"></path></svg></div>
+        <div style="flex:1"><div style="font-size:13.5px">Class reminders</div><div style="font-size:11px;color:#75664f;margin-top:3px">{{ notifLabel }}</div></div>
+        <div style="width:44px;height:26px;border-radius:99px;background:{{ notifTrack }};padding:3px;display:flex;justify-content:{{ notifAlign }}"><div style="width:20px;height:20px;border-radius:50%;background:#fff"></div></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;padding:14px;cursor:pointer">
+        <div style="width:32px;height:32px;border-radius:10px;background:#231c14;display:flex;align-items:center;justify-content:center;flex:none"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#e6c877" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 3v3M12 18v3M3 12h3M18 12h3"></path></svg></div>
+        <div style="flex:1"><div style="font-size:13.5px">Account &amp; data</div><div style="font-size:11px;color:#75664f;margin-top:3px">Lorem ipsum dolor sit amet</div></div>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6b5c45" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"></path></svg>
+      </div>
+    </div>
+  </div>
+  <div style="padding:20px 20px 0">
+    <a href="https://www.instagram.com/blacksilvahd/" target="_blank" rel="noopener" style="display:block;text-align:center;padding:14px;border-radius:16px;border:1px solid rgba(201,162,74,.3);font-size:13.5px;color:#e6c877">Contact the studio</a>
+  </div>
+</div>
+</sc-if>
+
+</div>
+
+<sc-if value="{{ lessonOpen }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;background:#0e0c0a;z-index:80;display:flex;flex-direction:column;animation:bsIn .28s ease both">
+  <div style="position:relative;height:238px;flex:none">
+    <img src="assets/portrait.jpg" alt="" style="width:100%;height:100%;object-fit:cover;object-position:50% 62%;filter:saturate(.85) brightness(.6)">
+    <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(14,12,10,.6) 0%,rgba(14,12,10,.45) 28%,rgba(14,12,10,.9) 66%,rgba(14,12,10,.99) 100%)"></div>
+    <div onClick="{{ closeLesson }}" style="position:absolute;top:56px;left:16px;width:38px;height:38px;border-radius:50%;background:rgba(14,12,10,.6);border:1px solid rgba(201,162,74,.3);display:flex;align-items:center;justify-content:center;cursor:pointer">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#e6c877" stroke-width="2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"></path></svg>
+    </div>
+    <div style="position:absolute;left:20px;right:20px;bottom:16px">
+      <div style="font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#c9a24a">Step {{ lesson.n }} · {{ lesson.kind }}</div>
+      <div style="font-size:23px;font-weight:700;line-height:1.25;margin-top:6px">{{ lesson.title }}</div>
+      
+    </div>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:18px 20px 118px">
+    <div style="display:flex;gap:9px">
+      <div style="flex:1;padding:13px;border-radius:14px;background:#e6c877;color:#1a1206;font-size:13.5px;font-weight:700;text-align:center;cursor:pointer">Play lesson</div>
+      <div style="padding:13px 15px;border-radius:14px;border:1px solid rgba(201,162,74,.3);color:#e6c877;font-size:13.5px;cursor:pointer">Save</div>
+    </div>
+    <sc-if value="{{ lessonHasImage }}" hint-placeholder-val="{{ false }}">
+      <div onMouseDown="{{ lensStart }}" onMouseMove="{{ lensMove }}" onMouseUp="{{ lensEnd }}" onMouseLeave="{{ lensEnd }}" onTouchStart="{{ lensStart }}" onTouchMove="{{ lensMove }}" onTouchEnd="{{ lensEnd }}" style="margin-top:18px;border-radius:18px;overflow:hidden;border:1px solid rgba(201,162,74,.2);background:#f6f2ea;position:relative;cursor:zoom-in;touch-action:none;user-select:none">
+        <img src="{{ lessonImage }}" alt="" style="width:100%;display:block;pointer-events:none">
+        <div style="position:absolute;left:{{ lensX }};top:{{ lensY }};width:{{ lensDia }};height:{{ lensDia }};border-radius:50%;border:2px solid #e6c877;box-shadow:0 0 0 1px rgba(14,12,10,.45),0 16px 36px rgba(0,0,0,.5);background-color:#f6f2ea;background-repeat:no-repeat;background-image:{{ lensImg }};background-size:{{ lensSize }};background-position:{{ lensPos }};transform:translate(-50%,-50%);opacity:{{ lensOpacity }};pointer-events:none;transition:opacity .14s ease"></div>
+        <div style="position:absolute;right:10px;bottom:10px;display:flex;align-items:center;gap:7px;padding:8px 11px;border-radius:99px;background:rgba(14,12,10,.82);border:1px solid rgba(230,200,119,.4);backdrop-filter:blur(6px);opacity:{{ badgeOpacity }};transition:opacity .14s ease">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#e6c877" stroke-width="2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="M15.5 15.5 21 21M10.5 7.5v6M7.5 10.5h6"></path></svg>
+          <span style="font-size:11px;color:#e6c877;letter-spacing:.04em">Hold to zoom</span>
+        </div>
+      </div>
+      
+    </sc-if>
+    <div style="margin-top:18px;display:flex;flex-direction:column;gap:12px">
+      <sc-for list="{{ lessonBlocks }}" as="bl" hint-placeholder-count="4">
+        <div>
+          <sc-if value="{{ bl.isH }}" hint-placeholder-val="{{ false }}">
+            <div style="font-size:15.5px;font-weight:700;line-height:1.4;color:#f2ebdd;margin-top:6px">{{ bl.text }}</div>
+          </sc-if>
+          <sc-if value="{{ bl.isP }}" hint-placeholder-val="{{ true }}">
+            <p style="font-size:14px;line-height:1.85;color:#b3a288;margin:0;text-wrap:pretty">{{ bl.text }}</p>
+          </sc-if>
+          <sc-if value="{{ bl.isKv }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;gap:11px;align-items:flex-start;padding:11px 13px;border-radius:13px;background:#171412;border-left:2px solid #c9a24a">
+              <div style="flex:1;min-width:0">
+                <div style="font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:#a08a5e">{{ bl.label }}</div>
+                <div style="font-size:13.5px;line-height:1.6;color:#e6c877;margin-top:4px">{{ bl.value }}</div>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+      </sc-for>
+    </div>
+    
+    <div style="margin-top:11px;display:flex;flex-direction:column;gap:8px">
+      <sc-for list="{{ chapters }}" as="c" hint-placeholder-count="4">
+        
+      </sc-for>
+    </div>
+    <div style="margin-top:20px;padding:15px;border-radius:16px;background:#171412;border:1px solid rgba(201,162,74,.16)">
+      <div style="font-size:13.5px;font-weight:700">Eduard's personal note's</div>
+      <p style="font-size:13px;line-height:1.8;color:#a3927a;margin:7px 0 0">Focus very much on Square and Oval shape, that's your goal</p>
+    </div>
+    <div onClick="{{ completeStep }}" style="margin-top:18px;padding:14px;border-radius:16px;border:1px solid rgba(201,162,74,.35);color:#e6c877;font-size:13.5px;font-weight:700;text-align:center;cursor:pointer">Mark step complete</div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ zoomOpen }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;z-index:120;background:rgba(6,5,4,.96);display:flex;flex-direction:column;animation:bsIn .22s ease both">
+  <div style="padding:56px 16px 10px;display:flex;align-items:center;gap:10px">
+    <div style="flex:1;font-size:12px;color:#a08a5e;line-height:1.5">{{ lessonImageCaption }}</div>
+    <div onClick="{{ closeZoom }}" style="width:36px;height:36px;border-radius:50%;background:rgba(23,20,18,.9);border:1px solid rgba(230,200,119,.35);display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e6c877" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+    </div>
+  </div>
+  <div style="flex:1;overflow:auto;display:flex;align-items:center;padding:0 0 30px">
+    <sc-if value="{{ lessonHasImage }}" hint-placeholder-val="{{ false }}">
+      <img src="{{ lessonImage }}" alt="" style="width:{{ zoomWidth }};max-width:none;display:block;background:#f6f2ea;border-radius:10px">
+    </sc-if>
+  </div>
+  <div style="position:absolute;left:0;right:0;bottom:22px;display:flex;justify-content:center;gap:8px">
+    <div onClick="{{ zoomOut }}" style="padding:11px 16px;border-radius:13px;background:rgba(23,20,18,.94);border:1px solid rgba(230,200,119,.3);color:#e6c877;font-size:13px;cursor:pointer">&minus;</div>
+    <div style="padding:11px 16px;border-radius:13px;background:rgba(23,20,18,.94);border:1px solid rgba(201,162,74,.2);color:#c4b393;font-size:12.5px">{{ zoomLabel }}</div>
+    <div onClick="{{ zoomIn }}" style="padding:11px 16px;border-radius:13px;background:rgba(23,20,18,.94);border:1px solid rgba(230,200,119,.3);color:#e6c877;font-size:13px;cursor:pointer">+</div>
+  </div>
+</div>
+</sc-if>
+
+<div style="position:absolute;left:12px;right:12px;bottom:26px;height:66px;border-radius:24px;background:rgba(23,20,18,.94);border:1px solid rgba(201,162,74,.2);box-shadow:0 12px 30px rgba(0,0,0,.55);backdrop-filter:blur(14px);display:flex;align-items:center;padding:0 4px;z-index:90">
+  <div onClick="{{ goHome }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;color:{{ cHome }}">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"></path></svg>
+    <sc-if value="{{ showLabels }}" hint-placeholder-val="{{ true }}"><span style="font-size:9.5px">Home</span></sc-if>
+  </div>
+  <div onClick="{{ goProgress }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;color:{{ cProgress }}">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="18" r="2.5"></circle><circle cx="18" cy="6" r="2.5"></circle><path d="M7.6 16 10 13a4 4 0 0 1 4-4h2.4"></path></svg>
+    <sc-if value="{{ showLabels }}" hint-placeholder-val="{{ true }}"><span style="font-size:9.5px">Progress</span></sc-if>
+  </div>
+  <div onClick="{{ goClasses }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;color:{{ cClasses }}">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"></rect><path d="M8 3v4M16 3v4M3 11h18"></path></svg>
+    <sc-if value="{{ showLabels }}" hint-placeholder-val="{{ true }}"><span style="font-size:9.5px">Classes</span></sc-if>
+  </div>
+  <div onClick="{{ goChat }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;color:{{ cChat }};position:relative">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13a5 5 0 0 1-5 5H9l-5 3V8a5 5 0 0 1 5-5h6a5 5 0 0 1 5 5z"></path></svg>
+    <span style="position:absolute;top:-1px;right:24px;width:7px;height:7px;border-radius:50%;background:#c9a24a"></span>
+    <sc-if value="{{ showLabels }}" hint-placeholder-val="{{ true }}"><span style="font-size:9.5px">Chat</span></sc-if>
+  </div>
+  <div onClick="{{ goProfile }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;color:{{ cProfile }}">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.5"></circle><path d="M5 20c0-3.6 3.1-5.5 7-5.5s7 1.9 7 5.5"></path></svg>
+    <sc-if value="{{ showLabels }}" hint-placeholder-val="{{ true }}"><span style="font-size:9.5px">Profile</span></sc-if>
+  </div>
+</div>
+
+</div>
+</x-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;showTabLabels&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;App&quot;},&quot;defaultTab&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;home&quot;,&quot;progress&quot;,&quot;classes&quot;,&quot;chat&quot;,&quot;profile&quot;],&quot;default&quot;:&quot;home&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;App&quot;}}">
+const INTRO_PARAS = [
+  'Ever wonder what separates a standard class from a masterclass?',
+  'Think back to your traditional school days: sleepy mornings, clock-watching, skipping homework, and vaguely hoping for the best because the real world felt years away.',
+  'This masterclass is the exact opposite.',
+  'Consider this training a bootcamp for your career. We take this craft seriously, and you will be trained to elite professional standards. You are on a strict deadline, and there is zero time to waste. Your trainer is here to push your limits, demand your focus, and ensure you are completely dialed in.',
+  'The ultimate goal? To get you behind the chair, building a client roster, and launching your business immediately.',
+];
+const STEPS = [
+  { n: '00', title: 'Welcome to Your Masterclass', kind: 'Introduction', mins: '6 min', blurb: 'Ever wonder what separates a standard class from a masterclass?', paras: INTRO_PARAS },
+  { n: '01', title: 'Harmony & Character', kind: 'Theory', mins: '18 min',
+    blurb: 'Two opposing visual identities — and when to use each.',
+    image: 'assets/faces-chart.png',
+    imageCaption: 'Face shapes · Oval through Triangle (Pear)',
+    blocks: [
+      { type: 'h', text: 'Understanding Harmony and Character' },
+      { type: 'p', text: "In hair and facial design, Harmony and Character represent two distinct, opposing visual identities. Understanding when to use each is crucial for tailoring a look to a client's lifestyle, personality, and professional needs." },
+      { type: 'h', text: '1. Harmony: The Art of Fluidity' },
+      { type: 'p', text: 'Harmony is defined by seamless, fluid shapes and soft lines. This approach imparts an elegant, friendly, and approachable energy to the face. It is traditionally used to create gentle, softer aesthetics that flow naturally without harsh transitions.' },
+      { type: 'kv', label: 'Visual Impact', value: 'Soft, elegant, and welcoming.' },
+      { type: 'kv', label: 'Dominant Geometric Shape', value: 'The Oval.' },
+      { type: 'h', text: '2. Character: The Power of Structure' },
+      { type: 'p', text: 'Giving a face "character" is about creating visual impact. It relies on sharp corners, distinct lines, and structured angles. This approach projects authority, dynamism, and strength—making it highly effective for clients in competitive business environments or high-impact, aggressive sports.' },
+      { type: 'kv', label: 'Visual Impact', value: 'Bold, authoritative, and dynamic.' },
+      { type: 'kv', label: 'Dominant Geometric Shape', value: 'The Square.' },
+    ] },
+  { n: '02', title: 'Scissor Technique', kind: 'Practice', mins: '26 min', blurb: 'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.' },
+  { n: '03', title: 'Gradients — Scale of Gray', kind: 'Theory', mins: '15 min', blurb: 'Duis aute irure dolor in reprehenderit in voluptate velit esse.' },
+  { n: '04', title: 'Knowledge of Tools', kind: 'Theory', mins: '22 min', blurb: 'Excepteur sint occaecat cupidatat non proident sunt in culpa.' },
+  { n: '05', title: 'Guards & the Gray Scale', kind: 'Practice', mins: '19 min', blurb: 'Sed ut perspiciatis unde omnis iste natus error sit voluptatem.' },
+  { n: '06', title: 'Create Systems', kind: 'Theory', mins: '14 min', blurb: 'Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit.' },
+  { n: '07', title: 'Hair Products Knowledge', kind: 'Theory', mins: '21 min', blurb: 'Neque porro quisquam est qui dolorem ipsum quia dolor sit amet.' },
+  { n: '08', title: 'Hair Wash Techniques', kind: 'Practice', mins: '17 min', blurb: 'Quis autem vel eum iure reprehenderit qui in ea voluptate velit.' },
+  { n: '09', title: 'Hair Consultation', kind: 'Practice', mins: '24 min', blurb: 'At vero eos et accusamus et iusto odio dignissimos ducimus.' },
+  { n: '10', title: 'Your First Haircut', kind: 'Practice', mins: '90 min', blurb: 'Temporibus autem quibusdam et aut officiis debitis aut rerum.' },
+];
+const CHAPTERS = [
+  { n: '1', title: 'Lorem ipsum dolor sit', mins: '3:20' },
+  { n: '2', title: 'Consectetur adipiscing elit', mins: '4:05' },
+  { n: '3', title: 'Sed do eiusmod tempor', mins: '5:40' },
+  { n: '4', title: 'Ut labore et dolore magna', mins: '6:15' },
+];
+const DAYS = [
+  { dow: 'MON', day: '14', seats: '4 left', open: true },
+  { dow: 'TUE', day: '15', seats: 'full', open: false },
+  { dow: 'WED', day: '16', seats: '2 left', open: true },
+  { dow: 'THU', day: '17', seats: '6 left', open: true },
+  { dow: 'FRI', day: '18', seats: '1 left', open: true },
+];
+const SLOTS = [
+  { time: '09:30', dur: '7h', title: 'Full masterclass day', room: 'Studio floor · steps 01–10', avail: '2 of 6 seats', price: '€390', host: 'Black Silva', hostRole: 'Master barber · owner', peers: '+4 joined', open: true },
+  { time: '14:00', dur: '3h', title: 'Practice lab: fades', room: 'Back chairs · steps 03–05', avail: '5 of 6 seats', price: '€140', host: 'Mihai R.', hostRole: 'Senior instructor', peers: '+1 joined', open: true },
+  { time: '18:00', dur: '2h', title: 'Consultation clinic', room: 'Front room · step 09', avail: 'Waiting list', price: '€90', host: 'Ana K.', hostRole: 'Guest instructor', peers: '6 joined', open: false },
+];
+const CHANNELS = [
+  { name: '# ask-silva', desc: 'Direct questions to Silva. One thread per problem, answered within 48h.' },
+  { name: '# fades', desc: 'Blending, guards and gray-scale problems. Post photos with your thread.' },
+  { name: '# tools', desc: 'Clippers, shears and maintenance. No buy/sell posts.' },
+  { name: '# cohort-07', desc: 'Your class group. Coordinate practice sessions here.' },
+];
+const POSTS = [
+  { initials: 'LI', author: 'Lorem I.', time: '2h', tag: '# fades', state: 'Answered', subject: 'Guard 2 to 3 line keeps showing', problem: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.', replies: 6, likes: 12, hasAnswer: true, answer: 'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip.' },
+  { initials: 'DS', author: 'Dolor S.', time: '5h', tag: '# tools', state: 'Open', subject: 'Which shear length for thick straight hair', problem: 'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.', replies: 2, likes: 4, hasAnswer: false, answer: '' },
+  { initials: 'AM', author: 'Amet C.', time: '1d', tag: '# ask-silva', state: 'Answered', subject: 'Consultation script for first-time clients', problem: 'Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium.', replies: 11, likes: 27, hasAnswer: true, answer: 'Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit.' },
+];
+const TAGS = ['Technique', 'Tools', 'Client', 'Business'];
+const LANGS = [
+  { flag: '🇬🇧', name: 'English', native: 'English' },
+  { flag: '🇷🇴', name: 'Romanian', native: 'Română' },
+  { flag: '🇩🇰', name: 'Danish', native: 'Dansk' },
+  { flag: '🇪🇸', name: 'Spanish', native: 'Español' },
+];
+const INVOICES = [
+  { title: 'Masterclass Pro', date: '12 Aug 2026', no: 'BS-0241', amount: '€690', paid: true },
+  { title: 'Starter kit bundle', date: '12 Aug 2026', no: 'BS-0242', amount: '€89', paid: true },
+  { title: 'Practice lab: fades', date: '02 Sep 2026', no: 'BS-0288', amount: '€140', paid: false },
+  { title: 'Consultation clinic', date: '18 Sep 2026', no: 'BS-0301', amount: '€90', paid: false },
+];
+
+class Component extends DCLogic {
+  state = { tab: null, lesson: null, day: 2, lang: 0, subject: '', problem: '', tag: 0, posts: POSTS, dys: true, notif: true, booked: null, zoom: false, zoomLevel: 250, lens: null, doneCount: 0 };
+
+  videoRef = (el) => {
+    if (!el) return;
+    el.muted = true;
+    el.volume = 0;
+    el.setAttribute('muted', '');
+    const p = el.play();
+    if (p && p.catch) p.catch(() => {});
+  };
+
+  lensPoint(e) {
+    const box = e.currentTarget.getBoundingClientRect();
+    const t = (e.touches && e.touches[0]) || (e.changedTouches && e.changedTouches[0]) || e;
+    return {
+      x: Math.max(0, Math.min(box.width, t.clientX - box.left)),
+      y: Math.max(0, Math.min(box.height, t.clientY - box.top)),
+      w: box.width,
+      dia: Math.max(64, Math.min(140, box.height - 10)),
+    };
+  };
+
+  lensStart = (e) => { this.setState({ lens: this.lensPoint(e) }); };
+  lensMove = (e) => { if (this.state.lens) { e.preventDefault && e.preventDefault(); this.setState({ lens: this.lensPoint(e) }); } };
+  lensEnd = () => { if (this.state.lens) this.setState({ lens: null }); };
+
+  tab() { return this.state.tab || this.props.defaultTab || 'home'; }
+  go(t) { return () => this.setState({ tab: t, lesson: null }); }
+
+  renderVals() {
+    const t = this.tab();
+    const done = Math.min(STEPS.length, Math.max(5, this.state.doneCount || 0));
+    const ch = this.state.tag;
+    const canPost = this.state.subject.trim().length > 3 && this.state.problem.trim().length > 9;
+    const day = DAYS[this.state.day];
+    return {
+      videoRef: this.videoRef,
+      fontStack: this.state.dys
+        ? "'OpenDyslexic','Atkinson Hyperlegible',Verdana,sans-serif"
+        : "'Lexend',system-ui,-apple-system,sans-serif",
+      lineH: this.state.dys ? 1.6 : 1.45,
+      tracking: this.state.dys ? '.02em' : '0',
+      wordSpace: this.state.dys ? '.06em' : 'normal',
+      isHome: t === 'home', isProgress: t === 'progress', isClasses: t === 'classes', isChat: t === 'chat', isProfile: t === 'profile',
+      showLabels: this.props.showTabLabels ?? true,
+      goHome: this.go('home'), goProgress: this.go('progress'), goClasses: this.go('classes'), goChat: this.go('chat'), goProfile: this.go('profile'),
+      cHome: t === 'home' ? '#e6c877' : '#75664f',
+      cProgress: t === 'progress' ? '#e6c877' : '#75664f',
+      cClasses: t === 'classes' ? '#e6c877' : '#75664f',
+      cChat: t === 'chat' ? '#e6c877' : '#75664f',
+      cProfile: t === 'profile' ? '#e6c877' : '#75664f',
+
+      progressCount: done + '/' + STEPS.length,
+      progressPct: Math.round(done / STEPS.length * 100) + '%',
+      progressNote: (done >= STEPS.length ? 'Masterclass complete · certificate unlocked' : ('Level ' + done + ' · in progress on step ' + STEPS[done].n + (STEPS[done + 1] ? ' · next unlock ' + STEPS[done + 1].n : ''))),
+      nodes: STEPS.map((s, i) => {
+        const isDone = i < done, isNow = i === done;
+        return {
+          ...s,
+          badge: isDone ? '✓' : s.n,
+          status: isDone ? 'Complete' : (isNow ? 'In progress' : 'Locked'),
+          pct: isDone ? '100%' : (isNow ? '62%' : '0%'),
+          dotBg: isDone ? '#e6c877' : (isNow ? '#2a2115' : '#141110'),
+          dotBorder: isDone || isNow ? '#e6c877' : 'rgba(201,162,74,.22)',
+          dotFg: isDone ? '#1a1206' : (isNow ? '#e6c877' : '#6b5c45'),
+          dotAnim: isNow ? 'bsRing 1.9s ease-out infinite' : 'none',
+          lineBg: i === STEPS.length - 1 ? 'transparent'
+            : (isDone || isNow
+              ? 'repeating-linear-gradient(180deg,#e6c877 0,#e6c877 9px,rgba(230,200,119,.15) 9px,rgba(230,200,119,.15) 22px)'
+              : 'rgba(201,162,74,.14)'),
+          lineAnim: isDone || isNow ? 'bsFlow 1.1s linear infinite' : 'none',
+          cardBg: isNow ? 'linear-gradient(135deg,#241d14,#161210)' : '#171412',
+          cardBorder: isNow ? 'rgba(230,200,119,.4)' : 'rgba(201,162,74,.14)',
+          cardOpacity: isDone || isNow ? '1' : '.55',
+          chipFg: isNow ? '#e6c877' : '#8d7a58',
+          chipBorder: isNow ? 'rgba(230,200,119,.4)' : 'rgba(201,162,74,.22)',
+          open: () => this.setState({ lesson: s }),
+        };
+      }),
+
+      days: DAYS.map((d, i) => ({
+        ...d,
+        bg: i === this.state.day ? '#e6c877' : '#171412',
+        border: i === this.state.day ? '#e6c877' : 'rgba(201,162,74,.16)',
+        fg: i === this.state.day ? '#1a1206' : '#f2ebdd',
+        subFg: i === this.state.day ? '#5a4310' : '#8d7a58',
+        opacity: d.open ? '1' : '.45',
+        pick: () => this.setState({ day: i }),
+      })),
+      selectedDayLabel: 'Thursday ' + day.day + ' September · ' + day.seats,
+      slots: SLOTS.map((s, i) => ({
+        ...s,
+        border: s.open ? 'rgba(201,162,74,.16)' : 'rgba(201,162,74,.1)',
+        availFg: s.open ? '#e6c877' : '#8d7a58',
+        cta: this.state.booked === i ? 'Seat reserved ✓' : (s.open ? 'Reserve seat' : 'Join waiting list'),
+        ctaBg: this.state.booked === i ? 'rgba(230,200,119,.18)' : (s.open ? '#e6c877' : 'transparent'),
+        ctaFg: this.state.booked === i ? '#e6c877' : (s.open ? '#1a1206' : '#c4b393'),
+        book: () => this.setState({ booked: i }),
+      })),
+
+      channels: CHANNELS.map((c, i) => ({
+        name: c.name,
+        bg: i === ch ? '#e6c877' : 'transparent',
+        fg: i === ch ? '#1a1206' : '#c4b393',
+        pick: () => this.setState({ tag: i }),
+      })),
+      channelDesc: CHANNELS[ch].desc,
+      posts: this.state.posts,
+      tags: TAGS.map((name, i) => ({
+        name,
+        bg: i === this.state.tag ? 'rgba(230,200,119,.18)' : 'transparent',
+        fg: i === this.state.tag ? '#e6c877' : '#94836a',
+        pick: () => this.setState({ tag: i }),
+      })),
+      subject: this.state.subject,
+      problem: this.state.problem,
+      onSubject: (e) => this.setState({ subject: e.target.value }),
+      onProblem: (e) => this.setState({ problem: e.target.value }),
+      postBg: canPost ? '#e6c877' : 'rgba(230,200,119,.12)',
+      postFg: canPost ? '#1a1206' : '#75664f',
+      hint: canPost ? 'Ready to post' : 'Both fields required',
+      submitPost: () => {
+        if (!canPost) return;
+        const p = {
+          initials: 'YOU', author: 'You', time: 'now', tag: CHANNELS[ch].name, state: 'Open',
+          subject: this.state.subject, problem: this.state.problem,
+          replies: 0, likes: 0, hasAnswer: false, answer: '',
+        };
+        this.setState(s => ({ posts: [p, ...s.posts], subject: '', problem: '' }));
+      },
+
+      languages: LANGS.map((l, i) => ({
+        ...l,
+        border: i === this.state.lang ? 'rgba(230,200,119,.4)' : 'rgba(201,162,74,.14)',
+        dotBg: i === this.state.lang ? '#e6c877' : 'transparent',
+        dotBorder: i === this.state.lang ? '#e6c877' : 'rgba(201,162,74,.3)',
+        tick: i === this.state.lang ? '✓' : '',
+        pick: () => this.setState({ lang: i }),
+      })),
+      invoices: INVOICES.map(iv => ({
+        ...iv,
+        status: iv.paid ? 'Paid' : 'Unpaid',
+        stFg: iv.paid ? '#8fae7a' : '#e0a15c',
+        stBorder: iv.paid ? 'rgba(143,174,122,.4)' : 'rgba(224,161,92,.45)',
+      })),
+      unpaidLabel: INVOICES.filter(i => !i.paid).length + ' unpaid · €230',
+
+      dysLabel: this.state.dys ? 'OpenDyslexic · on · wider spacing' : 'Lexend · standard spacing',
+      dysTrack: this.state.dys ? '#c9a24a' : '#332e27',
+      dysAlign: this.state.dys ? 'flex-end' : 'flex-start',
+      toggleDys: () => this.setState(s => ({ dys: !s.dys })),
+      notifLabel: this.state.notif ? 'Push + email' : 'Off',
+      notifTrack: this.state.notif ? '#c9a24a' : '#332e27',
+      notifAlign: this.state.notif ? 'flex-end' : 'flex-start',
+      toggleNotif: () => this.setState(s => ({ notif: !s.notif })),
+
+      lessonOpen: !!this.state.lesson,
+      lesson: this.state.lesson || STEPS[0],
+      lessonBlocks: (() => {
+        const L = this.state.lesson || STEPS[0];
+        if (L.blocks) return L.blocks.map(b => ({
+          ...b,
+          isH: b.type === 'h', isP: b.type === 'p', isKv: b.type === 'kv',
+        }));
+        const paras = L.paras || [
+          'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+          'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.',
+        ];
+        return paras.map(text => ({ type: 'p', text, isH: false, isP: true, isKv: false }));
+      })(),
+      lensX: (this.state.lens ? this.state.lens.x : 0) + 'px',
+      lensY: (this.state.lens ? this.state.lens.y : 0) + 'px',
+      lensOpacity: this.state.lens ? 1 : 0,
+      badgeOpacity: this.state.lens ? 0 : 1,
+      lensImg: 'url("' + ((this.state.lesson || STEPS[0]).image || '') + '")',
+      lensDia: (this.state.lens ? this.state.lens.dia : 120) + 'px',
+      lensSize: this.state.lens ? (this.state.lens.w * 3) + 'px auto' : 'auto',
+      lensPos: this.state.lens
+        ? (-(this.state.lens.x * 3) + this.state.lens.dia / 2) + 'px ' + (-(this.state.lens.y * 3) + this.state.lens.dia / 2) + 'px'
+        : '0 0',
+      lensStart: this.lensStart,
+      lensMove: this.lensMove,
+      lensEnd: this.lensEnd,
+      zoomOpen: !!this.state.zoom,
+      zoomWidth: (this.state.zoomLevel || 250) + '%',
+      zoomLabel: Math.round((this.state.zoomLevel || 250) / 100 * 10) / 10 + '×',
+      openZoom: () => this.setState({ zoom: true, zoomLevel: 250 }),
+      closeZoom: () => this.setState({ zoom: false }),
+      zoomIn: () => this.setState(s => ({ zoomLevel: Math.min(700, (s.zoomLevel || 250) + 100) })),
+      zoomOut: () => this.setState(s => ({ zoomLevel: Math.max(100, (s.zoomLevel || 250) - 100) })),
+      lessonHasImage: !!(this.state.lesson || STEPS[0]).image,
+      lessonImage: (this.state.lesson || STEPS[0]).image || '',
+      lessonImageCaption: (this.state.lesson || STEPS[0]).imageCaption || '',
+      chapters: CHAPTERS.map((c, i) => ({ ...c, bg: i === 0 ? '#e6c877' : '#231c14', fg: i === 0 ? '#1a1206' : '#c9a24a' })),
+      closeLesson: () => this.setState({ lesson: null }),
+      completeStep: () => { var L = this.state.lesson || STEPS[0]; var i = STEPS.map(function (z) { return z.n; }).indexOf(L.n); if (i < 0) i = 0; var nd = Math.max(this.state.doneCount || 0, i + 1); if (i >= STEPS.length - 1) { this.setState({ lesson: null, doneCount: nd }); if (window.bsCert) window.bsCert(); } else { this.setState({ lesson: STEPS[i + 1], doneCount: nd }); } },
+    };
+  }
+}
+</script>
+<script id="bs-mobile-gate">(function(){
+ try{
+  var h=document.head||document.documentElement;
+  var vp=document.createElement('meta'); vp.name='viewport'; vp.content='width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover'; h.appendChild(vp);
+  var m1=document.createElement('meta'); m1.name='apple-mobile-web-app-capable'; m1.content='yes'; h.appendChild(m1);
+  var m2=document.createElement('meta'); m2.name='mobile-web-app-capable'; m2.content='yes'; h.appendChild(m2);
+  var m3=document.createElement('meta'); m3.name='theme-color'; m3.content='#0a0908'; h.appendChild(m3);
+  var st=document.createElement('style'); st.textContent=
+   'html,body{margin:0;padding:0;width:100%;}'
+  +'@media (max-width:767px){html,body{overflow-x:hidden;height:100dvh;background:#0e0c0a}[data-om-starter="ios-frame"]{position:fixed!important;inset:0!important;width:100vw!important;height:100dvh!important;border-radius:0!important;box-shadow:none!important;background:#0e0c0a!important;box-sizing:border-box!important;padding-top:env(safe-area-inset-top)!important}[data-om-starter="ios-frame"] [style*="z-index: 90"]{bottom:calc(16px + env(safe-area-inset-bottom))!important}[style*="0px 0px 110px"]{padding-bottom:calc(110px + env(safe-area-inset-bottom))!important}[style*="20px 118px"]{padding-bottom:calc(110px + env(safe-area-inset-bottom))!important}}'
+  +'@media (min-width:768px){'
+  +'[data-om-starter="ios-frame"]{width:420px!important;height:880px!important;border-radius:44px!important;box-shadow:0 0 0 10px #1a1714,0 0 0 12px rgba(201,162,74,.25),0 40px 90px rgba(0,0,0,.6)!important;overflow:hidden!important}'
+  +'}';
+  document.head.appendChild(st);
+ }catch(e){}
+})();</script>
+
+<script id="bs-cert">
+(function(){
+  var FKEY="bsCertName";
+  function esc(s){var d=document.createElement("div");d.textContent=String(s==null?"":s);return d.innerHTML;}
+  function getName(){try{return localStorage.getItem(FKEY)||"";}catch(e){return "";}}
+  function saveName(v){try{localStorage.setItem(FKEY,v);}catch(e){}}
+  function monthYear(){var d=new Date();try{return d.toLocaleString("en-US",{month:"long"})+" "+d.getFullYear();}catch(e){return ""+d.getFullYear();}}
+  function sheetHTML(name){
+    var body="This certificate is awarded to "+esc(name)+" in recognition of their achievement during the month of "+monthYear()+", for successfully mastering the Haircutting Skills and Theory course";
+    return "<div id=bsSheet style='width:1123px;height:794px;position:relative;background:url(assets/cert-bg.png) center/100% 100% no-repeat;transform-origin:0 0'>"
+      +"<div id=bsSheetName style='position:absolute;left:242.45px;top:314.92px;width:637.63px;height:101.93px;display:flex;align-items:center;justify-content:center;font-family:Pinyon Script,cursive;font-size:85.33px;line-height:1.25;color:#1a2b44;white-space:nowrap'>"+esc(name)+"</div>"
+      +"<div id=bsSheetBody style='position:absolute;left:184.48px;top:433.85px;width:753.56px;height:48.27px;display:flex;align-items:center;justify-content:center;text-align:center;font-family:Lora,Georgia,serif;font-style:italic;font-size:17.6px;line-height:1.4;color:#000'>"+body+"</div>"
+      +"</div>";
+  }
+  function fitName(){
+    var el=document.getElementById("bsSheetName"); if(!el) return;
+    var run=function(){
+      var size=85.33, g=0; el.style.fontSize=size+"px";
+      while(el.scrollWidth>el.clientWidth+1 && size>26 && g++<60){ size-=2.5; el.style.fontSize=size+"px"; }
+    };
+    run();
+    try{
+      if(document.fonts && document.fonts.load){
+        document.fonts.load('85px "Pinyon Script"').then(function(){ run(); setTimeout(run,250); });
+        if(document.fonts.ready && document.fonts.ready.then) document.fonts.ready.then(function(){ run(); });
+      }
+    }catch(e){}
+  }
+  function fitBody(){
+    var el=document.getElementById("bsSheetBody"); if(!el) return;
+    var run=function(){
+      var size=17.6, g=0; el.style.fontSize=size+"px";
+      while(el.scrollHeight>el.clientHeight+1 && size>11.5 && g++<40){ size-=0.4; el.style.fontSize=size+"px"; }
+    };
+    run();
+    try{
+      if(document.fonts && document.fonts.load){
+        document.fonts.load('italic 17px Lora').then(function(){ run(); setTimeout(run,250); });
+        if(document.fonts.ready && document.fonts.ready.then) document.fonts.ready.then(function(){ run(); });
+      }
+    }catch(e){}
+  }
+  function scaleSheet(){
+    var sh=document.getElementById("bsSheet"), ho=document.getElementById("bsHolder");
+    if(!sh||!ho) return;
+    var avail=Math.min(window.innerWidth-32,1123);
+    var sc=avail/1123;
+    sh.style.transform="scale("+sc+")";
+    ho.style.width=avail+"px"; ho.style.height=Math.round(794*sc)+"px";
+  }
+  function loadScript(src){return new Promise(function(res,rej){var s=document.createElement("script");s.src=src;s.onload=res;s.onerror=rej;document.head.appendChild(s);});}
+  function renderCanvas(){
+    var sh=document.getElementById("bsSheet");
+    var clone=sh.cloneNode(true); clone.id="bsSheetClone"; clone.style.transform="none";
+    var box=document.createElement("div");
+    box.style.cssText="position:fixed;left:-20000px;top:0;width:1123px;height:794px;z-index:-1";
+    box.appendChild(clone); document.body.appendChild(box);
+    return window.html2canvas(clone,{scale:2,backgroundColor:"#fffef9",useCORS:true,width:1123,height:794,windowWidth:1123,windowHeight:794})
+      .then(function(cv){ box.remove(); return cv; });
+  }
+  function saveBlob(blob,fname){
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement("a"); a.href=url; a.download=fname; a.rel="noopener";
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){ try{a.remove();URL.revokeObjectURL(url);}catch(e){} },4000);
+  }
+  function doDownload(btn,kind){
+    if(btn.getAttribute("data-busy")==="1") return;
+    var old=btn.getAttribute("data-label")||btn.textContent;
+    btn.setAttribute("data-label",old); btn.setAttribute("data-busy","1");
+    btn.textContent=(kind==="pdf"?"Preparing PDF...":"Preparing image...");
+    Promise.resolve()
+      .then(function(){ return window.html2canvas?0:loadScript("https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"); })
+      .then(function(){ if(kind!=="pdf") return 0; return (window.jspdf&&window.jspdf.jsPDF)?0:loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"); })
+      .then(function(){ return document.fonts?document.fonts.ready:0; })
+      .then(renderCanvas)
+      .then(function(cv){
+        if(kind==="pdf"){
+          var img=cv.toDataURL("image/jpeg",0.95);
+          var pdf=new window.jspdf.jsPDF({orientation:"landscape",unit:"pt",format:"a4"});
+          pdf.addImage(img,"JPEG",0,0,841.89,595.28);
+          pdf.save("Black-Silva-Certificate.pdf");
+          return 0;
+        }
+        return new Promise(function(res){
+          cv.toBlob(function(b){ if(b) saveBlob(b,"Black-Silva-Certificate.png"); res(0); },"image/png");
+        });
+      })
+      .then(function(){ btn.textContent=old; btn.removeAttribute("data-busy"); })
+      .catch(function(){ btn.textContent="Failed - tap to retry"; btn.removeAttribute("data-busy"); });
+  }
+  function render(){
+    var w=document.getElementById("bsCertWrap"); if(!w) return;
+    var name=getName();
+    var head="<div style='text-align:center;padding:26px 20px 4px'>"
+      +"<div style='font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:#c9a24a'>Step 10 complete</div>"
+      +"<div style='font-size:24px;font-weight:700;color:#f4e7c9;margin-top:8px'>Your masterclass certificate</div>"
+      +"<div style='font-size:13px;color:#94836a;margin-top:6px;line-height:1.6'>"+(name?"Congratulations. You finished all 10 steps.":"Write your full name as you want it on the certificate.")+"</div></div>";
+    var form=name?"":"<div style='padding:16px 20px 4px;display:flex;gap:8px'>"
+      +"<input id='bsNameIn' placeholder='Your full name' style='flex:1;min-width:0;padding:13px 14px;border-radius:14px;border:1px solid rgba(201,162,74,.35);background:#171412;color:#f4e7c9;font-size:15px;font-family:inherit'>"
+      +"<div id='bsNameGo' style='padding:13px 18px;border-radius:14px;background:#e6c877;color:#1a1206;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap'>Done</div></div>";
+    var sheet=name?("<div style='padding:18px 16px 0;display:flex;justify-content:center'><div id='bsHolder' style='overflow:hidden;border-radius:8px;box-shadow:0 18px 40px rgba(0,0,0,.55)'>"+sheetHTML(name)+"</div></div>"):"";
+    var acts=name?("<div style='padding:18px 20px 40px;display:flex;flex-direction:column;gap:9px'>"
+      +"<div style='display:flex;gap:9px'>"
+      +"<div id='bsPdf' style='flex:1;min-width:0;padding:15px;border-radius:16px;background:#e6c877;color:#1a1206;font-size:14px;font-weight:700;text-align:center;cursor:pointer'>Download PDF</div>"
+      +"<div id='bsPng' style='flex:1;min-width:0;padding:15px;border-radius:16px;background:#171412;border:1px solid rgba(230,200,119,.5);color:#e6c877;font-size:14px;font-weight:700;text-align:center;cursor:pointer'>Download PNG</div>"
+      +"</div>"
+      +"<div id='bsRename' style='padding:14px;border-radius:16px;border:1px solid rgba(201,162,74,.35);color:#e6c877;font-size:13.5px;text-align:center;cursor:pointer'>Change name</div>"
+      +"<div id='bsClose' style='padding:14px;color:#94836a;font-size:13px;text-align:center;cursor:pointer'>Close</div></div>"):"";
+    w.innerHTML=head+form+sheet+acts;
+    if(name){ fitName(); fitBody(); scaleSheet(); }
+    var go=document.getElementById("bsNameGo"), inp=document.getElementById("bsNameIn");
+    if(go&&inp){
+      var submit=function(){ var v=(inp.value||"").trim(); if(!v) return; saveName(v); render(); };
+      go.addEventListener("click",submit);
+      inp.addEventListener("keydown",function(e){ if(e.key==="Enter") submit(); });
+      setTimeout(function(){ try{inp.focus();}catch(e){} },120);
+    }
+    var p=document.getElementById("bsPdf"); if(p) p.addEventListener("click",function(){ doDownload(p,"pdf"); });
+    var g=document.getElementById("bsPng"); if(g) g.addEventListener("click",function(){ doDownload(g,"png"); });
+    var r=document.getElementById("bsRename"); if(r) r.addEventListener("click",function(){ saveName(""); render(); });
+    var c=document.getElementById("bsClose"); if(c) c.addEventListener("click",function(){ w.remove(); });
+  }
+  window.bsCert=function(){
+    var old=document.getElementById("bsCertWrap"); if(old) old.remove();
+    var w=document.createElement("div"); w.id="bsCertWrap";
+    w.style.cssText="position:fixed;left:0;top:0;right:0;bottom:0;z-index:2147483000;background:#0b0a08;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-top:env(safe-area-inset-top)";
+    document.body.appendChild(w); render();
+  };
+  window.addEventListener("resize",function(){ if(document.getElementById("bsSheet")) scaleSheet(); });
+})();
+</script>
+</body>
+</html>

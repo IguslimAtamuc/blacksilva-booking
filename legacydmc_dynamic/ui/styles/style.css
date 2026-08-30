@@ -1,0 +1,306 @@
+/* General HUD Overlay Styling */
+body, html {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  overflow: hidden;
+}
+
+#hud-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+}
+
+/* Circle Styling */
+.circle {
+  width: 20vmin; /* Base size, adjustable by JS */
+  height: 20vmin;
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 50%;
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  visibility: hidden;
+  font-size: 1vmin; /* Base font size for em units, scales with viewport */
+}
+
+.circle svg {
+  width: 100%;
+  height: 100%;
+  transform-origin: center;
+  shape-rendering: geometricPrecision;
+  text-rendering: optimizeLegibility;
+  overflow: visible;  /* allow strokes to extend past the edge */
+}
+
+.bar-bg {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.1);
+  stroke-width: 3%;
+}
+
+.bar-bg-redline {
+  fill: none;
+  stroke: rgba(255, 0, 0, 0.5);
+  stroke-width: 3%;
+}
+
+.bar-progress {
+  fill: none;
+  stroke: #cfcfcf;
+  stroke-width: 3%;
+}
+
+.bar-progress-redzone {
+  fill: none;
+  stroke: rgba(255, 0, 0, 0.75);
+  stroke-width: 3%;
+}
+
+
+.bar-nitrous {
+  fill: none;
+  stroke: url(#nitrousGradient);
+  stroke-width: 5%; /* Or use a fixed value like 10 for consistency */
+}
+
+.bar-nitrous-bg {
+  fill: none;
+  stroke: rgba(0, 0, 0, 0.5);
+  stroke-width: 6%; /* Or use a fixed value like 10 for consistency */
+}
+
+/* RPM Tick Text */
+.rpm-ticks text {
+  font-size: 0.8vmin;
+  font-family: "Michroma", serif;
+  font-weight: 400;
+  fill: rgb(255, 255, 255);
+  text-anchor: middle;
+  dominant-baseline: middle;
+  shape-rendering: crispEdges;
+}
+
+/* Center Text Styling */
+.circle-content {
+  position: absolute;
+  text-align: center;
+  color: white;
+  font-family: "Michroma", serif;
+  pointer-events: none;
+  width: 100%;
+  height: 100%;
+}
+
+/* Gear Styling - Positioned at the Top */
+.circle-content .gear {
+  position: absolute;
+  top: 16.25%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 8.5vmin; /* Adjusted for better scaling, proportional to .circle */
+  font-weight: bold;
+}
+
+/* Speed Styling - Positioned in the Center */
+.circle-content .speed {
+  position: absolute;
+  top: 66.25%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 3.6vmin; /* Adjusted for better scaling */
+  font-weight: lighter;
+  line-height: 1;
+}
+
+/* Unit Styling - Positioned at the Bottom */
+.circle-content .unit {
+  position: absolute;
+  bottom: 19.75%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1vmin; /* Adjusted for better scaling */
+  font-weight: lighter;
+  text-transform: uppercase;
+}
+
+/* TCS & ESC Box Wrapper */
+.circle-content .tcs-box,
+.circle-content .esc-box {
+  position: absolute;
+  bottom: 6.75%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* TCS Position */
+.circle-content .tcs-box {
+  left: 59.375%;
+}
+
+/* ESC Position */
+.circle-content .esc-box {
+  left: 40.625%;
+}
+
+/* SVG Sizing for TCS and ESC */
+.tcs-box svg,
+.esc-box svg {
+  width: 4vmin;
+  height: 2vmin;
+}
+
+/* Outline Styling */
+.tcs-outline,
+.esc-outline {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.1);
+  stroke-width: 0.55vmin; /* Changed from vh to vmin for consistency */
+  rx: 0.5vmin;
+  ry: 0.5vmin;
+}
+
+/* Text Styling */
+.tcs-box text,
+.esc-box text {
+  fill: rgba(255, 255, 255, 0.1);
+  font-size: 1.5vmin; /* Adjusted for better scaling */
+  font-weight: bold;
+  text-anchor: middle;
+  dominant-baseline: middle;
+  pointer-events: none;
+}
+
+/* Tire Grid Container (unchanged, since it’s working well) */
+.tire-grid {
+  display: grid;
+  grid-template-columns: 10vmin 10vmin; /* Changed from vh to vmin for consistency */
+  grid-template-rows: 16.5vmin 16.5vmin; /* Changed from vh to vmin for consistency */
+  gap: 2vmin; /* Changed from vh to vmin for consistency */
+  justify-items: center;
+  align-items: center;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  visibility: hidden;
+}
+
+.tire-grid.motorcycle {
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* Individual Tire Container (Fixed Size) */
+.tire-container {
+  width: 10vmin; /* Changed from vh to vmin for consistency */
+  height: 20vmin; /* Changed from vh to vmin for consistency */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+/* Tire Icon (SVG) */
+.tire-icon {
+  width: 100%;
+  height: 100%;
+  transform-origin: center;
+}
+
+/* SVG Rect (Heat and Outline) Styling */
+.tire-heat,
+.tire-outline {
+  width: 80%;
+  height: 70%;
+  x: 5%;
+  y: 5%;
+}
+
+/* SVG Rectangle Styling */
+.tire-icon .tire-heat {
+  fill: hsla(240, 100%, 50%, 0.75);
+  stroke: none;
+}
+
+.tire-icon .tire-outline {
+  fill: none;
+  stroke: rgba(0, 0, 0, 0.75);
+  stroke-width: 2%;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+/* Fuel Widget Container */
+.fuel-widget {
+  position: absolute;
+  display: flex;
+  align-items: center; /* Vertical center */
+  gap: 1vh;
+  transform-origin: left top;
+  pointer-events: none;
+  height: 10vh; /* Match fuel bar height for alignment */
+  visibility: hidden;
+}
+
+.fuel-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  transform: translateY(3.65vh); /* Default: no offset */
+}
+
+/* Fuel Icon */
+.fuel-icon {
+  width: 2.75vh;
+  height: auto;
+  fill: #ffffff;
+  stroke: #000;           /* Outline color */
+  stroke-width: 1px;   /* Adjust thickness */
+  filter: drop-shadow(0 0 1.0vh rgba(0, 0, 0, 0.5));
+}
+
+/* Bar Container */
+.fuel-bar-container {
+  height: 10vh;
+  width: 1vh;
+  background-color: transparent;
+  border: 3px solid rgba(0, 0, 0, 0.5);
+  border-radius: 0.3vh;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Background */
+.fuel-bar-bg {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Fuel Fill (dynamic height) */
+.fuel-bar-fill {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 100%; /* Will be adjusted with JS */
+  background: #cfcfcf;
+  transition: height 0.3s ease;
+}

@@ -10,11 +10,27 @@ Zero dependinte externe. Ruleaza pe Python 3.9+ si offline.
 
 ## Pornire rapida
 
+**Cea mai simpla cale — fara terminal:**
+
+| Sistem | Dublu-click pe |
+|---|---|
+| Windows | `START-WINDOWS.bat` |
+| macOS / Linux | `start-mac-linux.command` |
+
+Se deschide singur in browser pe `http://127.0.0.1:8000`. Apesi o culoare,
+primesti instant urmatoarea. Lasi fereastra neagra deschisa cat timp folosesti
+aplicatia; ca sa opresti, o inchizi.
+
+Ai nevoie doar de Python 3.9+ instalat ([python.org/downloads](https://www.python.org/downloads/) —
+pe Windows bifeaza **„Add Python to PATH"** la instalare). Nimic altceva: fara pip,
+fara librarii.
+
+**Din terminal**, daca preferi:
+
 ```bash
 cd roulette-lab
 python3 -m roulette_lab serve
 ```
-Se deschide `http://127.0.0.1:8000`. Apesi o culoare, primesti instant urmatoarea.
 
 Din linia de comanda:
 ```bash

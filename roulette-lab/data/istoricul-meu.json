@@ -1,0 +1,601 @@
+{
+  "schema_version": 1,
+  "name": "istoricul-meu",
+  "preset": "color3",
+  "symbols": null,
+  "source": "legacy-import",
+  "notes": "Importat din history.json (predictor.py v2). Fara timestamp-uri per rotire.",
+  "created_at": "2026-09-07T19:22:28.794942+00:00",
+  "spins": [
+    {
+      "index": 0,
+      "value": "R"
+    },
+    {
+      "index": 1,
+      "value": "R"
+    },
+    {
+      "index": 2,
+      "value": "N"
+    },
+    {
+      "index": 3,
+      "value": "R"
+    },
+    {
+      "index": 4,
+      "value": "N"
+    },
+    {
+      "index": 5,
+      "value": "N"
+    },
+    {
+      "index": 6,
+      "value": "R"
+    },
+    {
+      "index": 7,
+      "value": "R"
+    },
+    {
+      "index": 8,
+      "value": "R"
+    },
+    {
+      "index": 9,
+      "value": "V"
+    },
+    {
+      "index": 10,
+      "value": "V"
+    },
+    {
+      "index": 11,
+      "value": "R"
+    },
+    {
+      "index": 12,
+      "value": "R"
+    },
+    {
+      "index": 13,
+      "value": "N"
+    },
+    {
+      "index": 14,
+      "value": "R"
+    },
+    {
+      "index": 15,
+      "value": "N"
+    },
+    {
+      "index": 16,
+      "value": "N"
+    },
+    {
+      "index": 17,
+      "value": "R"
+    },
+    {
+      "index": 18,
+      "value": "R"
+    },
+    {
+      "index": 19,
+      "value": "R"
+    },
+    {
+      "index": 20,
+      "value": "N"
+    },
+    {
+      "index": 21,
+      "value": "R"
+    },
+    {
+      "index": 22,
+      "value": "V"
+    },
+    {
+      "index": 23,
+      "value": "V"
+    },
+    {
+      "index": 24,
+      "value": "N"
+    },
+    {
+      "index": 25,
+      "value": "N"
+    },
+    {
+      "index": 26,
+      "value": "R"
+    },
+    {
+      "index": 27,
+      "value": "N"
+    },
+    {
+      "index": 28,
+      "value": "R"
+    },
+    {
+      "index": 29,
+      "value": "R"
+    },
+    {
+      "index": 30,
+      "value": "V"
+    },
+    {
+      "index": 31,
+      "value": "R"
+    },
+    {
+      "index": 32,
+      "value": "N"
+    },
+    {
+      "index": 33,
+      "value": "N"
+    },
+    {
+      "index": 34,
+      "value": "R"
+    },
+    {
+      "index": 35,
+      "value": "N"
+    },
+    {
+      "index": 36,
+      "value": "N"
+    },
+    {
+      "index": 37,
+      "value": "R"
+    },
+    {
+      "index": 38,
+      "value": "N"
+    }
+  ],
+  "predictions": [
+    {
+      "at_index": 1,
+      "predicted": "R",
+      "probabilities": {},
+      "confidence": 0.0,
+      "model": "legacy-v2",
+      "gated": false,
+      "reason": "Import din tool-ul vechi; predictie neverificata statistic.",
+      "ts": 1788815913.197189,
+      "actual": "R",
+      "correct": true
+    },
+    {
+      "at_index": 2,
+      "predicted": "R",
+      "probabilities": {},
+      "confidence": 0.0,
+      "model": "legacy-v2",
+      "gated": false,
+      "reason": "Import din tool-ul vechi; predictie neverificata statistic.",
+      "ts": 1788815913.197189,
+      "actual": "N",
+      "correct": false
+    },
+    {
+      "at_index": 3,
+      "predicted": "R",
+      "probabilities": {},
+      "confidence": 0.0,
+      "model": "legacy-v2",
+      "gated": false,
+      "reason": "Import din tool-ul vechi; predictie neverificata statistic.",
+      "ts": 1788815913.197189,
+      "actual": "N",
+      "correct": false
+    },
+    {
+      "at_index": 4,
+      "predicted": "R",
+      "probabilities": {},
+      "confidence": 0.0,
+      "model": "legacy-v2",
+      "gated": false,
+      "reason": "Import din tool-ul vechi; predictie neverificata statistic.",
+      "ts": 1788815913.197189,
+      "actual": "R",
+      "correct": true
+    },
+    {
+      "at_index": 5,
+      "predicted": "N",
+      "probabilities": {},
+      "confidence": 0.0,
+      "model": "legacy-v2",
+      "gated": false,
+      "reason": "Import din tool-ul vechi; predictie neverificata statistic.",
+      "ts": 1788815913.197189,
+      "actual": "R",
+      "correct": false
+    },
+    {
+      "at_index": 6,
+      "predicted": "R",
+      "probabilities": {},
+      "confidence": 0.0,
+      "model": "legacy-v2",
+      "gated": false,
+      "reason": "Import din tool-ul vechi; predictie neverificata statistic.",
+      "ts": 1788815913.197189,
+      "actual": "R",
+      "correct": true
+    },
+    {
+      "at_index": 7,
+      "predicted": "R",
+      "probabilities": {},
+      "confidence": 0.0,
+      "model": "legacy-v2",
+      "gated": false,
+      "reason": "Import din tool-ul vechi; predictie neverificata statistic.",
+      "ts": 1788815913.197189,
+      "actual": "V",
+      "correct": false
+    },
+    {
+      "at_index": 8,
+      "predicted": "N",
+      "probabilities": {},
+      "confidence": 0.0,
+      "model": "legacy-v2",
+      "gated": false,
+      "reason": "Import din tool-ul vechi; predictie neverificata statistic.",
+      "ts": 1788815913.197189,
+      "actual": "V",
+      "correct": false
+    },
+    {
+      "at_index": 9,
+      "predicted": "R",
+      "probabilities": {},
+      "confidence": 0.0,
+      "model": "legacy-v2",
+      "gated": false,
+      "reason": "Import din tool-ul vechi; predictie neverificata statistic.",
+      "ts": 1788815913.197189,
+      "actual": "R",
+      "correct": true
+    },
+    {
+      "at_index": 10,
+      "predicted": "R",
+      "probabilities": {},
+      "confidence": 0.0,
+      "model": "legacy-v2",
+      "gated": false,
+      "reason": "Import din tool-ul vechi; predictie neverificata statistic.",
+      "ts": 1788815913.197189,
+      "actual": "R",
+      "correct": true
+    },
+    {
+      "at_index": 11,
+      "predicted": "N",
+      "probabilities": {},
+      "confidence": 0.0,
+      "model": "legacy-v2",
+      "gated": false,
+      "reason": "Import din tool-ul vechi; predictie neverificata statistic.",
+      "ts": 1788815913.197189,
+      "actual": "N",
+      "correct": true
+    },
+    {
+      "at_index": 12,
+      "predicted": "R",
+      "probabilities": {},
+      "confidence": 0.0,
+      "model": "legacy-v2",
+      "gated": false,
+      "reason": "Import din tool-ul vechi; predictie neverificata statistic.",
+      "ts": 1788815913.197189,
+      "actual": "R",
+      "correct": true
+    },
+    {
+      "at_index": 13,
+      "predicted": "N",
+      "probabilities": {},
+      "confidence": 0.0,
+      "model": "legacy-v2",
+      "gated": false,
+      "reason": "Import din tool-ul vechi; predictie neverificata statistic.",
+      "ts": 1788815913.197189,
+      "actual": "N",
+      "correct": true
+    },
+    {
+      "at_index": 14,
+      "predicted": "R",
+      "probabilities": {},
+      "confidence": 0.0,
+      "model": "legacy-v2",
+      "gated": false,
+      "reason": "Import din tool-ul vechi; predictie neverificata statistic.",
+      "ts": 1788815913.197189,
+      "actual": "N",
+      "correct": false
+    },
+    {
+      "at_index": 15,
+      "predicted": "R",
+      "probabilities": {},
+      "confidence": 0.0,
+      "model": "legacy-v2",
+      "gated": false,
+      "reason": "Import din tool-ul vechi; predictie neverificata statistic.",
+      "ts": 1788815913.197189,
+      "actual": "R",
+      "correct": true
+    },
+    {
+      "at_index": 16,
+      "predicted": "R",
+      "probabilities": {},
+      "confidence": 0.0,
+      "model": "legacy-v2",
+      "gated": false,
+      "reason": "Import din tool-ul vechi; predictie neverificata statistic.",
+      "ts": 1788815913.197189,
+      "actual": "R",
+      "correct": true
+    },
+    {
+      "at_index": 17,
+      "predicted": "R",
+      "probabilities": {},
+      "confidence": 0.0,
+      "model": "legacy-v2",
+      "gated": false,
+      "reason": "Import din tool-ul vechi; predictie neverificata statistic.",
+      "ts": 1788815913.197189,
+      "actual": "R",
+      "correct": true
+    },
+    {
+      "at_index": 18,
+      "predicted": "V",
+      "probabilities": {},
+      "confidence": 0.0,
+      "model": "legacy-v2",
+      "gated": false,
+      "reason": "Import din tool-ul vechi; predictie neverificata statistic.",
+      "ts": 1788815913.197189,
+      "actual": "N",
+      "correct": false
+    },
+    {
+      "at_index": 19,
+      "predicted": "R",
+      "probabilities": {},
+      "confidence": 0.0,
+      "model": "legacy-v2",
+      "gated": false,
+      "reason": "Import din tool-ul vechi; predictie neverificata statistic.",
+      "ts": 1788815913.197189,
+      "actual": "R",
+      "correct": true
+    },
+    {
+      "at_index": 20,
+      "predicted": "N",
+      "probabilities": {},
+      "confidence": 0.0,
+      "model": "legacy-v2",
+      "gated": false,
+      "reason": "Import din tool-ul vechi; predictie neverificata statistic.",
+      "ts": 1788815913.197189,
+      "actual": "V",
+      "correct": false
+    },
+    {
+      "at_index": 21,
+      "predicted": "V",
+      "probabilities": {},
+      "confidence": 0.0,
+      "model": "legacy-v2",
+      "gated": false,
+      "reason": "Import din tool-ul vechi; predictie neverificata statistic.",
+      "ts": 1788815913.197189,
+      "actual": "V",
+      "correct": true
+    },
+    {
+      "at_index": 22,
+      "predicted": "R",
+      "probabilities": {},
+      "confidence": 0.0,
+      "model": "legacy-v2",
+      "gated": false,
+      "reason": "Import din tool-ul vechi; predictie neverificata statistic.",
+      "ts": 1788815913.197189,
+      "actual": "N",
+      "correct": false
+    },
+    {
+      "at_index": 23,
+      "predicted": "R",
+      "probabilities": {},
+      "confidence": 0.0,
+      "model": "legacy-v2",
+      "gated": false,
+      "reason": "Import din tool-ul vechi; predictie neverificata statistic.",
+      "ts": 1788815913.197189,
+      "actual": "N",
+      "correct": false
+    },
+    {
+      "at_index": 24,
+      "predicted": "R",
+      "probabilities": {},
+      "confidence": 0.0,
+      "model": "legacy-v2",
+      "gated": false,
+      "reason": "Import din tool-ul vechi; predictie neverificata statistic.",
+      "ts": 1788815913.197189,
+      "actual": "R",
+      "correct": true
+    },
+    {
+      "at_index": 25,
+      "predicted": "R",
+      "probabilities": {},
+      "confidence": 0.0,
+      "model": "legacy-v2",
+      "gated": false,
+      "reason": "Import din tool-ul vechi; predictie neverificata statistic.",
+      "ts": 1788815913.197189,
+      "actual": "N",
+      "correct": false
+    },
+    {
+      "at_index": 26,
+      "predicted": "R",
+      "probabilities": {},
+      "confidence": 0.0,
+      "model": "legacy-v2",
+      "gated": false,
+      "reason": "Import din tool-ul vechi; predictie neverificata statistic.",
+      "ts": 1788815913.197189,
+      "actual": "R",
+      "correct": true
+    },
+    {
+      "at_index": 27,
+      "predicted": "N",
+      "probabilities": {},
+      "confidence": 0.0,
+      "model": "legacy-v2",
+      "gated": false,
+      "reason": "Import din tool-ul vechi; predictie neverificata statistic.",
+      "ts": 1788815913.197189,
+      "actual": "R",
+      "correct": false
+    },
+    {
+      "at_index": 28,
+      "predicted": "R",
+      "probabilities": {},
+      "confidence": 0.0,
+      "model": "legacy-v2",
+      "gated": false,
+      "reason": "Import din tool-ul vechi; predictie neverificata statistic.",
+      "ts": 1788815913.197189,
+      "actual": "V",
+      "correct": false
+    },
+    {
+      "at_index": 29,
+      "predicted": "V",
+      "probabilities": {},
+      "confidence": 0.0,
+      "model": "legacy-v2",
+      "gated": false,
+      "reason": "Import din tool-ul vechi; predictie neverificata statistic.",
+      "ts": 1788815913.197189,
+      "actual": "R",
+      "correct": false
+    },
+    {
+      "at_index": 30,
+      "predicted": "N",
+      "probabilities": {},
+      "confidence": 0.0,
+      "model": "legacy-v2",
+      "gated": false,
+      "reason": "Import din tool-ul vechi; predictie neverificata statistic.",
+      "ts": 1788815913.197189,
+      "actual": "N",
+      "correct": true
+    },
+    {
+      "at_index": 31,
+      "predicted": "R",
+      "probabilities": {},
+      "confidence": 0.0,
+      "model": "legacy-v2",
+      "gated": false,
+      "reason": "Import din tool-ul vechi; predictie neverificata statistic.",
+      "ts": 1788815913.197189,
+      "actual": "N",
+      "correct": false
+    },
+    {
+      "at_index": 32,
+      "predicted": "R",
+      "probabilities": {},
+      "confidence": 0.0,
+      "model": "legacy-v2",
+      "gated": false,
+      "reason": "Import din tool-ul vechi; predictie neverificata statistic.",
+      "ts": 1788815913.197189,
+      "actual": "R",
+      "correct": true
+    },
+    {
+      "at_index": 33,
+      "predicted": "R",
+      "probabilities": {},
+      "confidence": 0.0,
+      "model": "legacy-v2",
+      "gated": false,
+      "reason": "Import din tool-ul vechi; predictie neverificata statistic.",
+      "ts": 1788815913.197189,
+      "actual": "N",
+      "correct": false
+    },
+    {
+      "at_index": 34,
+      "predicted": "R",
+      "probabilities": {},
+      "confidence": 0.0,
+      "model": "legacy-v2",
+      "gated": false,
+      "reason": "Import din tool-ul vechi; predictie neverificata statistic.",
+      "ts": 1788815913.197189,
+      "actual": "N",
+      "correct": false
+    },
+    {
+      "at_index": 35,
+      "predicted": "R",
+      "probabilities": {},
+      "confidence": 0.0,
+      "model": "legacy-v2",
+      "gated": false,
+      "reason": "Import din tool-ul vechi; predictie neverificata statistic.",
+      "ts": 1788815913.197189,
+      "actual": "R",
+      "correct": true
+    },
+    {
+      "at_index": 36,
+      "predicted": "N",
+      "probabilities": {},
+      "confidence": 0.0,
+      "model": "legacy-v2",
+      "gated": false,
+      "reason": "Import din tool-ul vechi; predictie neverificata statistic.",
+      "ts": 1788815913.197189,
+      "actual": "N",
+      "correct": true
+    }
+  ]
+}

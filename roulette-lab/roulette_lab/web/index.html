@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Roulette Lab — analiză de secvență</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%234f9cf9'/%3E%3Ccircle cx='16' cy='16' r='5' fill='%230e1117'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header>
+  <div class="wrap head">
+    <div>
+      <h1>Roulette Lab</h1>
+      <p class="sub">Instrument educational de analiza statistica si reverse engineering.
+         Emite o predictie doar daca datele o justifica.</p>
+    </div>
+    <div class="head-stats">
+      <div class="kpi"><span id="kpiN">0</span><small>rotiri</small></div>
+      <div class="kpi"><span id="kpiFp">—</span><small>amprenta date</small></div>
+    </div>
+  </div>
+</header>
+
+<nav class="wrap tabs" id="tabs">
+  <button data-tab="date" class="active">Date</button>
+  <button data-tab="analiza">Analiza</button>
+  <button data-tab="prng">PRNG</button>
+  <button data-tab="backtest">Backtesting</button>
+  <button data-tab="predictie">Predictie</button>
+  <button data-tab="raport">Raport</button>
+</nav>
+
+<main class="wrap">
+
+<!-- ================= DATE ================= -->
+<section id="tab-date" class="tab active">
+  <div class="card live-card" id="liveCard">
+    <div class="live-head">
+      <h2 style="margin:0">Urmatoarea culoare</h2>
+      <span class="q" id="liveModel"></span>
+    </div>
+    <div id="liveBody"><p class="hint">Introdu primul rezultat ca sa porneasca motorul.</p></div>
+  </div>
+
+  <div class="card">
+    <h2>Introdu rezultatul</h2>
+    <div id="entryButtons" class="entry"></div>
+    <p class="hint" id="entryHint"></p>
+    <div class="row">
+      <label>Sesiune (optional)
+        <input id="sessionInput" type="text" placeholder="ex. sesiune-3 (dupa repornirea jocului)">
+      </label>
+      <button class="ghost" id="undoBtn">Undo ultima</button>
+      <button class="ghost danger" id="clearBtn">Sterge tot</button>
+    </div>
+    <p class="hint">De ce conteaza sesiunea: daca jocul reia secventa dupa restart, singurul
+       mod de a o detecta este sa stim unde incepe fiecare sesiune.</p>
+  </div>
+
+  <div class="card">
+    <h2>Ce a urmat istoric dupa combinatia curenta</h2>
+    <div id="contextEvidence"></div>
+  </div>
+
+  <div class="card">
+    <h2>Secventa</h2>
+    <div id="dots" class="dots"></div>
+    <div id="seqChart"></div>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <h2>Statistici</h2>
+      <div id="stats"></div>
+    </div>
+    <div class="card">
+      <h2>Import / Export</h2>
+      <div class="row">
+        <input type="file" id="fileInput" accept=".csv,.txt,.json">
+        <label class="check"><input type="checkbox" id="appendChk"> adauga la datele existente</label>
+      </div>
+      <textarea id="pasteArea" rows="4" placeholder="...sau lipeste direct rezultatele: RRNVRN sau R,N,V"></textarea>
+      <div class="row">
+        <button id="importBtn">Importa</button>
+        <a class="btn ghost" href="/api/export?format=csv">Export CSV</a>
+        <a class="btn ghost" href="/api/export?format=json">Export JSON</a>
+        <a class="btn ghost" href="/api/export?format=txt">Export TXT</a>
+      </div>
+      <p class="hint">Format CSV recomandat: <code>index,value,ts,session</code> —
+         <code>value</code> este obligatoriu, restul optionale dar valoroase.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Tabelul rotirilor</h2>
+    <div class="tablewrap"><table id="spinTable"></table></div>
+  </div>
+</section>
+
+<!-- ================= ANALIZA ================= -->
+<section id="tab-analiza" class="tab">
+  <div class="card">
+    <div class="row between">
+      <h2>Bateria de teste statistice</h2>
+      <button id="runAnalysis">Ruleaza analiza</button>
+    </div>
+    <p class="hint">Toate p-value-urile sunt corectate Benjamini–Hochberg pentru numarul de
+       teste rulate. Fara aceasta corectie, 9 teste independente produc ~37% sansa de fals pozitiv.</p>
+    <div id="analysisOut" class="out"></div>
+  </div>
+</section>
+
+<!-- ================= PRNG ================= -->
+<section id="tab-prng" class="tab">
+  <div class="card">
+    <div class="row between">
+      <h2>Identificarea generatorului</h2>
+      <button id="runPrng">Ruleaza identificarea</button>
+    </div>
+    <p class="hint">Identificarea unui PRNG este o problema de informatie: pentru a determina
+       o stare de B biti ai nevoie de cel putin B biti de observatii.</p>
+    <div id="prngOut" class="out"></div>
+  </div>
+</section>
+
+<!-- ================= BACKTEST ================= -->
+<section id="tab-backtest" class="tab">
+  <div class="card">
+    <div class="row between">
+      <h2>Backtesting walk-forward</h2>
+      <div class="row">
+        <label class="inline">warmup <input id="warmupInput" type="number" min="1" placeholder="auto" style="width:6rem"></label>
+        <button id="runBacktest">Ruleaza backtesting</button>
+      </div>
+    </div>
+    <p class="hint">Fiecare rotire este prezisa inainte de a fi vazuta, apoi adaugata la istoric.
+       Metrica principala este log-loss in biti, nu acuratetea.</p>
+    <div id="backtestOut" class="out"></div>
+  </div>
+</section>
+
+<!-- ================= PREDICTIE ================= -->
+<section id="tab-predictie" class="tab">
+  <div class="card">
+    <div class="row between">
+      <h2>Predictia urmatoarei rotiri</h2>
+      <div class="row">
+        <label class="check"><input type="checkbox" id="logPred" checked> inregistreaza predictia</label>
+        <button id="runPredict">Evalueaza</button>
+      </div>
+    </div>
+    <div id="predictOut" class="out"></div>
+  </div>
+  <div class="card">
+    <h2>Istoric predictii vs. rezultate reale</h2>
+    <div id="predHistory"></div>
+  </div>
+</section>
+
+<!-- ================= RAPORT ================= -->
+<section id="tab-raport" class="tab">
+  <div class="card">
+    <h2>Raport reproductibil</h2>
+    <p class="hint">Raportul contine amprenta SHA-256 a datelor si a codului, seed-ul folosit si
+       toate cifrele — ca sa poti demonstra cum ai ajuns la concluzii.</p>
+    <div class="row">
+      <a class="btn" href="/api/report?format=md">Descarca raport Markdown</a>
+      <a class="btn ghost" href="/api/report?format=json">Descarca raport JSON</a>
+      <button class="ghost" id="previewReport">Previzualizeaza</button>
+    </div>
+    <pre id="reportPreview" class="report"></pre>
+  </div>
+</section>
+
+</main>
+<div id="toast" class="toast"></div>
+<script src="/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+data/dataset.json
+data/raport-*.json
+data/raport-*.md
+*.tmp
